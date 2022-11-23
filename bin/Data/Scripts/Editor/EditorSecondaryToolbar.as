@@ -10,7 +10,7 @@ void CreateSecondaryToolBar()
     secondaryToolBar.layoutSpacing = 4;
     secondaryToolBar.layoutBorder = IntRect(4, 4, 4, 4);
     secondaryToolBar.opacity = uiMaxOpacity;
-    secondaryToolBar.SetFixedSize(28, graphics.height / ui.scale);
+    secondaryToolBar.SetFixedSize(30, graphics.height / ui.scale);
     secondaryToolBar.SetPosition(0, uiMenuBar.height+40);
     secondaryToolBar.SetFixedHeight(graphics.height / ui.scale);
 
@@ -133,6 +133,8 @@ Button@ CreateSmallToolBarButton(const String&in title, String toolTipTitle = ""
     button.defaultStyle = uiStyle;
     button.style = "ToolBarButton";
     button.SetFixedSize(20, 20);
+    button.SetChildOffset(IntVector2(1, 1));
+    button.SetAlignment(HA_CENTER, VA_CENTER);
     CreateSmallToolBarIcon(button);
 
     if (toolTipTitle.empty)

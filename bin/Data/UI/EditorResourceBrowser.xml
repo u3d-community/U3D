@@ -62,7 +62,7 @@
 		<attribute name="Layout Mode" value="Horizontal" />
 		<attribute name="Layout Spacing" value="10" />
 		<attribute name="Layout Border" value="0 4 0 4" />
-		<element type="ListView" style="HierarchyListView">
+		<element type="ListView" style="HierarchyListViewWithoutIcons">
 			<attribute name="Name" value="DirectoryList" />
 			<attribute name="Max Size" value="400 2147483647" />
 			<attribute name="Highlight Mode" value="Always" />

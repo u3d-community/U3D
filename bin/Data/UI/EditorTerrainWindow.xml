@@ -48,6 +48,7 @@
     </element>
     <element>
         <attribute name="Layout Mode" value="Horizontal" />
+        <attribute name="Layout Spacing" value="4" />
         <attribute name="Min Size" value="0 34" />
         <attribute name="Max Size" value="999999 34" />
         <element type="LineEdit">

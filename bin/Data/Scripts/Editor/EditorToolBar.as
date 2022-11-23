@@ -10,10 +10,10 @@ void CreateToolBar()
     toolBar = BorderImage("ToolBar");
     toolBar.style = "EditorToolBar";
     toolBar.SetLayout(LM_HORIZONTAL);
-    toolBar.layoutSpacing = 4;
-    toolBar.layoutBorder = IntRect(8, 4, 4, 8);
+    toolBar.layoutSpacing = 2;
+    toolBar.layoutBorder = IntRect(4, 4, 4, 8);
     toolBar.opacity = uiMaxOpacity;
-    toolBar.SetFixedSize(graphics.width / ui.scale, 42);
+    toolBar.SetFixedSize(graphics.width / ui.scale, 41);
     toolBar.SetPosition(0, uiMenuBar.height);
     ui.root.AddChild(toolBar);
 
@@ -33,6 +33,7 @@ void CreateToolBar()
     FinalizeGroupHorizontal(editModeGroup, "ToolBarToggle");
     toolBar.AddChild(editModeGroup);
 
+    toolBar.AddChild(CreateToolBarSpacer(4));
     UIElement@ axisModeGroup = CreateGroup("AxisModeGroup", LM_HORIZONTAL);
     axisModeGroup.AddChild(CreateToolBarToggle("AxisWorld"));
     axisModeGroup.AddChild(CreateToolBarToggle("AxisLocal"));
@@ -41,9 +42,12 @@ void CreateToolBar()
 
     toolBar.AddChild(CreateToolBarSpacer(4));
     toolBar.AddChild(CreateToolBarToggle("MoveSnap"));
+    toolBar.AddChild(CreateToolBarSpacer(1));
     toolBar.AddChild(CreateToolBarToggle("RotateSnap"));
+    toolBar.AddChild(CreateToolBarSpacer(1));
     toolBar.AddChild(CreateToolBarToggle("ScaleSnap"));
 
+    toolBar.AddChild(CreateToolBarSpacer(4));
     UIElement@ snapScaleModeGroup = CreateGroup("SnapScaleModeGroup", LM_HORIZONTAL);
     snapScaleModeGroup.AddChild(CreateToolBarToggle("SnapScaleHalf"));
     snapScaleModeGroup.AddChild(CreateToolBarToggle("SnapScaleQuarter"));
@@ -67,12 +71,10 @@ void CreateToolBar()
     fillModeGroup.AddChild(CreateToolBarToggle("FillSolid"));
     FinalizeGroupHorizontal(fillModeGroup, "ToolBarToggle");
     toolBar.AddChild(fillModeGroup);
-    
+
+
     toolBar.AddChild(CreateToolBarSpacer(4));
-    UIElement@ originGroup = CreateGroup("OriginGroup", LM_HORIZONTAL);
-    originGroup.AddChild(CreateToolBarToggle("ShowOrigin"));
-    FinalizeGroupHorizontal(originGroup, "ToolBarToggle");
-    toolBar.AddChild(originGroup);
+    toolBar.AddChild(CreateToolBarToggle("ShowOrigin"));
 
     toolBar.AddChild(CreateToolBarSpacer(4));
     DropDownList@ viewportModeList = DropDownList();
