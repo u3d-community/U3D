@@ -1,0 +1,97 @@
+name: Android Build
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-android
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: 📱
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lib-type:
+          - static
+          - shared
+    env:
+      HOST: linux
+      PLATFORM: android
+      BUILD_TYPE: both
+      LIB_TYPE: ${{ matrix.lib-type }}
+      ARCH: all
+      DBE_TAG: master
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with: { fetch-depth: 0 }
+      - name: Free up space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android
+          sudo apt-get clean
+          df -h
+      - name: Source checksum
+        id: source_checksum
+        run: rake source_checksum
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/cache/.ccache
+            build/cache/.gradle/caches
+            build/cache/.gradle/wrapper
+          key: |
+            android-${{ matrix.lib-type }}-all-both-${{ env.DBE_TAG }}-${{ steps.source_checksum.outputs.hexdigest }}
+          restore-keys: |
+            android-${{ matrix.lib-type }}-all-both-${{ env.DBE_TAG }}
+            android-${{ matrix.lib-type }}-all-both
+      - name: DBE
+        run: rake update_dot_files && script/dockerized.sh ${PLATFORM/-*} env
+      - name: Build
+        run: script/dockerized.sh ${PLATFORM/-*} rake build
+      - name: Test
+        run: script/dockerized.sh ${PLATFORM/-*} rake test
+      - name: Install
+        run: |
+          script/dockerized.sh ${PLATFORM/-*} rake install
+          touch build/cache/.gradle/mark
+      - name: Scaffolding - new
+        run: script/dockerized.sh ${PLATFORM/-*} rake new
+      - name: Scaffolding - build
+        run: |
+          cd build/cache/projects/UrhoApp
+          script/dockerized.sh ${PLATFORM/-*}
+      - name: Scaffolding - test
+        run: |
+          cd build/cache/projects/UrhoApp
+          script/dockerized.sh ${PLATFORM/-*} rake test
+      - name: Scaffolding - cleanup
+        run: |
+          rm -rf build/cache/.m2
+          find build/cache/.gradle -newer build/cache/.gradle/mark -type d |xargs rm -rf
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-${{ matrix.lib-type }}-all-both
+          path: |
+            build/ci/*.tar.gz
+            android/urho3d-lib/build/distributions/*.aar
+            android/urho3d-lib/build/distributions/*.zip
+            android/urho3d-lib/build/libs/*.jar
+            build/*.out
+        if: github.event_name == 'push'
+        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHER_NAME: ${{ secrets.PUBLISHER_NAME }}
+          PUBLISHER_EMAIL: ${{ secrets.PUBLISHER_EMAIL }}
+          PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+        run: script/dockerized.sh ${PLATFORM/-*} rake publish
+        if: |
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}

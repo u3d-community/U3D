@@ -185,4 +185,6 @@ file (MAKE_DIRECTORY ${THIRD_PARTY_INCLUDE_DIR})
 add_subdirectory (Source)
 
 # Urho3D documentation
-add_subdirectory (Docs)
+if (URHO3D_DOCS)
+    add_subdirectory (Docs)
+endif ()
