@@ -1,4 +1,9 @@
+# Properly detect languages on Github
 Docs/* linguist-documentation
 Source/ThirdParty/* linguist-vendored
 bin/Data/Fonts/* linguist-vendored
 *.h linguist-language=C++
+
+# Normalize EOL
+* text=auto eol=lf
+*.bat eol=crlf
