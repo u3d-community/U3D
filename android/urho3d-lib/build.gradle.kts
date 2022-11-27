@@ -206,7 +206,6 @@ fun MavenPublication.configure(config: String) {
         from(components[config])
     }
     artifact(tasks["sourcesJar"])
-    artifact(tasks["documentationZip"])
     pom {
         inceptionYear.set("2008")
         licenses {
