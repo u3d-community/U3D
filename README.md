@@ -19,6 +19,7 @@ Before making pull requests, please read the [Contribution checklist](https://ur
 
 Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
 (http://www.horde3d.org). Additional inspiration & research used:
+
 - Rectangle packing by Jukka Jylänki (clb)
   http://clb.demon.fi/projects/rectangle-bin-packing
 - Tangent generation from Terathon
@@ -40,6 +41,7 @@ Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
   http://warp.povusers.org/SortComparison/
 
 Urho3D uses the following third-party libraries:
+
 - AngelScript 2.35.1 WIP (http://www.angelcode.com/angelscript)
 - Boost 1.64.0 (http://www.boost.org) - only used for AngelScript generic bindings
 - Box2D 2.3.2 WIP (http://box2d.org)
@@ -70,18 +72,20 @@ Urho3D uses the following third-party libraries:
 - WebP (https://chromium.googlesource.com/webm/libwebp)
 - ETCPACK (https://github.com/Ericsson/ETCPACK)
 - Tracy 0.7.6 (https://github.com/wolfpld/tracy)
+- DXT / PVRTC decompression code based on the Squish library and the Oolong Engine.
 
-DXT / PVRTC decompression code based on the Squish library and the Oolong
-Engine.
-Jack and mushroom models from the realXtend project. (https://www.realxtend.org)
-Ninja model and terrain, water, smoke, flare and status bar textures from OGRE.
-BlueHighway font from Larabie Fonts.
-Anonymous Pro font by Mark Simonson.
-NinjaSnowWar sounds by Veli-Pekka Tätilä.
-PBR textures from Substance Share. (https://share.allegorithmic.com)
-IBL textures from HDRLab's sIBL Archive.
-Dieselpunk Moto model by allexandr007.
-Mutant & Kachujin models from Mixamo.
+### Media credits
+- Jack and mushroom models from the realXtend project. (https://www.realxtend.org)
+- Ninja model and terrain, water, smoke, flare and status bar textures from OGRE.
+- BlueHighway font from Larabie Fonts.
+- Anonymous Pro font by Mark Simonson.
+- NinjaSnowWar sounds by Veli-Pekka Tätilä.
+- PBR textures from Substance Share. (https://share.allegorithmic.com)
+- IBL textures from HDRLab's sIBL Archive.
+- Dieselpunk Moto model by allexandr007.
+- Mutant & Kachujin models from Mixamo.
+- Skies from Polyhaven. (https://polyhaven.com/license)
+
 License / copyright information included with the assets as necessary. All other assets (including shaders) by Urho3D authors and licensed similarly as the engine itself.
 
 ## Documentation
