@@ -49,7 +49,7 @@ static const unsigned MAX_TRIANGLES = 100000;
 
 DebugRenderer::DebugRenderer(Context* context) :
     Component(context),
-    lineAntiAlias_(false)
+    lineAntiAlias_(true)
 {
     vertexBuffer_ = new VertexBuffer(context_);
 
@@ -61,7 +61,7 @@ DebugRenderer::~DebugRenderer() = default;
 void DebugRenderer::RegisterObject(Context* context)
 {
     context->RegisterFactory<DebugRenderer>(SUBSYSTEM_CATEGORY);
-    URHO3D_ACCESSOR_ATTRIBUTE("Line Antialias", GetLineAntiAlias, SetLineAntiAlias, bool, false, AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("Line Antialias", GetLineAntiAlias, SetLineAntiAlias, bool, true, AM_DEFAULT);
 }
 
 void DebugRenderer::SetLineAntiAlias(bool enable)
