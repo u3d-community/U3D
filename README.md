@@ -1,16 +1,16 @@
 ![Urho3D logo](https://raw.githubusercontent.com/urho3d/Urho3D/master/bin/Data/Textures/LogoLarge.png)
 
-# Urho3D
+# U3D
 
 [![CI/CD](https://github.com/urho3d/Urho3D/workflows/CI/CD/badge.svg)](https://github.com/urho3d/Urho3D/actions?query=workflow%3ACI%2FCD)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/4954/badge.svg)](https://scan.coverity.com/projects/urho3d-urho3d)
 
-**Urho3D** is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. Greatly inspired by OGRE and Horde3D.
+**U3D** is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. Greatly inspired by OGRE and Horde3D, and a continuation of [Urho3D](https://urho3d.io/).
 
-Main website: [https://urho3d.io/](https://urho3d.io/)
+Main website: [https://u3d.io/](https://u3dd.io/)
 
 ## License
-Licensed under the MIT license, see [LICENSE](https://github.com/urho3d/Urho3D/blob/master/LICENSE) for details.
+Licensed under the MIT license, see [LICENSE](https://github.com/u3d-community/U3D/blob/master/LICENSE) for details.
 
 ## Contributing
 Before making pull requests, please read the [Contribution checklist](https://urho3d.io/documentation/HEAD/_contribution_checklist.html) and [Coding conventions](https://urho3d.io/documentation/HEAD/_coding_conventions.html) pages from the documentation.
@@ -19,6 +19,7 @@ Before making pull requests, please read the [Contribution checklist](https://ur
 
 Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
 (http://www.horde3d.org). Additional inspiration & research used:
+
 - Rectangle packing by Jukka Jylänki (clb)
   http://clb.demon.fi/projects/rectangle-bin-packing
 - Tangent generation from Terathon
@@ -38,13 +39,15 @@ Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
   http://eternallyconfuzzled.com/tuts/datastructures/jsw_tut_rbtree.aspx
 - Comparison of several sorting algorithms by Juha Nieminen
   http://warp.povusers.org/SortComparison/
-
+  
 Urho3D uses the following third-party libraries:
+
 - AngelScript 2.35.1 WIP (http://www.angelcode.com/angelscript)
 - Boost 1.64.0 (http://www.boost.org) - only used for AngelScript generic bindings
 - Box2D 2.3.2 WIP (http://box2d.org)
 - Bullet 3.06+ (http://www.bulletphysics.org)
 - Civetweb 1.7 (https://github.com/civetweb/civetweb)
+- fmt 3.0.0 (https://fmt.dev)
 - FreeType 2.8 (https://www.freetype.org)
 - GLEW 1.13.0 (http://glew.sourceforge.net)
 - SLikeNet (https://github.com/SLikeSoft/SLikeNet)
@@ -71,17 +74,20 @@ Urho3D uses the following third-party libraries:
 - ETCPACK (https://github.com/Ericsson/ETCPACK)
 - Tracy 0.7.6 (https://github.com/wolfpld/tracy)
 
-DXT / PVRTC decompression code based on the Squish library and the Oolong
+Further:
+
+- DXT / PVRTC decompression code based on the Squish library and the Oolong
 Engine.
-Jack and mushroom models from the realXtend project. (https://www.realxtend.org)
-Ninja model and terrain, water, smoke, flare and status bar textures from OGRE.
-BlueHighway font from Larabie Fonts.
-Anonymous Pro font by Mark Simonson.
-NinjaSnowWar sounds by Veli-Pekka Tätilä.
-PBR textures from Substance Share. (https://share.allegorithmic.com)
-IBL textures from HDRLab's sIBL Archive.
-Dieselpunk Moto model by allexandr007.
-Mutant & Kachujin models from Mixamo.
+- Jack and mushroom models from the realXtend project. (https://www.realxtend.org)
+- Ninja model and terrain, water, smoke, flare and status bar textures from OGRE.
+- BlueHighway font from Larabie Fonts.
+- Anonymous Pro font by Mark Simonson.
+- NinjaSnowWar sounds by Veli-Pekka Tätilä.
+- PBR textures from Substance Share. (https://share.allegorithmic.com)
+- IBL textures from HDRLab's sIBL Archive.
+- Dieselpunk Moto model by allexandr007.
+- Mutant & Kachujin models from Mixamo.
+
 License / copyright information included with the assets as necessary. All other assets (including shaders) by Urho3D authors and licensed similarly as the engine itself.
 
 ## Documentation
