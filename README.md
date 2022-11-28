@@ -1,24 +1,94 @@
-![Urho3D logo](https://raw.githubusercontent.com/urho3d/Urho3D/master/bin/Data/Textures/LogoLarge.png)
+<div align="center">
+<a href="https://u3d.io">
+  <img src="https://raw.githubusercontent.com/u3d-community/U3D/master/SourceAssets/Logo.svg" width="200" alt="U3D Logo">
+</a>
 
-# Urho3D
+# U3D
+[![android](https://github.com/u3d-community/U3D/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/u3d-community/U3D/actions/workflows/android.yml)
+[![ios](https://github.com/u3d-community/U3D/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/u3d-community/U3D/actions/workflows/ios.yml)
+[![linux](https://github.com/u3d-community/U3D/actions/workflows/linux.yml/badge.svg?branch=master)](https://github.com/u3d-community/U3D/actions/workflows/linux.yml)
+[![macos](https://github.com/u3d-community/U3D/actions/workflows/macos.yml/badge.svg?branch=master)](https://github.com/u3d-community/U3D/actions/workflows/macos.yml)
+[![windows](https://github.com/u3d-community/U3D/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/u3d-community/U3D/actions/workflows/windows.yml)
+![GitHub](https://img.shields.io/github/license/u3d-community/U3D)
+[![Discord](https://img.shields.io/discord/1044444861992026192)](https://discord.gg/httHCqcXGx)
+</div>
 
-[![CI/CD](https://github.com/urho3d/Urho3D/workflows/CI/CD/badge.svg)](https://github.com/urho3d/Urho3D/actions?query=workflow%3ACI%2FCD)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/4954/badge.svg)](https://scan.coverity.com/projects/urho3d-urho3d)
+**U3D** is a open source, lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. Forked from [Urho3D](https://web.archive.org/web/20170406232054/https://urho3d.github.io/) and greatly inspired by OGRE and Horde3D.
 
-**Urho3D** is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. Greatly inspired by OGRE and Horde3D.
-
-Main website: [https://urho3d.io/](https://urho3d.io/)
+Main website: [https://u3d.io/](https://u3d.io/)
 
 ## License
-Licensed under the MIT license, see [LICENSE](https://github.com/urho3d/Urho3D/blob/master/LICENSE) for details.
+Licensed under the MIT license, see [LICENSE](https://github.com/u3d-community/U3D/blob/master/LICENSE) for details.
 
-## Contributing
-Before making pull requests, please read the [Contribution checklist](https://urho3d.io/documentation/HEAD/_contribution_checklist.html) and [Coding conventions](https://urho3d.io/documentation/HEAD/_coding_conventions.html) pages from the documentation.
+## Features
+![U3D Screenshot](https://user-images.githubusercontent.com/467729/204386186-fbc2b8f8-cff8-4549-9fbc-5a6d35869a08.png)
+
+- Cross-platform support: Windows, Linux, macOS, iOS, tvOS, Android, Raspberry Pi (and other generic ARM boards), and Web with Emscripten
+- Powerful and configurable rendering pipeline, with implementations for forward, light pre-pass and deferred rendering
+- OpenGL, OpenGL ES, WebGL and Direct3D11
+- All-in-one editor built with ActionScript, allowing you to easily customize the editor to your game needs
+- Two scripting languages available for creating game logic: Lua and AngelScript
+- UI, localization and database subsystems
+- Component based scene model
+- Skeletal, vertex morph and node animation
+- Point, spot and directional lights
+- Cascaded shadow maps
+- Particle rendering
+- Geomipmapped terrain
+- Static and skinned decals
+- LODs
+- Automatic instancing
+- Software rasterized occlusion culling
+- Post-processing
+- HDR and PBR rendering
+- 2D sprites and particles that integrate into the 3D scene
+- Task-based multithreading
+- Hierarchical performance profiler
+- Scene, object and prefab load/save in binary, XML and JSON formats
+- Keyframe animation of object attributes
+- Background loading of resources
+- Keyboard, mouse, joystick and touch input
+- High-performance math library
+- Physics powered by Bullet and Box2D
+- Networking powered by SLikeNet
+- Pathfinding and Crowd Simulation via Recast/Detour
+- Supported images: JPEG, PNG, TGA, BMP, PSD, GIF, HDR
+- Compressed image support: DDS, KTX, PVR
+- Import virtually any 3D file format via [Assimp](https://github.com/assimp/assimp/blob/master/doc/Fileformats.md)
+- 2D and 3D audio playblack, Ogg Vorbis and WAV support
+- TrueType font rendering
+- Built as a single external library, can be linked statically or dynamically
+
+## Design Goals
+- **Productive**: Do not reinvent the wheel. Engine should reduce development time. Less yak shaving, more game making.
+- **Fast**: Compile and run fast. Parallelize when possible.
+- **Modular**: Only use what you need. Flexibility for power users.
+
+## Conventions
+U3D uses the following conventions and principles:
+
+- Left-handed coordinates. Positive X, Y & Z axes point to the right, up, and forward, and positive rotation is clockwise.
+- Degrees are used for angles.
+- Clockwise vertices define a front face.
+- Audio volume is specified from 0.0 (silence) to 1.0 (full volume)
+- Path names use slash instead of backslash. Paths will be converted internally into the necessary format when calling into the operating system.
+- In the script API, properties are used whenever appropriate instead of Set...() and Get...() functions. If the setter and getter require index parameters, the property will use array-style indexing, and its name will be in plural. For example model->SetMaterial(0, myMaterial) in C++ would become model.materials[0] = myMaterial in script.
+- Raw pointers are used whenever possible in the classes' public API. This simplifies exposing functions & classes to script, and is relatively safe, because `SharedPtr` & `WeakPtr` use intrusive reference counting.
+- When an object's public API allows assigning a reference counted object to it through a Set...() function, this implies ownership through a `SharedPtr`. For example assigning a Material to a StaticModel, or a Viewport to Renderer. To end the assignment and free the reference counted object, call the Set...() function again with a null argument.
+- No C++ exceptions. Error return values (false / null pointer / dummy reference) are used instead. Script exceptions are used when there is no other sensible way, such as with out of bounds array access.
+- Feeding illegal data to public API functions, such as out of bounds indices or null pointers, should not cause crashes or corruption. Instead errors are logged as appropriate.
+- Third party libraries are included as source code for the build process. They are however hidden from the public API as completely as possible.
+
+## Community
+U3D's development is community-driven and completely independent, empowering developers to build and design better tools to help indie game development. We invite you to familiarize yourself with our [**Code of Conduct**](./CODE_OF_CONDUCT.md) and get to know us on:
+
+- **[Discord](https://discord.gg/httHCqcXGx)**: Community chat room
+- **[GitHub Discussions](https://github.com/u3d-community/U3D/discussions)**: Technical discussions about the roadmap, issues, bugs
+
+If you'd like to help build U3D, we have a guide just for you! Check it out: **[Contributor Guide](./CONTRIBUTING.md)**.
 
 ## Credits
-
-Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
-(http://www.horde3d.org). Additional inspiration & research used:
+U3D is greatly inspired by [Urho3D](https://web.archive.org/web/20170406232054/https://urho3d.github.io/), [OGRE](http://www.ogre3d.org) and [Horde3D](http://www.horde3d.org). Additional inspiration & research used:
 
 - Rectangle packing by Jukka Jylänki (clb)
   http://clb.demon.fi/projects/rectangle-bin-packing
@@ -40,7 +110,7 @@ Urho3D is greatly inspired by OGRE (http://www.ogre3d.org) and Horde3D
 - Comparison of several sorting algorithms by Juha Nieminen
   http://warp.povusers.org/SortComparison/
 
-Urho3D uses the following third-party libraries:
+U3D uses the following third-party libraries:
 
 - AngelScript 2.35.1 WIP (http://www.angelcode.com/angelscript)
 - Boost 1.64.0 (http://www.boost.org) - only used for AngelScript generic bindings
@@ -86,28 +156,7 @@ Urho3D uses the following third-party libraries:
 - Mutant & Kachujin models from Mixamo.
 - Skies from Polyhaven. (https://polyhaven.com/license)
 
-License / copyright information included with the assets as necessary. All other assets (including shaders) by Urho3D authors and licensed similarly as the engine itself.
+License / copyright information included with the assets as necessary. All other assets (including shaders) by U3D authors and licensed similarly as the engine itself.
 
-## Documentation
-Urho3D classes have been sparsely documented using Doxygen notation. To
-generate documentation into the "Docs" subdirectory, open the Doxyfile in the
-"Docs" subdirectory with doxywizard and click "Run doxygen" from the "Run" tab.
-Get Doxygen from http://www.doxygen.org & Graphviz from http://www.graphviz.org.
-See section "Documentation build" below on how to automate documentation
-generation as part of the build process.
-
-The documentation is also available online at
-  https://urho3d.io/documentation/HEAD/index.html
-
-Documentation on how to build Urho3D:
-  https://urho3d.io/documentation/HEAD/_building.html
-Documentation on how to use Urho3D as external library
-  https://urho3d.io/documentation/HEAD/_using_library.html
-
-Replace HEAD with a specific release version in the above links to obtain the
-documentation pertinent to the specified release. Alternatively, use the
-document-switcher in the documentation website to do so.
-
-## History
-The change history is available online at
-  https://urho3d.io/documentation/HEAD/_history.html
+### Contributors
+<a href="https://github.com/u3d-community/U3D/graphs/contributors"><img src="https://opencollective.com/U3D/contributors.svg?width=890&button=false" /></a>
