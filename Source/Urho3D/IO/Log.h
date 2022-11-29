@@ -27,6 +27,8 @@
 #include "../Core/Object.h"
 #include "../Core/StringUtils.h"
 
+#include <utility>
+
 namespace Urho3D
 {
 
@@ -113,8 +115,15 @@ public:
     /// Write to the log. If logging level is higher than the level of the message, the message is ignored.
     /// @nobind
     static void Write(int level, const String& message);
-    /// Write formatted message to the log. If logging level is higher than the level of the message, the message is ignored.
-    static void WriteFormat(int level, const char* format, ...);
+    /// Write fmt-style formatted message to the log. If logging level is higher than the level of the message, the message is ignored.
+    template<typename... T>
+    static void WriteFormatted(int level, const char* format, T&&... args)
+    {
+        Write(level,FormatString(format,std::forward<T>(args)...));
+    }
+    /// Write printf-style formatted message to the log. If logging level is higher than the level of the message, the message is ignored.
+    /// \deprececated{ Printf-style %s formatting has been deprecated in favor of brace-style {} formatting of the fmt library. Please use Log::WriteFormatted instead, wrapped as U3D_LOG___F. }
+    URHO3D_DEPRECATED static void WriteFormat(int level, const char* format, ...);
     /// Write raw output to the log.
     static void WriteRaw(const String& message, bool error = false);
 
@@ -157,6 +166,14 @@ private:
 #define URHO3D_LOGERRORF(format, ...) Urho3D::Log::WriteFormat(Urho3D::LOG_ERROR, format, ##__VA_ARGS__)
 #define URHO3D_LOGRAWF(format, ...) Urho3D::Log::WriteFormat(Urho3D::LOG_RAW, format, ##__VA_ARGS__)
 
+#define U3D_LOGF(level, format, ...) Urho3D::Log::WriteFormatted(level, format, ##__VA_ARGS__)
+#define U3D_LOGTRACEF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_TRACE, format, ##__VA_ARGS__)
+#define U3D_LOGDEBUGF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_DEBUG, format, ##__VA_ARGS__)
+#define U3D_LOGINFOF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_INFO, format, ##__VA_ARGS__)
+#define U3D_LOGWARNINGF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_WARNING, format, ##__VA_ARGS__)
+#define U3D_LOGERRORF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_ERROR, format, ##__VA_ARGS__)
+#define U3D_LOGRAWF(format, ...) Urho3D::Log::WriteFormatted(Urho3D::LOG_RAW, format, ##__VA_ARGS__)
+
 #else
 #define URHO3D_LOG(message) ((void)0)
 #define URHO3D_LOGTRACE(message) ((void)0)
@@ -173,6 +190,14 @@ private:
 #define URHO3D_LOGWARNINGF(...) ((void)0)
 #define URHO3D_LOGERRORF(...) ((void)0)
 #define URHO3D_LOGRAWF(...) ((void)0)
+
+#define U3D_LOGF(...) ((void)0)
+#define U3D_LOGTRACEF(...) ((void)0)
+#define U3D_LOGDEBUGF(...) ((void)0)
+#define U3D_LOGINFOF(...) ((void)0)
+#define U3D_LOGWARNINGF(...) ((void)0)
+#define U3D_LOGERRORF(...) ((void)0)
+#define U3D_LOGRAWF(...) ((void)0)
 #endif
 
 }
