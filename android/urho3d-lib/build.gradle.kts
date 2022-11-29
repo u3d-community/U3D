@@ -164,7 +164,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/urho3d/Urho3D")
+            url = uri("https://maven.pkg.github.com/u3d-community/U3D")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
@@ -183,12 +183,12 @@ bintray {
         repo = "maven"
         name = project.name
         setLicenses("MIT")
-        vcsUrl = "https://github.com/urho3d/Urho3D.git"
+        vcsUrl = "https://github.com/u3d-community/U3D.git"
         userOrg = "urho3d"
         setLabels("android", "game-development", "game-engine", "open-source", "urho3d")
         websiteUrl = "https://urho3d.io/"
-        issueTrackerUrl = "https://github.com/urho3d/Urho3D/issues"
-        githubRepo = "urho3d/Urho3D"
+        issueTrackerUrl = "https://github.com/u3d-community/U3D/issues"
+        githubRepo = "u3d-community/U3D"
         publicDownloadNumbers = true
         desc = project.description
         version.apply {
@@ -211,19 +211,19 @@ fun MavenPublication.configure(config: String) {
         licenses {
             license {
                 name.set("MIT License")
-                url.set("https://github.com/urho3d/Urho3D/blob/master/LICENSE")
+                url.set("https://github.com/u3d-community/U3D/blob/master/LICENSE")
             }
         }
         developers {
             developer {
                 name.set("Urho3D contributors")
-                url.set("https://github.com/urho3d/Urho3D/graphs/contributors")
+                url.set("https://github.com/u3d-community/U3D/graphs/contributors")
             }
         }
         scm {
-            url.set("https://github.com/urho3d/Urho3D.git")
-            connection.set("scm:git:ssh://git@github.com:urho3d/Urho3D.git")
-            developerConnection.set("scm:git:ssh://git@github.com:urho3d/Urho3D.git")
+            url.set("https://github.com/u3d-community/U3D.git")
+            connection.set("scm:git:ssh://git@github.com:u3d-community/U3D.git")
+            developerConnection.set("scm:git:ssh://git@github.com:u3d-community/U3D.git")
         }
         withXml {
             asNode().apply {
