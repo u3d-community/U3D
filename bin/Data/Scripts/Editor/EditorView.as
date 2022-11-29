@@ -14,7 +14,7 @@ CustomGeometry@ grid;
 UIElement@ viewportUI; // holds the viewport ui, convienent for clearing and hiding
 uint setViewportCursor = 0; // used to set cursor in post update
 uint resizingBorder = 0; // current border that is dragging
-uint viewportMode = VIEWPORT_SINGLE;
+uint viewportMode = VIEWPORT_COMPACT;
 int  viewportBorderOffset = 2; // used to center borders over viewport seams,  should be half of width
 int  viewportBorderWidth = 4; // width of a viewport resize border
 IntRect viewportArea; // the area where the editor viewport is. if we ever want to have the viewport not take up the whole screen this abstracts that. NOTE: viewportArea is in scaled UI position.
@@ -201,7 +201,7 @@ class ViewportContext
 
     void CreateViewportContextUI()
     {
-        Font@ font = cache.GetResource("Font", "Fonts/Anonymous Pro.ttf");
+        Font@ font = cache.GetResource("Font", "Fonts/Roboto.ttf");
 
         viewportContextUI = UIElement();
         viewportUI.AddChild(viewportContextUI);
@@ -224,7 +224,7 @@ class ViewportContext
         cameraPosText = Text();
         statusBar.AddChild(cameraPosText);
 
-        cameraPosText.SetFont(font, 11);
+        cameraPosText.SetFont(font, 10);
         cameraPosText.color = Color(1, 1, 0);
         cameraPosText.textEffect = TE_SHADOW;
         cameraPosText.priority = -100;
@@ -899,12 +899,12 @@ void SetViewportMode(uint mode = VIEWPORT_SINGLE)
 
         // Move and scale hierarchy window to left of screen
         ShowHierarchyWindow();
-        hierarchyWindow.position = IntVector2(secondaryToolBar.width,toolBar.height + uiMenuBar.height);
+        hierarchyWindow.position = IntVector2(secondaryToolBar.width - 1, (toolBar.height + uiMenuBar.height) - 1);
         hierarchyWindow.height = viewportArea.height-(toolBar.height + uiMenuBar.height);
 
         // Move and scale inspector window to left of screen
         ShowAttributeInspectorWindow();
-        attributeInspectorWindow.position = IntVector2(viewportArea.width-attributeInspectorWindow.width,toolBar.height + uiMenuBar.height);
+        attributeInspectorWindow.position = IntVector2(viewportArea.width-attributeInspectorWindow.width, (toolBar.height + uiMenuBar.height) - 1);
         attributeInspectorWindow.height = viewportArea.height-(toolBar.height + uiMenuBar.height);
 
         // Hide close button and disable resize/movement inspector/hierarchy of windows
@@ -920,7 +920,7 @@ void SetViewportMode(uint mode = VIEWPORT_SINGLE)
             uint viewport = 0;
             ViewportContext@ vc = ViewportContext(
                 IntRect(
-                    secondaryToolBar.width + hierarchyWindow.width,
+                    (secondaryToolBar.width + hierarchyWindow.width) - 1,
                     toolBar.height + uiMenuBar.height,
                     viewportArea.width-attributeInspectorWindow.width,
                     viewportArea.height),
@@ -1468,7 +1468,7 @@ void SetupStatsBarText(Text@ text, Font@ font, int x, int y, HorizontalAlignment
     text.position = IntVector2(x, y);
     text.horizontalAlignment = hAlign;
     text.verticalAlignment = vAlign;
-    text.SetFont(font, 11);
+    text.SetFont(font, 10);
     text.color = Color(1, 1, 0);
     text.textEffect = TE_SHADOW;
     text.priority = -100;
@@ -1499,7 +1499,7 @@ void UpdateStats(float timeStep)
     renderStatsText.size = renderStatsText.minSize;
 
     // Relayout stats bar
-    Font@ font = cache.GetResource("Font", "Fonts/Anonymous Pro.ttf");
+    Font@ font = cache.GetResource("Font", "Fonts/Roboto.ttf");
 
     if(viewportMode != VIEWPORT_COMPACT)
     {

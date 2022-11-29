@@ -145,7 +145,7 @@ end
 
 desc 'Create a new project'
 task :new, [:name, :parent_dir, :use_copy] => [:init] do |_, args|
-  abort 'The "new" task can only be invoked in the Urho3D project root!' unless first_match(/^# (Urho3D)$/, 'README.md')
+  abort 'The "new" task can only be invoked in the Urho3D project root!' unless first_match(/^# (U3D)$/, 'README.md')
   args.with_defaults(:name => 'UrhoApp', :parent_dir => '~/projects', :use_copy => false)
   name = args[:name]
   parent_dir = verify_path(args[:parent_dir])
@@ -631,7 +631,7 @@ allprojects {
         if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/urho3d/Urho3D")
+                url = uri("https://maven.pkg.github.com/u3d-community/U3D")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
                     password = System.getenv("GITHUB_TOKEN")

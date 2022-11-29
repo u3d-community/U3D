@@ -1,0 +1,52 @@
+name: iOS Build
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-ios
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: 🍎
+    runs-on: macos-latest
+    # Disabled temporarily: https://github.com/u3d-community/U3D/issues/12
+    if: false
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - iOS
+          - tvOS
+    env:
+      HOST: macOS
+      PLATFORM: ${{ matrix.platform }}
+      LIB_TYPE: static
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with: { fetch-depth: 0 }
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_14.0.1.app
+      - name: CMake
+        run: rake cmake
+      - name: Build
+        run: rake build
+      - name: Install
+        run: rake install
+      - name: Scaffolding - new
+        run: rake new
+      - name: Scaffolding - build
+        run: |
+          cd ~/projects/UrhoApp
+          rake
+      - name: Scaffolding - cleanup
+        run: rm -rf ~/{.urho3d,projects}
+      - name: Package
+        run: rake package
+        if: github.event_name == 'push'
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-static-all-rel
+          path: build/ci/*.tar.gz
+        if: github.event_name == 'push'

@@ -20,4 +20,4 @@
 :: THE SOFTWARE.
 ::
 
-@"%~dp0cmake_vs2022.bat" %*
+@"%~dp0cmake_generic.bat" %* -VS=17

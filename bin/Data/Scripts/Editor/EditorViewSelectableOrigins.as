@@ -270,7 +270,7 @@ void CreateOrigin(int index, bool isVisible = false)
 
     originsNames[index] = Text();
     originsNames[index].visible = false;
-    originsNames[index].SetFont(cache.GetResource("Font", "Fonts/Anonymous Pro.ttf"), NAMES_SIZE);
+    originsNames[index].SetFont(cache.GetResource("Font", "Fonts/Roboto.ttf"), NAMES_SIZE);
     originsNames[index].color = ORIGIN_COLOR_TEXT;
     //originsNames[index].textEffect = TE_STROKE;
     originsNames[index].temporary = true;

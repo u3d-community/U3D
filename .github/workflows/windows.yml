@@ -1,0 +1,79 @@
+name: Windows Build
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: 🏁
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - win-vs
+          - win-gcc
+        lib-type:
+          - static
+          - shared
+        graphics-api:
+          - DX11
+          - OpenGL
+    env:
+      HOST: ${{ github.job }}
+      PLATFORM: ${{ matrix.platform }}
+      LIB_TYPE: ${{ matrix.lib-type }}
+      GRAPHICS_API: ${{ matrix.graphics-api }}
+      URHO3D_DOCS: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with: { fetch-depth: 0 }
+      - name: Set cache TTL
+        run: |
+          echo ("CACHE_MONTH=" + $(date '+%b %Y')) >> $env:GITHUB_ENV
+      - name: Cache MinGW installation
+        id: cache-mingw
+        uses: actions/cache@v3
+        if: matrix.platform == 'win-gcc'
+        with:
+          path: C:\ProgramData\chocolatey\lib\mingw
+          key: ${{ env.CACHE_MONTH }}
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        if: matrix.platform == 'win-gcc'
+        with:
+          platform: x64
+      - name: CMake
+        run: rake cmake
+      - name: Build
+        run: rake build
+      - name: Test
+        run: rake test
+        if: matrix.graphics-api != 'OpenGL'
+      - name: Install
+        run: rake install
+      - name: Scaffolding - new
+        run: rake new
+      - name: Scaffolding - build
+        run: |
+          cd ~/projects/UrhoApp
+          rake
+      - name: Scaffolding - test
+        run: |
+          cd ~/projects/UrhoApp
+          rake test
+        if: matrix.graphics-api != 'OpenGL'
+      - name: Scaffolding - cleanup
+        run: rm -r -fo ~/.urho3d, ~/Projects
+      - name: Package
+        run: rake package
+        if: github.event_name == 'push'
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-64-${{ matrix.graphics-api }}-rel
+          path: build/ci/*.zip
+        if: github.event_name == 'push'

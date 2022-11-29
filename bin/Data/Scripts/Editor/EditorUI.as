@@ -852,7 +852,7 @@ Menu@ CreateMenuItem(const String&in title, MENU_CALLBACK@ callback = null, int 
 {
     Menu@ menu = Menu(title);
     menu.defaultStyle = uiStyle;
-    menu.style = AUTO_STYLE;
+    menu.style = "EditorMenuItem";
     menu.SetLayout(LM_HORIZONTAL, 0, IntRect(8, 2, 8, 2));
     if (accelKey > 0)
         menu.SetAccelerator(accelKey, accelQual);
@@ -945,7 +945,7 @@ Window@ CreatePopup(Menu@ baseMenu)
 {
     Window@ popup = Window();
     popup.defaultStyle = uiStyle;
-    popup.style = AUTO_STYLE;
+    popup.style = "EditorMenuPopup";
     popup.SetLayout(LM_VERTICAL, 1, IntRect(2, 6, 2, 6));
     baseMenu.popup = popup;
     baseMenu.popupOffset = IntVector2(0, baseMenu.height);
