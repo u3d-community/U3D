@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2022 the Urho3D project.
+// Copyright (c) 2008-2021 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
 #pragma once
 
 #include "../Core/Variant.h"
+
+#include <fmt/format.h>
 
 namespace Urho3D
 {
@@ -137,6 +139,10 @@ URHO3D_API unsigned ToLower(unsigned ch);
 URHO3D_API String GetFileSizeString(unsigned long long memorySize);
 /// Decode a base64-encoded string into buffer.
 URHO3D_API PODVector<unsigned char> DecodeBase64(String encodedString);
+
+/// Return a formatted string following a python-style str.format syntax.
+inline String FormatString(const char* format_str, fmt::ArgList args);
+
 /// Parse type from a C string.
 template <class T> T FromString(const char* source);
 
@@ -163,5 +169,33 @@ template <> inline Matrix4 FromString<Matrix4>(const char* source) { return ToMa
 
 /// Parse type from a string.
 template <class T> T FromString(const String& source) { return FromString<T>(source.CString()); }
+
+}
+
+namespace fmt
+{
+
+/// Formats a value. Enables passing a String as an argument without calling CString() on it.
+template <typename Char, typename ArgFormatter, typename T>
+void format(BasicFormatter<Char, ArgFormatter> &f,
+            const Char *&format_str, const T &value)
+{
+    typedef internal::MakeArg< BasicFormatter<Char> > MakeArg;
+    format_str = f.format(format_str,MakeArg(value.CString()));
+}
+
+}
+
+namespace Urho3D
+{
+
+/// Return a formatted string following a python-style str.format syntax.
+inline String FormatString(const char* format_str, fmt::ArgList args)
+{
+    fmt::MemoryWriter w;
+    w.write(format_str, args);
+    return String(w.c_str());
+}
+FMT_VARIADIC(String, FormatString, const char*)
 
 }
