@@ -457,7 +457,7 @@ bool TmxFile2D::EndLoad()
     String version = rootElem.GetAttribute("version");
     if (!version.StartsWith("1."))
     {
-        URHO3D_LOGERRORF("Invalid TMX version: %s", version.CString());
+        U3D_LOGERRORF("Invalid TMX version: {}", version.CString());
         return false;
     }
 
