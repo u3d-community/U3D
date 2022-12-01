@@ -1,10 +1,10 @@
-namespace Urho3D
+namespace U3D
 {
 
 /**
 \mainpage Documentation
 
-Urho3D (https://urho3d.io/) is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. It utilizes either Direct3D9 or OpenGL for rendering (%Shader %Model 2 or OpenGL 2.0 required as minimum.)
+U3D (https://urho3d.io/) is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and released under the MIT license. It utilizes either Direct3D9 or OpenGL for rendering (%Shader %Model 2 or OpenGL 2.0 required as minimum.)
 
 For getting started, see:
 
@@ -52,17 +52,17 @@ For further reference, see:
 \ref EventList "Event list (generated)" <br>
 \ref AttributeList "Attribute list (generated)" <br>
 
-For Urho3D related links and projects, see \ref ExternalLinks "External links".
+For U3D related links and projects, see \ref ExternalLinks "External links".
 
 For credits, copyright and licensing information, see \ref Credits & \ref License.
 
 For release history and major changes, see \ref History.
 
-Also see \ref PortingNotes for necessary changes when moving to a newer Urho3D version.
+Also see \ref PortingNotes for necessary changes when moving to a newer U3D version.
 
 \page Credits Credits
 
-Urho3D is greatly inspired by OGRE (http://www.ogre3d.org/) and Horde3D (http://www.horde3d.org/). Additional inspiration & research used:
+U3D is greatly inspired by OGRE (http://www.ogre3d.org/) and Horde3D (http://www.horde3d.org/). Additional inspiration & research used:
 
 - Rectangle packing by Jukka Jyl&auml;nki (clb) (http://clb.demon.fi/projects/rectangle-bin-packing/)
 - Tangent generation from Terathon (http://www.terathon.com/code/tangent.html)
@@ -74,7 +74,7 @@ Urho3D is greatly inspired by OGRE (http://www.ogre3d.org/) and Horde3D (http://
 - Red Black Trees by Julienne Walker (http://eternallyconfuzzled.com/tuts/datastructures/jsw_tut_rbtree.aspx)
 - Comparison of several sorting algorithms by Juha Nieminen (http://warp.povusers.org/SortComparison/)
 
-Urho3D uses the following third-party libraries:
+U3D uses the following third-party libraries:
 
 - AngelScript 2.35.1 WIP (http://www.angelcode.com/angelscript)
 - Boost 1.64.0 (http://www.boost.org) - only used for AngelScript generic bindings
@@ -117,12 +117,12 @@ PBR textures from Substance Share. (https://share.allegorithmic.com)<br>
 IBL textures from HDRLab's sIBL Archive.<br>
 Dieselpunk Moto model by allexandr007.<br>
 Mutant & Kachujin models from Mixamo.<br>
-License / copyright information included with the assets as necessary. All other assets (including shaders) by Urho3D authors and licensed similarly as the engine itself.<br>
+License / copyright information included with the assets as necessary. All other assets (including shaders) by U3D authors and licensed similarly as the engine itself.<br>
 
 
 \page License License
 
-Copyright (c) 2008-2022 the Urho3D project.
+Copyright (c) 2008-2022 the U3D project.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -224,7 +224,7 @@ V1.7
 - %Console auto-completion.
 - %Console text highlighting according to message type.
 - %XMLFile GetOrCreateRoot() function, and %XMLElement GetOrCreateChild() function.
-- Urho3DPlayer attempts to read CommandLine.txt from resource system on all platforms, if cannot read from filesystem.
+- U3DPlayer attempts to read CommandLine.txt from resource system on all platforms, if cannot read from filesystem.
 - Improve use of SDL_Init() so that %Context keeps track of initialized SDL subsystems.
 - IES cookie generation in RampGenerator.
 - %AbstractFile as a parent class for those that implement both %Serializer & %Deserializer.
@@ -260,7 +260,7 @@ V1.7
 - Build system: fix Wayland build.
 - Build system: autodetect availability of clock_gettime() on Apple platforms.
 - Build system: fix package metadata for RPI & ARM platforms.
-- Build system: fix Urho3DAll.h generation in non out-of-source build.
+- Build system: fix U3DAll.h generation in non out-of-source build.
 - Build system: avoid special chars in paths in MRI script passed to ar utility (Web build.)
 - Build system: Always use export header for auto-discovering build options.
 - Build system: use -O2 option for MinGW release build
@@ -311,7 +311,7 @@ V1.7
 - Documentation: do not include RapidJSON classes.
 - Documentation: inverse kinematics page.
 - Sample content: Kachujin model, used in SkeletalAnimation sample.
-- Sample content: new Urho3D logo.
+- Sample content: new U3D logo.
 - Sample content: mutant model added to the CharacterDemo.
 - Sample content: Vertex colors in the standard primitive models.
 - Sample content: fix normals / lighting on the cylinder.
@@ -494,18 +494,18 @@ V1.6
 - Improved multiarch support in auto-detection.
 - Scaffolding rake task improvements.
 - Build speedup improvements.
-- Avoid SDL when building mini Urho3D for PackageTool.
+- Avoid SDL when building mini U3D for PackageTool.
 - Avoid hardcoding sample list in build script.
 - Output option in PackageTool.
-- Enhance Urho3D-CMake-common module to auto find Urho3D library.
+- Enhance U3D-CMake-common module to auto find U3D library.
 - Automatical bumping of year in the source code when crossing to a new year.
 - Move to use subtrees for some thirdparty libraries.
-- For downstream use: auto detect Urho3D lib type from build artifact.
+- For downstream use: auto detect U3D lib type from build artifact.
 - Refactored mechanism to detect CPU instruction extensions for build.
 - Set PCH flags at target level, not compile unit level.
 - Perform cleanup when installing headers to the build tree.
 - try_run logic to auto-discover build options.
-- try_compile mechanism to verify ABI compatibility of found Urho3D library.
+- try_compile mechanism to verify ABI compatibility of found U3D library.
 - SDL build options added: PulseAudio, EGL, Wayland, Mir.
 - LuaJIT related build fixes.
 - Eliminate the need for KNET_UNIX define.
@@ -573,7 +573,7 @@ V1.6
 - Fix depth test potentially disabled in OpenGL by third party programs such as MSI Afterburner (re-enable every frame.)
 - Fix writing rendertarget inverse size uniforms incorrectly (Vector2 instead of Vector4.)
 - Fix off by one error in mipmap data size counting.
-- Fix FindUrho3D CMake module behaving incorrectly when called more than once.
+- Fix FindU3D CMake module behaving incorrectly when called more than once.
 - Fix %PhysicsWorld::GetRigidBodies() to use immediate contact test for static bodies.
 - Fix sampling of depth buffer in read-only mode on D3D11.
 - Fix ForwardDepth renderpath potentially missing depth clear on OpenGL.
@@ -603,7 +603,7 @@ V1.5
 - Improved the navigation / crowd navigation API and examples.
 - SSE and animation performance optimizations.
 - Enable BT_USE_SSE on Linux and MinGW platforms, enable BT_USE_NEON on Android and Raspberry-Pi platforms.
-- Urho3D macros such as OBJECT, EVENT, HANDLER renamed to have URHO3D_ prefix to prevent ambiguity with other libraries.
+- U3D macros such as OBJECT, EVENT, HANDLER renamed to have URHO3D_ prefix to prevent ambiguity with other libraries.
 - Double support to %Variant, %Deserializer, %Serializer & %JSONValue. Store Lua object attributes accurately as doubles.
 - Support for moving nodes & components between scenes, or creating components "sceneless" and moving into a scene later.
 - Cubemap loading from DDS files.
@@ -626,7 +626,7 @@ V1.5
 - Added resource memory usage stats to %DebugHud.
 - Support for ScanDir() on Android.
 - Improve %Variant / VariantMap bindings on Lua.
-- Improve internal mechanisms for Lua bindings, e.g. store Urho3D context inside Lua state global table.
+- Improve internal mechanisms for Lua bindings, e.g. store U3D context inside Lua state global table.
 - Improve API for kNet connection stats.
 - Improve AngelScript GetChildrenWithClassName() to return also derived classes.
 - Improve %UI tab behavior
@@ -669,13 +669,13 @@ V1.5
 - Support non-PCH build.
 - Support spaces in path for build.
 - Install d3dcompiler DLL to bin directory for Windows / D3D builds.
-- Improved Urho3D DLL installation logic.
+- Improved U3D DLL installation logic.
 - More user-friendly operation for missing HTML help compiler or dot.
 - Symlink assets to the build binary directory.
 - Allow installed sample executables to run out-of-the-box on Windows.
 - Reformatting of source code to get rid of indents on empty lines.
 - %Script subdirectory in the engine source renamed to AngelScript.
-- Option to build Urho3D without threading (URHO3D_THREADING). Normally disabled on Emscripten but can be enabled for experimental development on browsers with included support.
+- Option to build U3D without threading (URHO3D_THREADING). Normally disabled on Emscripten but can be enabled for experimental development on browsers with included support.
 - Improved documentation on contributing and 3rd party library policy.
 - Update AngelScript to 2.30.2.
 - Update Assimp to September 2015 revision.
@@ -779,13 +779,13 @@ V1.4
 - Dynamic audio types instead of hardcoded.
 - Dynamic cursor image type definitions.
 - Added various material techniques.
-- Allow reading Data/CommandLine.txt on all platforms, if Urho3DPlayer is started without parameters.
+- Allow reading Data/CommandLine.txt on all platforms, if U3DPlayer is started without parameters.
 - LOD level support in %Terrain collision shape.
 - Reduce cost of rendering multiple materials with same shader parameter values, reduce shader switching cost on D3D9, and other rendering efficiency optimizations.
 - Refactored event subscription mechanism with Lua.
 - Add SpritePacker utility.
 - User configurable indentation for XML and JSON files.
-- %Controls class moved away from %Network subdirectory to allow using when Urho3D is built without networking.
+- %Controls class moved away from %Network subdirectory to allow using when U3D is built without networking.
 - MOBILE_GRAPHICS & DESKTOP_GRAPHICS defines for graphics capability level, to avoid hardcoded platform checks.
 - Remove bell sound when pressing Alt key combinations on Windows.
 - 8-bit time stamp added to client controls sent over the network. Allow to intercept attribute updates from network. These features should allow writing custom clientside prediction.
@@ -793,7 +793,7 @@ V1.4
 - Fill mode added to materials.
 - AngelScript script objects can be stored in a %Variant.
 - Improved attribute registration: class name and variant type not needed.
-- Add new rake tasks to facilitate configuring/generating and building Urho3D project, including downstream project using Urho3D library.
+- Add new rake tasks to facilitate configuring/generating and building U3D project, including downstream project using U3D library.
 - Update PugiXml to 1.5.
 - Update STB libraries to latest.
 - Editor: particle effect editor window.
@@ -822,7 +822,7 @@ V1.4
 - Fix wrong camera aspect ratio after modifying orthographic size.
 - Fix "lightvolumes" render path command not allowing custom shader defines.
 - Fix %AnimatedSprite2D not hiding child sprites when disabled.
-- Fix missing export specifiers for some Urho3D classes.
+- Fix missing export specifiers for some U3D classes.
 - Fix additive particle scale modification making the particle size negative.
 - Fix screen orientation issue on iOS 8.
 - Fix multiple view rendering for 2D drawables.
@@ -833,7 +833,7 @@ V1.4
 - Fix NaN check working incorrectly on GCC.
 - Fix possible wrong logic when a component is removed from a scene node, as opposed to being destroyed.
 - Fix tab escape sequences in the generated script documentation.
-- Fix warnings that leak into Urho3D applications.
+- Fix warnings that leak into U3D applications.
 - Fix being able to create a REPLICATED component into a LOCAL node.
 - Fix negative light direction from Assimp with certain 3D file formats.
 - Fix spot light FOV handling with Assimp.
@@ -942,7 +942,7 @@ V1.32
 - Allow to specify material techniques/passes that should not be used on mobile devices.
 - Reduced default shadow mapping issues on mobile devices.
 - Minor rendering optimizations.
-- Build system: possibility to build Urho3D without networking or 2D graphics functionality.
+- Build system: possibility to build U3D without networking or 2D graphics functionality.
 - Build system: improved generated scripting documentation.
 - Build system: improved support for IDE's in CMake scripts.
 - Build system: support up to Android NDK r10c and 64-bit ABIs.
@@ -992,9 +992,9 @@ V1.32
 - Fix erroneous raycast to triangles behind the ray.
 - Fix crash when multiple AnimatedModels exist in a node and the master model is destroyed.
 - Fix missing %Matrix4 * %Matrix3x4 operator in script.
-- Fix various compile warnings that leak to applications using Urho3D.
+- Fix various compile warnings that leak to applications using U3D.
 - Fix %DebugHud update possibly being late one frame.
-- Fix various macros not being usable outside Urho3D namespace.
+- Fix various macros not being usable outside U3D namespace.
 - Fix erroneous layout with wordwrap text elements.
 - Fix debug geometry rendering on flipped OpenGL viewports.
 - Fix kNet debug mode assert with zero sized messages.
@@ -1014,7 +1014,7 @@ V1.32
 
 V1.31
 
-- Extensive build system improvements, especially for using Urho3D as a library in an downstream project.
+- Extensive build system improvements, especially for using U3D as a library in an downstream project.
 - LuaJIT support.
 - Improved Lua bindings, Lua coroutine support, automatic loading of compiled Lua scripts (.luc) if they exist.
 - HDR rendering, 3D textures, height fog and several new post process shaders.
@@ -1169,15 +1169,15 @@ V1.0
 
 Related projects:
 
-- Blender to Urho3D mesh exporter (https://github.com/reattiva/Urho3D-Blender)
+- Blender to U3D mesh exporter (https://github.com/reattiva/U3D-Blender)
 
-- ParticleEditor2D for Urho3D (https://github.com/aster2013/ParticleEditor2D)
+- ParticleEditor2D for U3D (https://github.com/aster2013/ParticleEditor2D)
 
-- Urho3D libRocket Integration (https://github.com/realrunner/urho3d-librocket)
+- U3D libRocket Integration (https://github.com/realrunner/urho3d-librocket)
 
-- Consolidated Urho3D extra samples (https://github.com/Lumak/Urho3D-Extra-Samples)
+- Consolidated U3D extra samples (https://github.com/Lumak/U3D-Extra-Samples)
 
-Projects using Urho3D:
+Projects using U3D:
 
 - heXon - a twin-stick-shooter for up to four players (https://github.com/LucKeyProductions/heXon)
 
@@ -1188,7 +1188,7 @@ Projects using Urho3D:
 From 1.4 to 1.5:
 
 - Urho preprocessor macros are now prefixed URHO3D_ , for example URHO3D_LOGINFO, URHO3D_HANDLER, URHO3D_DEFINE_APPLICATION_MAIN.
-- Build system - for projects using GCC/Clang compiler toolchain, set the URHO3D_DEPLOYMENT_TARGET build option according to the target audience of the downstream projects. The default value for this build option is 'native' which is great for Urho3D newbie but may potentially cause issue when this build option is not observed and set accordingly for production. The same is true for CMAKE_OSX_DEPLOYMENT_TARGET and IPHONEOS_DEPLOYMENT_TARGET build options when targeting macOS and iOS platforms, however, the latter two build options are not new.
+- Build system - for projects using GCC/Clang compiler toolchain, set the URHO3D_DEPLOYMENT_TARGET build option according to the target audience of the downstream projects. The default value for this build option is 'native' which is great for U3D newbie but may potentially cause issue when this build option is not observed and set accordingly for production. The same is true for CMAKE_OSX_DEPLOYMENT_TARGET and IPHONEOS_DEPLOYMENT_TARGET build options when targeting macOS and iOS platforms, however, the latter two build options are not new.
 
 From 1.5 to 1.6:
 
@@ -1203,9 +1203,9 @@ From 1.5 to 1.6:
 - Deferred lighting calculations are now performed in true world space, instead of camera-centered world space.
 - SoundSource autoremove functionality is deprecated and will be removed in the future. The SoundFinished event can be used instead to react to playback finishing and to perform the necessary action, for example to remove the sound component or its owner node.
 - String add operator with char parameter has been removed due to danger of truncating e.g. an int. Replace with adding a string literal (if applicable) or using add-assign or Append() function.
-- Build system - Windows users need to upgrade CMake version to 3.2.3 or higher. CMake version 3.2.3 will be the minimum version required for building Urho3D library on any host systems in the future releases. Mac users need to upgrade CMake version to 3.4.1 or higher when using URHO3D_LUAJIT build option.
-- Build system - the inclusion of Urho3D-CMake-common.cmake module into downstream project's CMakeLists.txt would implicitly instruct CMake to find all the required software packages, including Urho3D library. There is no need now for downstream's CMakeLists.txt to call "find_package (Urho3D)" explicitly, to avoid the Urho3D library from being searched twice. The enhanced FindUrho3D.cmake module now auto-discovers the build options used when building Urho3D library and reapply them to downstream projects. There is no need for users to remember and to supply the same set of build options when performing the initial configuration/generation of the downstream project's build tree.
-- Build system - the Urho3DAll.h header file is now auto-generated for downstream project that needs it. It is not a good practice though to use this "convenience header" as it would slow down the build process unnecessarily.
+- Build system - Windows users need to upgrade CMake version to 3.2.3 or higher. CMake version 3.2.3 will be the minimum version required for building U3D library on any host systems in the future releases. Mac users need to upgrade CMake version to 3.4.1 or higher when using URHO3D_LUAJIT build option.
+- Build system - the inclusion of U3D-CMake-common.cmake module into downstream project's CMakeLists.txt would implicitly instruct CMake to find all the required software packages, including U3D library. There is no need now for downstream's CMakeLists.txt to call "find_package (U3D)" explicitly, to avoid the U3D library from being searched twice. The enhanced FindU3D.cmake module now auto-discovers the build options used when building U3D library and reapply them to downstream projects. There is no need for users to remember and to supply the same set of build options when performing the initial configuration/generation of the downstream project's build tree.
+- Build system - the U3DAll.h header file is now auto-generated for downstream project that needs it. It is not a good practice though to use this "convenience header" as it would slow down the build process unnecessarily.
 
 From 1.6 to 1.7:
 
@@ -1228,7 +1228,7 @@ From 1.6 to 1.7:
 - Graphics::SetMode(), Graphics::GetDesktopResolution() and Graphics::GetResolutions() have gained an extra parameter to specify the monitor to use. Use Graphics::GetMonitorCount() to get the number of attached monitors. Monitor number 0 means the default primary monitor.
 - P_CONTACT parameter was removed from 2D physics collision events. Use P_CONTACTS buffer instead.
 - GetPlatform() function returns "macOS" instead of "Mac OS X".
-- Build system - the "Urho3D-CMake-common.cmake" file is now renamed to "UrhoCommon.cmake".
+- Build system - the "U3D-CMake-common.cmake" file is now renamed to "UrhoCommon.cmake".
 - Build system - downstream project is now responsible to add the HTML shell-file by calling the add_html_shell() macro or by passing "HTML_SHELL" option when calling the define_resource_dirs() in order to generate the HTML output when targeting Web platform, i.e. the build system defaults to JS output now, except when URHO3D_TESTING build option is set. When URHO3D_TESTING is set then it is assumed the output should be test runnable by using emrun, therefore the build system will automatically add the default HTML shell-file if none has been added yet.
 - Build system - when targeting macOS platform, the build tree will be configured to only target x86_64 arch by default as we are phasing out 32-bit mode. Use the URHO3D_UNIVERSAL build option, if you still want the universal binary build.
 
@@ -1241,7 +1241,7 @@ From 1.7 to master:
 - Build system - integrate with Gradle build system and migration to use Kotlin for Android platform.
 - Build system - introduce a new Emscripten-specific build option "EMSCRIPTEN_AUTO_SHELL" (default to TRUE), which cause the build system to automatically add an HTML shell-file if one is not explicitly given. Switch to LLVM WASM backend with the implication of removing the "EMSCRIPTEN_WASM" build option (WASM is now always enabled and we do not support asm.js anymore), also removing the SHARED and MODULE library types for Web platform (they do not build correctly with LLVM backend).
 - Build system - the 'WIN32' build option for 'cmake_generic.sh' is renamed to 'MINGW' to be consistent with 'cmake_generic.bat'.
-- Build system - CMake version 3.10.2 is now minimum version required for building Urho3D library on any host systems, except when targeting Android where version 3.17.3 is required.
+- Build system - CMake version 3.10.2 is now minimum version required for building U3D library on any host systems, except when targeting Android where version 3.17.3 is required.
 - Build system - RPI_ABI build option values are simplified to 'RPI0', 'RPI1', 'RPI2', 'RPI3', and 'RPI4'. Added 64-bit build support on RPI 4.
 - Build system: Reconfigure Apple build to not using the 'no_weak_imports' linker flags. This means the new build artifacts may not run correctly on old macOS/iOS/tvOS.  It is up to the devs to handle the weak symbols during runtime in their own apps if they needs to be run on old systems.
 
