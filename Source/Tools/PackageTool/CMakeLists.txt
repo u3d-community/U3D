@@ -86,6 +86,7 @@ if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
         set (LIBS LibCpuId)
     endif ()
     add_subdirectory (${BAKED_CMAKE_SOURCE_DIR}/Source/ThirdParty/LZ4 host/LZ4)
+    add_subdirectory (${BAKED_CMAKE_SOURCE_DIR}/Source/ThirdParty/fmt host/fmt)
     set (INCLUDE_DIRS ${BAKED_CMAKE_BINARY_DIR}/include ${BAKED_CMAKE_BINARY_DIR}/include/Urho3D ${CMAKE_BINARY_DIR}/${DEST_INCLUDE_DIR}/ThirdParty)
 endif ()
 
@@ -99,7 +100,7 @@ set (TARGET_NAME PackageTool${POSTFIX})
 define_source_files (EXTRA_CPP_FILES ${MINI_URHO_CPP_FILES})
 
 # Define dependency libs
-list (APPEND LIBS LZ4)
+list (APPEND LIBS LZ4 fmt)
 
 # Setup target
 setup_executable (TOOL)
