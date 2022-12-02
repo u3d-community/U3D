@@ -17,6 +17,7 @@
 //
 
 // Modified by Lasse Oorni, Yao Wei Tjong, 1vanK and cosmy1 for Urho3D
+// Updated 12/2022 by WyrdanGames for U3D
 
 #define _USE_MATH_DEFINES
 #include <string.h>
@@ -389,7 +390,6 @@ void dtCrowd::purge()
 bool dtCrowd::init(const int maxAgents, const float maxAgentRadius, dtNavMesh* nav, dtUpdateCallback cb)
 {
 	purge();
-	
 	m_updateCallback = cb; // Urho3D
 	m_maxAgents = maxAgents;
 	m_maxAgentRadius = maxAgentRadius;
@@ -570,7 +570,7 @@ int dtCrowd::addAgent(const float* pos, const dtCrowdAgentParams* params)
 	ag->targetState = DT_CROWDAGENT_TARGET_NONE;
 	
 	ag->active = true;
-	
+
 	// Urho3D: added to fix illegal memory access when ncorners is queried before the agent has updated
 	ag->ncorners = 0;
 
@@ -1378,7 +1378,7 @@ void dtCrowd::update(const float dt, dtCrowdAgentDebugInfo* debug)
 				}
 				
 				// Urho3D: Avoid tremble when another agent can not move away
-				if (ag->params.separationWeight < 0.0001f) 
+				if (ag->params.separationWeight < 0.0001f)
 					continue;
 				
 				dtVmad(ag->disp, ag->disp, diff, pen);			
@@ -1424,15 +1424,18 @@ void dtCrowd::update(const float dt, dtCrowdAgentDebugInfo* debug)
 		// Urho3D: Add update callback support
 		if (m_updateCallback)
 			(*m_updateCallback)(ag, dt);
+
 	}
 	
 	// Update agents using off-mesh connection.
-	for (int i = 0; i < m_maxAgents; ++i)
+	for (int i = 0; i < nagents; ++i)
 	{
-		dtCrowdAgentAnimation* anim = &m_agentAnims[i];
+		dtCrowdAgent* ag = agents[i];
+		const int idx = (int)(ag - m_agents);
+		dtCrowdAgentAnimation* anim = &m_agentAnims[idx];
 		if (!anim->active)
 			continue;
-		dtCrowdAgent* ag = agents[i];
+		
 
 		anim->t += dt;
 		if (anim->t > anim->tmax)
