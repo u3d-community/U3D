@@ -257,12 +257,12 @@ int main(int argc, char** argv)
 
 void Run(const Vector<String>& arguments)
 {
-    if (arguments.Size() < 2)
+    if (arguments.Size() < 1)
     {
         ErrorExit(
-            "Usage: AssetImporter <command> <input file> <output file> [options]\n"
-            "See http://assimp.sourceforge.net/main_features_formats.html for input formats\n\n"
+            "Usage: AssetImporter <command> <input file> <output file> [options]\n\n"
             "Commands:\n"
+            "list        List available formats for import\n"
             "model       Output a model\n"
             "anim        Output animation(s)\n"
             "scene       Output a scene\n"
@@ -572,8 +572,7 @@ void Run(const Vector<String>& arguments)
             if (!noTextures_)
                 CopyTextures(usedTextures, GetPath(inFile));
         }
-    }
-    else if (command == "lod")
+    } else if (command == "lod")
     {
         PODVector<float> lodDistances;
         Vector<String> modelNames;
@@ -611,9 +610,14 @@ void Run(const Vector<String>& arguments)
         }
 
         CombineLods(lodDistances, modelNames, outFile);
-    }
-    else
+    } else if (command == "list") {
+        aiString list;
+        aiGetExtensionList(&list);
+        PrintLine("Supported formats:\n");
+        PrintLine(list.C_Str());
+    } else {
         ErrorExit("Unrecognized command " + command);
+    }
 }
 
 void DumpNodes(aiNode* rootNode, unsigned level)

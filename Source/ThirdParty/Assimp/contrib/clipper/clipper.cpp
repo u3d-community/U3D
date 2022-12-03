@@ -86,6 +86,13 @@ class Int128
 
     Int128(const Int128 &val): hi(val.hi), lo(val.lo){}
 
+    Int128 operator = (const Int128 &val)
+    {
+        lo = val.lo;
+        hi = val.hi;
+        return val;
+    }
+
     long64 operator = (const long64 &val)
     {
       lo = val;
@@ -371,6 +378,9 @@ inline bool PointsEqual( const IntPoint &pt1, const IntPoint &pt2)
 
 bool Orientation(OutRec *outRec, bool UseFullInt64Range)
 {
+  if (!outRec->pts)
+    return 0.0;
+
   //first make sure bottomPt is correctly assigned ...
   OutPt *opBottom = outRec->pts, *op = outRec->pts->next;
   while (op != outRec->pts)
@@ -434,6 +444,9 @@ double Area(const Polygon &poly)
 
 double Area(const OutRec &outRec, bool UseFullInt64Range)
 {
+  if (!outRec.pts)
+    return 0.0;
+
   OutPt *op = outRec.pts;
   if (UseFullInt64Range) {
     Int128 a(0);
@@ -3085,9 +3098,9 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       FixupOutPolygon(*outRec1);
       FixupOutPolygon(*outRec2);
 
-      if (Orientation(outRec1, m_UseFullRange) != (Area(*outRec1, m_UseFullRange) > 0))
+      if (outRec1->pts && (Orientation(outRec1, m_UseFullRange) != (Area(*outRec1, m_UseFullRange) > 0)))
           DisposeBottomPt(*outRec1);
-      if (Orientation(outRec2, m_UseFullRange) != (Area(*outRec2, m_UseFullRange) > 0))
+      if (outRec2->pts && (Orientation(outRec2, m_UseFullRange) != (Area(*outRec2, m_UseFullRange) > 0)))
           DisposeBottomPt(*outRec2);
 
     } else
