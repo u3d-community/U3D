@@ -9,8 +9,6 @@ jobs:
   ios:
     name: 🍎
     runs-on: macos-latest
-    # Disabled temporarily: https://github.com/u3d-community/U3D/issues/12
-    if: false
     strategy:
       fail-fast: false
       matrix:
