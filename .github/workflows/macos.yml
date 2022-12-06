@@ -9,8 +9,6 @@ jobs:
   macOS:
     name: 🍎
     runs-on: macos-latest
-    # Disabled temporarily: https://github.com/u3d-community/U3D/issues/12
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -24,9 +22,6 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       LIB_TYPE: ${{ matrix.lib-type }}
       CMAKE_OSX_ARCHITECTURES: x86_64
-      URHO3D_LUA: 0
-      URHO3D_LUAJIT: 0
-      URHO3D_DATABASE_SQLITE: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v3
