@@ -464,7 +464,7 @@ if (XCODE)
         list (APPEND TARGET_PROPERTIES XCODE_ATTRIBUTE_ARCHS ${ARCH})
     elseif (URHO3D_64BIT OR ARM)
         set (EXCLUDE_FROM_ALL EXCLUDE_FROM_ALL)
-        list (APPEND TARGET_PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
+        # TODO: The following seems possibly incorrect - when does armv7 get built at all with the given options?
         if (URHO3D_64BIT AND ARM)
             list (APPEND TARGET_PROPERTIES XCODE_ATTRIBUTE_ARCHS arm64)     # The ARCHS_STANDARD builds armv7 first, but we have setup LuaJIT target detection to detect arm64 as the default arch so we override Xcode to build arm64 first
         endif ()

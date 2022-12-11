@@ -56,10 +56,10 @@ add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c
     ${UPDATE_COMMAND}
     DEPENDS ${TOLUA} tolua_scons.pkg
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating toluabind.c and toluabind.h")
+    COMMENT "Generating toluabind.c and toluabind.h. Warning: tolua++ is built using the original toluabind.c. To use the newly generated one, build once with URHO3D_UPDATE_SOURCE_TREE=1 to update toluabind.c and then rebuild a second time to build tolua++ using it.")
 
-# Define source files
-define_source_files (EXTRA_CPP_FILES tolua.c ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c)
+# Define source files. Will use the old toluabind.c even with URHO3D_UPDATE_SOURCE_TREE, so we must either build tolua++ twice or have the user run the build twice.
+define_source_files (EXTRA_CPP_FILES tolua.c toluabind.c)
 
 # Define dependency libs
 set (LIBS toluapp Lua)
@@ -70,3 +70,7 @@ set (INCLUDE_DIRS ../../include ../../../../ThirdParty/Lua/src)
 
 # Setup target
 setup_executable (TOOL NODEPS)
+
+# Wrapper target for tolua++ executable to be used externally.
+add_custom_target (tolua++bin 
+	DEPENDS tolua++ ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c)
