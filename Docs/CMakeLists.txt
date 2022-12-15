@@ -125,9 +125,17 @@ if (DOXYGEN_FOUND)
         endforeach ()
     endif ()
     file (GLOB DOX_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.dox)
+
+    add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/doxygen-awesome.css
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/doxygen-awesome.css ${CMAKE_CURRENT_BINARY_DIR}/generated/doxygen-awesome.css)
+
+    add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/logo.svg
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../SourceAssets/Logo.svg ${CMAKE_CURRENT_BINARY_DIR}/generated/logo.svg)
+
     add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
         COMMAND ${DOXYGEN_EXECUTABLE} generated/Doxyfile ${REDIRECT_STDOUT}
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/Doxyfile ${DOX_FILES} ${CMAKE_CURRENT_BINARY_DIR}/generated/ScriptAPI.dox ${CMAKE_CURRENT_BINARY_DIR}/generated/LuaScriptAPI.dox
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/Doxyfile ${DOX_FILES} ${CMAKE_CURRENT_BINARY_DIR}/generated/ScriptAPI.dox ${CMAKE_CURRENT_BINARY_DIR}/generated/LuaScriptAPI.dox ${CMAKE_CURRENT_BINARY_DIR}/generated/doxygen-awesome.css ${CMAKE_CURRENT_BINARY_DIR}/generated/logo.svg
         COMMENT "Generating documentation with Doxygen")
     add_custom_target (doc ${ALL}
         ${UPDATE_COMMANDS}

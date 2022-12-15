@@ -1,13 +1,23 @@
-name: QA
-on: [push, pull_request]
+name: Documentation
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-qa
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-docs
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  qa:
-    name: 🔬 Quality Assurance
+  docs:
+    name: 📖 Documentation
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -18,6 +28,7 @@ jobs:
       LIB_TYPE: shared
       ARCH: 64
       DBE_TAG: master
+      URHO3D_DOCS: 1
       USE_CCACHE: 1
       LLVM_USE_SPLIT_DWARF: 1
       LLVM_ENABLE_ASSERTIONS: 1
@@ -38,17 +49,13 @@ jobs:
           restore-keys: |
             ${{ env.PLATFORM }}-${{ env.LIB_TYPE }}-${{ env.ARCH }}-${{ env.BUILD_TYPE }}-${{ env.DBE_TAG }}
             ${{ env.PLATFORM }}-${{ env.LIB_TYPE }}-${{ env.ARCH }}-${{ env.BUILD_TYPE }}
-      - name: DBE
-        run: rake update_dot_files && script/dockerized.sh ${PLATFORM/-*} env
       - name: CMake
         run: script/dockerized.sh ${PLATFORM/-*} rake cmake
-      - name: Build
-        run: script/dockerized.sh ${PLATFORM/-*} rake build
-      - name: Lint
-        run: script/dockerized.sh ${PLATFORM/-*} rake lint
-        if: false # Disable linting for now
-      - name: Style
-        run: script/dockerized.sh ${PLATFORM/-*} rake style
       - name: Documentation
         run: script/dockerized.sh ${PLATFORM/-*} rake doc
-
+      - name: Deploy Documentation to Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./Docs/html/
+          destination_dir: docs
