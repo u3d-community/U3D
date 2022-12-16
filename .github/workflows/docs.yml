@@ -1,4 +1,4 @@
-name: Documentation
+name: 📖 Documentation
 on:
   push:
     branches:
@@ -10,52 +10,32 @@ concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-docs
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
 
 jobs:
   docs:
-    name: 📖 Documentation
+    name: Docs
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-    env:
-      HOST: linux
-      PLATFORM: linux-clang
-      BUILD_TYPE: dbg
-      LIB_TYPE: shared
-      ARCH: 64
-      DBE_TAG: master
-      URHO3D_DOCS: 1
-      USE_CCACHE: 1
-      LLVM_USE_SPLIT_DWARF: 1
-      LLVM_ENABLE_ASSERTIONS: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with: { fetch-depth: 0 }
-      - name: Source checksum
-        id: source_checksum
-        run: rake source_checksum
+
       - name: Cache
         uses: actions/cache@v3
         with:
-          path: |
-            build/cache/.ccache
-          key: |
-            ${{ env.PLATFORM }}-${{ env.LIB_TYPE }}-${{ env.ARCH }}-${{ env.BUILD_TYPE }}-${{ env.DBE_TAG }}-${{ steps.source_checksum.outputs.hexdigest }}
+          path: ${{ env.CCACHE_DIR }}
+          key: linux-static-Release-${{ github.sha }}
           restore-keys: |
-            ${{ env.PLATFORM }}-${{ env.LIB_TYPE }}-${{ env.ARCH }}-${{ env.BUILD_TYPE }}-${{ env.DBE_TAG }}
-            ${{ env.PLATFORM }}-${{ env.LIB_TYPE }}-${{ env.ARCH }}-${{ env.BUILD_TYPE }}
+            linux-static-Release-
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential ccache doxygen graphviz libasound2-dev libdbus-1-dev libgl1-mesa-dev libglew-dev libibus-1.0-dev libpulse-dev libreadline6-dev libtbb-dev libudev-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev libxss-dev pkg-config uuid-dev
+
       - name: CMake
-        run: script/dockerized.sh ${PLATFORM/-*} rake cmake
-      - name: Documentation
-        run: script/dockerized.sh ${PLATFORM/-*} rake doc
-      - name: Deploy Documentation to Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./Docs/html/
-          destination_dir: docs
+        run: cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DURHO3D_LIB_TYPE=static -DURHO3D_DOCS=1 -DURHO3D_PLAYER=0 -DURHO3D_PROFILING=0 -DURHO3D_SAMPLES=0 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build
+        run: cmake --build build --parallel 2 --target all --config Release -- -j2

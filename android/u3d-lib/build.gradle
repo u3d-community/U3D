@@ -1,0 +1,93 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'io.u3d.engine'
+    compileSdk 32
+
+    defaultConfig {
+        minSdk 18
+        targetSdk 32
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID=1',
+                '-DURHO3D_LIB_TYPE=' + System.getenv("LIB_TYPE") ?: "STATIC",
+                '-DURHO3D_PCH=OFF',
+                '-DURHO3D_SAMPLES=OFF',
+                '-DURHO3D_PLAYER=OFF',
+                '-DURHO3D_EXTRAS=OFF'
+            }
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    externalNativeBuild {
+        cmake {
+            path file('../../CMakeLists.txt')
+            version '3.22.1+'
+        }
+    }
+    sourceSets {
+        named("main") {
+            java.srcDir("../../Source/ThirdParty/SDL/android-project/app/src/main/java")
+        }
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'io.u3d'
+            artifactId = 'engine-' + System.getenv("BUILD_ID") ?: "master"
+            version = '1.0'
+
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/u3d-community/U3D"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}

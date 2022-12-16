@@ -1,0 +1,49 @@
+name: 🌎 Web
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-web
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Release
+          #- Debug
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # - name: Cache
+      #   id: cache-system-libraries
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: emsdk-cache
+      #     key: emsdk-${{ runner.os }}
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential libasound2-dev libdbus-1-dev libgl1-mesa-dev libglew-dev libibus-1.0-dev libpulse-dev libreadline6-dev libtbb-dev libudev-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev libxss-dev ninja-build pkg-config uuid-dev
+
+      - name: Emscripten
+        uses: mymindstorm/setup-emsdk@v11
+        with:
+          #actions-cache-folder: 'emsdk-cache'
+          no-cache: true
+          version: 3.1.17
+
+      - name: Verify Emscripten
+        run: |
+          emcc -v
+
+      - name: CMake
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=static -DEMSCRIPTEN_SHARE_DATA=1 -DWEB=1 -DURHO3D_PROFILING=0
+
+      - name: Build
+        run: cmake --build build --parallel 2 --config ${{ matrix.build-type }} -- -w dupbuild=warn

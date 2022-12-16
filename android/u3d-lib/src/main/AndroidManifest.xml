@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="io.urho3d">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- OpenGL ES 2.0 -->
     <uses-feature android:glEsVersion="0x00020000"/>
@@ -8,6 +9,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <!-- Allows applications to discover and pair bluetooth devices-->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <!-- Allow opening network sockets -->
     <uses-permission android:name="android.permission.INTERNET"/>
