@@ -1,6 +1,10 @@
 <div align="center">
 <a href="https://u3d.io">
-  <img src="https://raw.githubusercontent.com/u3d-community/U3D/master/SourceAssets/Logo.svg" width="200" alt="U3D Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/u3d-community/U3D/master/SourceAssets/LogoDark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/u3d-community/U3D/master/SourceAssets/Logo.svg">
+    <img width="200" alt="U3D Logo" src="https://raw.githubusercontent.com/u3d-community/U3D/master/SourceAssets/Logo.svg">
+  </picture>
 </a>
 
 # U3D
