@@ -14,7 +14,7 @@ jobs:
       matrix:
         platform:
           - iOS
-          #- tvOS
+          - tvOS
         lib-type:
           - static
           - shared
@@ -29,7 +29,7 @@ jobs:
         run: sudo xcode-select --switch /Applications/Xcode_14.0.1.app
 
       - name: CMake
-        run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=11 -DCMAKE_OSX_DEPLOYMENT_TARGET=11 -DIOS=1
+        run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=11 -DCMAKE_OSX_DEPLOYMENT_TARGET=11 ${{ matrix.platform == 'iOS' && '-DIOS=1' || '-DIOS=0' }} ${{ matrix.platform == 'tvOS' && '-DTVOS=1' || '-DTVOS=0' }}
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build-type }}
