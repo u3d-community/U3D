@@ -107,7 +107,7 @@ bool XMLFile::BeginLoad(Deserializer& source)
             cache->GetTempResource<XMLFile>(inherit);
         if (!inheritedXMLFile)
         {
-            URHO3D_LOGERRORF("Could not find inherited XML file: %s", inherit.CString());
+            URHO3D_LOGERROR("Could not find inherited XML file: {}", inherit.CString());
             return false;
         }
 
@@ -210,7 +210,7 @@ void XMLFile::Patch(const XMLElement& patchElement)
         pugi::xpath_node original = document_->select_single_node(sel.value());
         if (!original)
         {
-            URHO3D_LOGERRORF("XML Patch failed with bad select: %s.", sel.value());
+            URHO3D_LOGERROR("XML Patch failed with bad select: {}.", sel.value());
             continue;
         }
 
@@ -230,7 +230,7 @@ void XMLFile::PatchAdd(const pugi::xml_node& patch, pugi::xpath_node& original) 
     // If not a node, log an error
     if (original.attribute())
     {
-        URHO3D_LOGERRORF("XML Patch failed calling Add due to not selecting a node, %s attribute was selected.",
+        URHO3D_LOGERROR("XML Patch failed calling Add due to not selecting a node, {} attribute was selected.",
             original.attribute().name());
         return;
     }
@@ -350,7 +350,7 @@ void XMLFile::AddAttribute(const pugi::xml_node& patch, const pugi::xpath_node& 
 
     if (!patch.first_child() && patch.first_child().type() != pugi::node_pcdata)
     {
-        URHO3D_LOGERRORF("XML Patch failed calling Add due to attempting to add non text to an attribute for %s.", attribute.value());
+        URHO3D_LOGERROR("XML Patch failed calling Add due to attempting to add non text to an attribute for {}.", attribute.value());
         return;
     }
 

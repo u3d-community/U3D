@@ -156,7 +156,7 @@ void Urho2DStretchableSprite::HandleUpdate(StringHash /*eventType*/, VariantMap&
         break;
     case 2: TranslateSprites(timeStep);
         break;
-    default: URHO3D_LOGERRORF("bad transform selection: %d", selectTransform_);
+    default: URHO3D_LOGERROR("bad transform selection: {}", selectTransform_);
     }
 }
 

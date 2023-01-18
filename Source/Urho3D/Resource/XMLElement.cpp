@@ -1036,8 +1036,8 @@ XPathResultSet& XPathResultSet::operator =(const XPathResultSet& rhs)
 XMLElement XPathResultSet::operator [](unsigned index) const
 {
     if (!resultSet_)
-        URHO3D_LOGERRORF(
-            "Could not return result at index: %u. Most probably this is caused by the XPathResultSet not being stored in a lhs variable.",
+        URHO3D_LOGERROR(
+            "Could not return result at index: {}. Most probably this is caused by the XPathResultSet not being stored in a lhs variable.",
             index);
 
     return resultSet_ && index < Size() ? XMLElement(file_, this, &resultSet_->operator [](index), index) : XMLElement();

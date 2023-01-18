@@ -431,7 +431,7 @@ bool File::OpenInternal(const String& fileName, FileMode mode, bool fromPackage)
     auto* fileSystem = GetSubsystem<FileSystem>();
     if (fileSystem && !fileSystem->CheckAccess(GetPath(fileName)))
     {
-        URHO3D_LOGERRORF("Access denied to %s", fileName.CString());
+        URHO3D_LOGERROR("Access denied to {}", fileName.CString());
         return false;
     }
 
@@ -453,7 +453,7 @@ bool File::OpenInternal(const String& fileName, FileMode mode, bool fromPackage)
         assetHandle_ = SDL_RWFromFile(URHO3D_ASSET(fileName), "rb");
         if (!assetHandle_)
         {
-            URHO3D_LOGERRORF("Could not open Android asset file %s", fileName.CString());
+            URHO3D_LOGERROR("Could not open Android asset file {}", fileName.CString());
             return false;
         }
         else
@@ -490,7 +490,7 @@ bool File::OpenInternal(const String& fileName, FileMode mode, bool fromPackage)
 
     if (!handle_)
     {
-        URHO3D_LOGERRORF("Could not open file %s", fileName.CString());
+        URHO3D_LOGERROR("Could not open file {}", fileName.CString());
         return false;
     }
 
@@ -501,7 +501,7 @@ bool File::OpenInternal(const String& fileName, FileMode mode, bool fromPackage)
         fseek((FILE*)handle_, 0, SEEK_SET);
         if (size > M_MAX_UNSIGNED)
         {
-            URHO3D_LOGERRORF("Could not open file %s which is larger than 4GB", fileName.CString());
+            URHO3D_LOGERROR("Could not open file {} which is larger than 4GB", fileName.CString());
             Close();
             size_ = 0;
             return false;

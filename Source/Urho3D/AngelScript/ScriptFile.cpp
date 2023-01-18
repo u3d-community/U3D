@@ -427,13 +427,13 @@ bool ScriptFile::Execute(asIScriptFunction* function, const VariantVector& param
                 break;
 
             default:
-                URHO3D_LOGERRORF("Return type (%c) is not supported", typeInfo->GetName());
+                URHO3D_LOGERROR("Return type ({:c}) is not supported", typeInfo->GetName());
                 break;
             }
         }
         else
         {
-            URHO3D_LOGERRORF("Return type (%c)is not supported", typeInfo->GetName());
+            URHO3D_LOGERROR("Return type ({:c})is not supported", typeInfo->GetName());
         }
     }
     if (unprepare)
@@ -569,7 +569,7 @@ asIScriptObject* ScriptFile::CreateObject(const String& className, bool useInter
 
     if (!found)
     {
-        URHO3D_LOGERRORF("Script class %s does not implement the ScriptObject interface", type->GetName());
+        URHO3D_LOGERROR("Script class {} does not implement the ScriptObject interface", type->GetName());
         return nullptr;
     }
 

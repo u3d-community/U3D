@@ -1741,7 +1741,7 @@ void Graphics::OnWindowResized()
     // Reset rendertargets and viewport for the new screen size
     ResetRenderTargets();
 
-    URHO3D_LOGDEBUGF("Window was resized to %dx%d", width_, height_);
+    URHO3D_LOGDEBUG("Window was resized to {}x{}", width_, height_);
 
     using namespace ScreenMode;
 
@@ -1769,7 +1769,7 @@ void Graphics::OnWindowMoved()
     position_.x_ = newX;
     position_.y_ = newY;
 
-    URHO3D_LOGTRACEF("Window was moved to %d,%d", position_.x_, position_.y_);
+    URHO3D_LOGTRACE("Window was moved to {},{}", position_.x_, position_.y_);
 
     using namespace WindowPos;
 
@@ -1963,7 +1963,7 @@ bool Graphics::OpenWindow(int width, int height, bool resizable, bool borderless
 
     if (!window_)
     {
-        URHO3D_LOGERRORF("Could not create window, root cause: '%s'", SDL_GetError());
+        URHO3D_LOGERROR("Could not create window, root cause: '{}'", SDL_GetError());
         return false;
     }
 

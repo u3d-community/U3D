@@ -100,7 +100,7 @@ void HttpRequestDemo::HandleUpdate(StringHash eventType, VariantMap& eventData)
         {
             text_->SetText("An error has occurred: " + httpRequest_->GetError());
             UnsubscribeFromEvent("Update");
-            URHO3D_LOGERRORF("HttpRequest error: %s", httpRequest_->GetError().CString());
+            URHO3D_LOGERROR("HttpRequest error: {}", httpRequest_->GetError().CString());
         }
         // Get message data
         else

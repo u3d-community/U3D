@@ -40,7 +40,7 @@ void checkBorder(int border, float drawSize)
 {
     /* not clamping yet, as drawSize may still change and come to accommodate large borders */
     if (border < 0 || border * PIXEL_SIZE > drawSize)
-        URHO3D_LOGWARNINGF("Border out of bounds (%d), may be clamped", border);
+        URHO3D_LOGWARNING("Border out of bounds ({}), may be clamped", border);
 }
 
 Rect calcEffectiveBorder(const IntRect& border, const Vector2& drawSize)

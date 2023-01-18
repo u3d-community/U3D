@@ -1179,7 +1179,7 @@ String& String::AppendWithFormatArgs(const char* formatString, va_list args)
             }
 
         default:
-            URHO3D_LOGWARNINGF("Unsupported format specifier: '%c'", format);
+            URHO3D_LOGWARNING("Unsupported format specifier: '{:c}'", format);
             break;
         }
     }

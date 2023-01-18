@@ -49,7 +49,7 @@ static int ikInitCounter = 0;
 // Reroute all messages from the ik library to the Urho3D log
 static void HandleIKLog(const char* msg)
 {
-    URHO3D_LOGINFOF("[IK] %s", msg);
+    URHO3D_LOGINFO("[IK] {}", msg);
 }
 #endif
 
@@ -262,7 +262,7 @@ bool Context::RequireSDL(unsigned int sdlFlags)
         URHO3D_LOGDEBUG("Initialising SDL");
         if (SDL_Init(0) != 0)
         {
-            URHO3D_LOGERRORF("Failed to initialise SDL: %s", SDL_GetError());
+            URHO3D_LOGERROR("Failed to initialise SDL: {}", SDL_GetError());
             return false;
         }
     }
@@ -272,7 +272,7 @@ bool Context::RequireSDL(unsigned int sdlFlags)
     {
         if (SDL_InitSubSystem(remainingFlags) != 0)
         {
-            URHO3D_LOGERRORF("Failed to initialise SDL subsystem: %s", SDL_GetError());
+            URHO3D_LOGERROR("Failed to initialise SDL subsystem: {}", SDL_GetError());
             return false;
         }
     }

@@ -74,7 +74,7 @@ static const Urho3D::Context *appContext;
 
 static void JSCanvasSize(int width, int height, bool fullscreen, float scale)
 {
-    URHO3D_LOGINFOF("JSCanvasSize: width=%d height=%d fullscreen=%d ui scale=%f", width, height, fullscreen, scale);
+    URHO3D_LOGINFO("JSCanvasSize: width={} height={} fullscreen={} ui scale={}", width, height, fullscreen, scale);
 
     using namespace Urho3D;
 
@@ -459,7 +459,7 @@ bool Graphics::SetScreenMode(int width, int height, const ScreenModeParams& para
 
         if (!window_)
         {
-            URHO3D_LOGERRORF("Could not create window, root cause: '%s'", SDL_GetError());
+            URHO3D_LOGERROR("Could not create window, root cause: '{}'", SDL_GetError());
             return false;
         }
 
@@ -511,7 +511,7 @@ bool Graphics::SetScreenMode(int width, int height, const ScreenModeParams& para
     CheckFeatureSupport();
 
 #ifdef URHO3D_LOGGING
-    URHO3D_LOGINFOF("Adapter used %s %s", (const char *) glGetString(GL_VENDOR), (const char *) glGetString(GL_RENDERER));
+    URHO3D_LOGINFO("Adapter used {} {}", (const char *) glGetString(GL_VENDOR), (const char *) glGetString(GL_RENDERER));
 #endif
 
     OnScreenModeChanged();
@@ -2236,7 +2236,7 @@ void Graphics::OnWindowResized()
     CleanupFramebuffers();
     ResetRenderTargets();
 
-    URHO3D_LOGDEBUGF("Window was resized to %dx%d", width_, height_);
+    URHO3D_LOGDEBUG("Window was resized to {}x{}", width_, height_);
 
 #ifdef __EMSCRIPTEN__
     EM_ASM({
@@ -2270,7 +2270,7 @@ void Graphics::OnWindowMoved()
     position_.x_ = newX;
     position_.y_ = newY;
 
-    URHO3D_LOGTRACEF("Window was moved to %d,%d", position_.x_, position_.y_);
+    URHO3D_LOGTRACE("Window was moved to {},{}", position_.x_, position_.y_);
 
     using namespace WindowPos;
 
@@ -2459,7 +2459,7 @@ void Graphics::Restore()
 
         if (!impl_->context_)
         {
-            URHO3D_LOGERRORF("Could not create OpenGL context, root cause '%s'", SDL_GetError());
+            URHO3D_LOGERROR("Could not create OpenGL context, root cause '{}'", SDL_GetError());
             return;
         }
 
@@ -2471,7 +2471,9 @@ void Graphics::Restore()
         GLenum err = glewInit();
         if (GLEW_OK != err)
         {
-            URHO3D_LOGERRORF("Could not initialize OpenGL extensions, root cause: '%s'", glewGetErrorString(err));
+            // glew returns const unsigned char* rather than const char*, but fmt does not accept that.
+            URHO3D_LOGERROR("Could not initialize OpenGL extensions, root cause: '{}'",
+                            (const char*)(glewGetErrorString(err)));
             return;
         }
 

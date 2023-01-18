@@ -57,7 +57,7 @@ StringHash StringHashRegister::RegisterString(const StringHash& hash, const char
     }
     else if (iter->second_.Compare(string, false) != 0)
     {
-        URHO3D_LOGWARNINGF("StringHash collision detected! Both \"%s\" and \"%s\" have hash #%s",
+        URHO3D_LOGWARNING("StringHash collision detected! Both \"%s\" and \"%s\" have hash #%s",
             string, iter->second_.CString(), hash.ToString().CString());
     }
 

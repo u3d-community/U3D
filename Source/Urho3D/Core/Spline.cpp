@@ -110,7 +110,7 @@ void Spline::SetKnot(const Variant& knot, unsigned index)
         else if (knots_.Empty())
             knots_.Push(knot);
         else
-            URHO3D_LOGERRORF("Attempted to set a Spline's Knot value of type %s where elements are already using %s",
+            URHO3D_LOGERROR("Attempted to set a Spline's Knot value of type {} where elements are already using {}",
                 knot.GetTypeName().CString(), knots_[0].GetTypeName().CString());
     }
 }
@@ -122,7 +122,7 @@ void Spline::AddKnot(const Variant& knot)
     else if (knots_.Empty())
         knots_.Push(knot);
     else
-        URHO3D_LOGERRORF("Attempted to add Knot to Spline of type %s where elements are already using %s", knot.GetTypeName().CString(),
+        URHO3D_LOGERROR("Attempted to add Knot to Spline of type {} where elements are already using {}", knot.GetTypeName().CString(),
             knots_[0].GetTypeName().CString());
 }
 
@@ -136,7 +136,7 @@ void Spline::AddKnot(const Variant& knot, unsigned index)
     else if (knots_.Empty())
         knots_.Push(knot);
     else
-        URHO3D_LOGERRORF("Attempted to add Knot to Spline of type %s where elements are already using %s", knot.GetTypeName().CString(),
+        URHO3D_LOGERROR("Attempted to add Knot to Spline of type {} where elements are already using {}", knot.GetTypeName().CString(),
             knots_[0].GetTypeName().CString());
 }
 

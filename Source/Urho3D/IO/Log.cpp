@@ -119,7 +119,7 @@ void Log::SetLevel(int level)
 {
     if (level < LOG_TRACE || level > LOG_NONE)
     {
-        URHO3D_LOGERRORF("Attempted to set erroneous log level %d", level);
+        URHO3D_LOGERROR("Attempted to set erroneous log level {}", level);
         return;
     }
 

@@ -387,8 +387,8 @@ const char **Script::GetEnumValues(int asTypeID)
         const char* name = type->GetEnumValueByIndex(i,&val);
         if ((unsigned)val >= count)// use unsigned for val so negative values will be flagged as invalid
         {
-            URHO3D_LOGDEBUGF("Could not register enum attribute names for type %d."
-                      "%s has value of %d, which is outside of the range [0,%d) for a 0-based enum.",
+            URHO3D_LOGDEBUG("Could not register enum attribute names for type {}."
+                      "{} has value of {}, which is outside of the range [0,{}) for a 0-based enum.",
                       asTypeID,name,val,count);
 
             //fill with empty buffer

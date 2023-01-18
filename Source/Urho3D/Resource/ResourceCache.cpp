@@ -140,7 +140,7 @@ bool ResourceCache::AddPackageFile(PackageFile* package, unsigned priority)
     // Do not add packages that failed to load
     if (!package || !package->GetNumFiles())
     {
-        URHO3D_LOGERRORF("Could not add package file %s due to load failure", package->GetName().CString());
+        URHO3D_LOGERROR("Could not add package file {} due to load failure", package->GetName().CString());
         return false;
     }
 

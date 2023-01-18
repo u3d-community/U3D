@@ -237,7 +237,7 @@ void UIComponent::OnElementResized(StringHash eventType, VariantMap& args)
     if (width < UICOMPONENT_MIN_TEXTURE_SIZE || width > UICOMPONENT_MAX_TEXTURE_SIZE ||
         height < UICOMPONENT_MIN_TEXTURE_SIZE || height > UICOMPONENT_MAX_TEXTURE_SIZE)
     {
-        URHO3D_LOGERRORF("UIComponent: Texture size %dx%d is not valid. Width and height should be between %d and %d.",
+        URHO3D_LOGERROR("UIComponent: Texture size {}x{} is not valid. Width and height should be between {} and {}.",
                          width, height, UICOMPONENT_MIN_TEXTURE_SIZE, UICOMPONENT_MAX_TEXTURE_SIZE);
         return;
     }

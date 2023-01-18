@@ -422,7 +422,7 @@ void CrowdAgent::SetQueryFilterType(unsigned queryFilterType)
     {
         if (queryFilterType >= DT_CROWD_MAX_QUERY_FILTER_TYPE)
         {
-            URHO3D_LOGERRORF("The specified filter type index (%d) exceeds the maximum allowed value (%d)", queryFilterType,
+            URHO3D_LOGERROR("The specified filter type index ({}) exceeds the maximum allowed value ({})", queryFilterType,
                 DT_CROWD_MAX_QUERY_FILTER_TYPE);
             return;
         }
@@ -439,7 +439,7 @@ void CrowdAgent::SetObstacleAvoidanceType(unsigned obstacleAvoidanceType)
     {
         if (obstacleAvoidanceType >= DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS)
         {
-            URHO3D_LOGERRORF("The specified obstacle avoidance type index (%d) exceeds the maximum allowed value (%d)",
+            URHO3D_LOGERROR("The specified obstacle avoidance type index ({}) exceeds the maximum allowed value ({})",
                 obstacleAvoidanceType, DT_CROWD_MAX_OBSTAVOIDANCE_PARAMS);
             return;
         }

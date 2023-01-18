@@ -452,7 +452,7 @@ bool WriteDrawablesToOBJ(const PODVector<Drawable*>& drawables, File* outputFile
                 continue;
             if (geo->GetPrimitiveType() != TRIANGLE_LIST)
             {
-                URHO3D_LOGERRORF("%s (%u) %s (%u) Geometry %u contains an unsupported geometry type %u", node->GetName().Length() > 0 ? node->GetName().CString() : "Node", node->GetID(), drawable->GetTypeName().CString(), drawable->GetID(), geoIndex, (unsigned)geo->GetPrimitiveType());
+                URHO3D_LOGERROR("{} ({}) {} ({}) Geometry {} contains an unsupported geometry type {}", node->GetName().Length() > 0 ? node->GetName().CString() : "Node", node->GetID(), drawable->GetTypeName().CString(), drawable->GetID(), geoIndex, (unsigned)geo->GetPrimitiveType());
                 continue;
             }
 
@@ -470,7 +470,7 @@ bool WriteDrawablesToOBJ(const PODVector<Drawable*>& drawables, File* outputFile
             bool hasPosition = VertexBuffer::HasElement(*elements, TYPE_VECTOR3, SEM_POSITION);
             if (!hasPosition)
             {
-                URHO3D_LOGERRORF("%s (%u) %s (%u) Geometry %u contains does not have Vector3 type positions in vertex data", node->GetName().Length() > 0 ? node->GetName().CString() : "Node", node->GetID(), drawable->GetTypeName().CString(), drawable->GetID(), geoIndex);
+                URHO3D_LOGERROR("{} ({}) {} ({}) Geometry {} contains does not have Vector3 type positions in vertex data", node->GetName().Length() > 0 ? node->GetName().CString() : "Node", node->GetID(), drawable->GetTypeName().CString(), drawable->GetID(), geoIndex);
                 continue;
             }
 
