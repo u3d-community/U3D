@@ -31,8 +31,8 @@ file (GLOB H_FILES include/fmt/*.h)
 set (SOURCE_FILES ${CPP_FILES} ${H_FILES})
 set (INCLUDE_DIRS include)
 
-# Setup target
-setup_library ()
+# Do not setup library as we are using it header-only (`#define FMT_HEADER_ONLY` has been added to format.h)
+#setup_library ()
 
 # Install headers for building and using the Urho3D library (install dependency for Urho3D/Core/StringUtils.h)
 install_header_files (DIRECTORY include/fmt/ DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/fmt FILES_MATCHING PATTERN *.h)  # Note: the trailing slash is significant

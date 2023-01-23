@@ -33,6 +33,9 @@
 #ifndef FMT_FORMAT_H_
 #define FMT_FORMAT_H_
 
+// URHO3D: Force fmt to be header only. Fixes issues with the shared library build.
+#define FMT_HEADER_ONLY
+
 #include <cmath>         // std::signbit
 #include <cstdint>       // uint32_t
 #include <cstring>       // std::memcpy
