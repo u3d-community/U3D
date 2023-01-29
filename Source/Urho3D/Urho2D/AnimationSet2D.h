@@ -81,6 +81,8 @@ public:
     Spriter::SpriterData* GetSpriterData() const { return spriterData_.Get(); }
     /// Return spriter file sprite.
     Sprite2D* GetSpriterFileSprite(int folderId, int fileId) const;
+    /// True if a spritesheet xml file was found during the loading of this animationSet
+    bool HasSpriteSheet() const { return hasSpriteSheet_; }
 
 private:
     /// Return sprite by hash.
@@ -95,6 +97,7 @@ private:
     bool BeginLoadSpriter(Deserializer& source);
     /// Finish load scml.
     bool EndLoadSpriter();
+    void HandleDeviceReset(StringHash eventType, VariantMap& eventData);
     /// Dispose all data.
     void Dispose();
 
