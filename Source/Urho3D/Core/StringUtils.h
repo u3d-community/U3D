@@ -24,6 +24,8 @@
 
 #include "../Core/Variant.h"
 
+#include <fmt/format.h>
+
 namespace Urho3D
 {
 
@@ -163,5 +165,46 @@ template <> inline Matrix4 FromString<Matrix4>(const char* source) { return ToMa
 
 /// Parse type from a string.
 template <class T> T FromString(const String& source) { return FromString<T>(source.CString()); }
+
+}
+
+namespace fmt
+{
+
+/// Formats a value. Enables passing a String as an argument without calling CString() on it.
+template <typename Char>
+struct formatter<Urho3D::String, Char> : formatter<basic_string_view<Char>>
+{
+    /// The actual formatting method.
+    template <typename FormatContext>
+    auto format(const Urho3D::String& s, FormatContext& ctx) const -> decltype(ctx.out())
+    {
+        return formatter<basic_string_view<Char>>::format(
+            basic_string_view<Char>(s.CString(), s.Length()), ctx);
+    }
+
+    // Not needed for String, as we re-use the basic_string_view's parsing, but you could implement
+    // the following method to allow custom format specifiers for the type.
+    // template<typename ParseContext> constexpr auto fmt::formatter<complex>::parse(ParseContext& ctx);
+};
+
+}
+
+namespace Urho3D
+{
+
+/// The function that actually handles the string formatting. Per the fmt documentation, splitting it this way should improve compile time and reduce binary code size compared to a fully parameterized version. https://fmt.dev/9.1.0/api.html#argument-lists
+inline String VFormatString(fmt::string_view format, fmt::format_args args)
+{
+    auto str = fmt::vformat(format, args);
+    return String(str.c_str(), str.length());
+}
+
+/// Return a formatted string following a curly brace style format syntax. https://fmt.dev/9.1.0/syntax.html
+template<typename S, typename... Args>
+inline String FormatString(const S& format, Args&&... args)
+{
+    return VFormatString(format, fmt::make_format_args(args...));
+}
 
 }

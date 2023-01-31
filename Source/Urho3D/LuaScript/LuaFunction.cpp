@@ -91,7 +91,7 @@ bool LuaFunction::EndCall(int numReturns)
     if (lua_pcall(luaState_, numArguments, numReturns, 0) != 0)
     {
         const char* message = lua_tostring(luaState_, -1);
-        URHO3D_LOGERRORF("Execute Lua function failed: %s", message);
+        URHO3D_LOGERROR("Execute Lua function failed: {}", message);
         lua_pop(luaState_, 1);
         return false;
     }
@@ -179,7 +179,7 @@ void LuaFunction::PushLuaTable(const char* tableName)
                 {
                     lua_pop(luaState_, 1);
                     lua_pushnil(luaState_);
-                    URHO3D_LOGERRORF("Could not find lua table '%s'", currentName.CString());
+                    URHO3D_LOGERROR("Could not find lua table '{}'", currentName.CString());
                     return;
                 }
             }
@@ -191,7 +191,7 @@ void LuaFunction::PushLuaTable(const char* tableName)
     }
 
     if (!lua_istable(luaState_, -1))
-        URHO3D_LOGERRORF("Could not find lua table '%s'", tableName);      // nil is pushed instead
+        URHO3D_LOGERROR("Could not find lua table '{}'", tableName);      // nil is pushed instead
 }
 
 }

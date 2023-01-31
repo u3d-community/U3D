@@ -142,7 +142,7 @@ bool FontFaceFreeType::Load(const unsigned char* fontData, unsigned fontDataSize
     face_ = face;
 
     unsigned numGlyphs = (unsigned)face->num_glyphs;
-    URHO3D_LOGDEBUGF("Font face %s (%fpt) has %d glyphs", GetFileName(font_->GetName()).CString(), pointSize, numGlyphs);
+    URHO3D_LOGDEBUG("Font face {} ({}pt) has {} glyphs", GetFileName(font_->GetName()).CString(), pointSize, numGlyphs);
 
     // Load each of the glyphs to see the sizes & store other information
     loadMode_ = FT_LOAD_DEFAULT;
@@ -405,7 +405,7 @@ bool FontFaceFreeType::LoadCharGlyph(unsigned charCode, Image* image)
     if (error)
     {
         const char* family = face->family_name ? face->family_name : "NULL";
-        URHO3D_LOGERRORF("FT_Load_Char failed (family: %s, char code: %u)", family, charCode);
+        URHO3D_LOGERROR("FT_Load_Char failed (family: {}, char code: {})", family, charCode);
         fontGlyph.texWidth_ = 0;
         fontGlyph.texHeight_ = 0;
         fontGlyph.width_ = 0;
@@ -456,13 +456,13 @@ bool FontFaceFreeType::LoadCharGlyph(unsigned charCode, Image* image)
             int h = allocator_.GetHeight();
             if (!SetupNextTexture(w, h))
             {
-                URHO3D_LOGWARNINGF("FontFaceFreeType::LoadCharGlyph: failed to allocate new %dx%d texture", w, h);
+                URHO3D_LOGWARNING("FontFaceFreeType::LoadCharGlyph: failed to allocate new {}x{} texture", w, h);
                 return false;
             }
 
             if (!allocator_.Allocate(fontGlyph.texWidth_ + 1, fontGlyph.texHeight_ + 1, x, y))
             {
-                URHO3D_LOGWARNINGF("FontFaceFreeType::LoadCharGlyph: failed to position char code %u in blank page", charCode);
+                URHO3D_LOGWARNING("FontFaceFreeType::LoadCharGlyph: failed to position char code {} in blank page", charCode);
                 return false;
             }
         }

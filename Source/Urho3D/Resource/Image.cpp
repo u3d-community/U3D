@@ -1345,7 +1345,7 @@ bool Image::SaveDDS(const String& fileName) const
 
     if (components_ != 4)
     {
-        URHO3D_LOGERRORF("Can not save image with %u components to DDS", components_);
+        URHO3D_LOGERROR("Can not save image with {} components to DDS", components_);
         return false;
     }
 
@@ -1406,7 +1406,7 @@ bool Image::SaveWEBP(const String& fileName, float compression /* = 0.0f */) con
 
     if (components_ != 4 && components_ != 3)
     {
-        URHO3D_LOGERRORF("Can not save image with %u components to WebP, which requires 3 or 4; Try ConvertToRGBA first?", components_);
+        URHO3D_LOGERROR("Can not save image with {} components to WebP, which requires 3 or 4; Try ConvertToRGBA first?", components_);
         return false;
     }
 
@@ -1454,7 +1454,7 @@ bool Image::SaveWEBP(const String& fileName, float compression /* = 0.0f */) con
     // Check only general failure. WebPEncode() sets pic.error_code with specific error.
     if (!encodeResult)
     {
-        URHO3D_LOGERRORF("WebP encoding failed (memory error?). WebPEncodingError = %d", pic.error_code);
+        URHO3D_LOGERROR("WebP encoding failed (memory error?). WebPEncodingError = {}", pic.error_code);
         WebPPictureFree(&pic);
         WebPMemoryWriterClear(&wrt);
         return false;

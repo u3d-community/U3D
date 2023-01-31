@@ -219,7 +219,7 @@ bool Engine::Initialize(const VariantMap& parameters)
     {
         GetSubsystem<WorkQueue>()->CreateThreads(numThreads);
 
-        URHO3D_LOGINFOF("Created %u worker thread%s", numThreads, numThreads > 1 ? "s" : "");
+        URHO3D_LOGINFO("Created {} worker thread{}", numThreads, numThreads > 1 ? "s" : "");
     }
 #endif
 
@@ -377,8 +377,8 @@ bool Engine::InitializeResourceCache(const VariantMap& parameters, bool removeOl
             }
             if (j == resourcePrefixPaths.Size())
             {
-                URHO3D_LOGERRORF(
-                    "Failed to add resource path '%s', check the documentation on how to set the 'resource prefix path'",
+                URHO3D_LOGERROR(
+                    "Failed to add resource path '{}', check the documentation on how to set the 'resource prefix path'",
                     resourcePaths[i].CString());
                 return false;
             }
@@ -409,8 +409,8 @@ bool Engine::InitializeResourceCache(const VariantMap& parameters, bool removeOl
         }
         if (j == resourcePrefixPaths.Size())
         {
-            URHO3D_LOGERRORF(
-                "Failed to add resource package '%s', check the documentation on how to set the 'resource prefix path'",
+            URHO3D_LOGERROR(
+                "Failed to add resource package '{}', check the documentation on how to set the 'resource prefix path'",
                 resourcePackages[i].CString());
             return false;
         }
@@ -467,8 +467,8 @@ bool Engine::InitializeResourceCache(const VariantMap& parameters, bool removeOl
         // The cleaner approach is to not enable the autoload by default, i.e. do not use 'Autoload' as default value for 'AutoloadPaths' engine parameter
         // However, doing so will break the existing applications that rely on this
         if (!autoLoadPathExist && (autoLoadPaths.Size() > 1 || autoLoadPaths[0] != "Autoload"))
-            URHO3D_LOGDEBUGF(
-                "Skipped autoload path '%s' as it does not exist, check the documentation on how to set the 'resource prefix path'",
+            URHO3D_LOGDEBUG(
+                "Skipped autoload path '{}' as it does not exist, check the documentation on how to set the 'resource prefix path'",
                 autoLoadPaths[i].CString());
     }
 

@@ -483,7 +483,7 @@ VariantVector CrowdManager::GetQueryFilterTypesAttr() const
 unsigned short CrowdManager::GetIncludeFlags(unsigned queryFilterType) const
 {
     if (queryFilterType >= numQueryFilterTypes_)
-        URHO3D_LOGWARNINGF("Query filter type %d is not configured yet, returning the default include flags initialized by dtCrowd",
+        URHO3D_LOGWARNING("Query filter type {} is not configured yet, returning the default include flags initialized by dtCrowd",
             queryFilterType);
     const dtQueryFilter* filter = GetDetourQueryFilter(queryFilterType);
     return (unsigned short)(filter ? filter->getIncludeFlags() : 0xffff);
@@ -492,7 +492,7 @@ unsigned short CrowdManager::GetIncludeFlags(unsigned queryFilterType) const
 unsigned short CrowdManager::GetExcludeFlags(unsigned queryFilterType) const
 {
     if (queryFilterType >= numQueryFilterTypes_)
-        URHO3D_LOGWARNINGF("Query filter type %d is not configured yet, returning the default exclude flags initialized by dtCrowd",
+        URHO3D_LOGWARNING("Query filter type {} is not configured yet, returning the default exclude flags initialized by dtCrowd",
             queryFilterType);
     const dtQueryFilter* filter = GetDetourQueryFilter(queryFilterType);
     return (unsigned short)(filter ? filter->getExcludeFlags() : 0);
@@ -501,8 +501,8 @@ unsigned short CrowdManager::GetExcludeFlags(unsigned queryFilterType) const
 float CrowdManager::GetAreaCost(unsigned queryFilterType, unsigned areaID) const
 {
     if (queryFilterType >= numQueryFilterTypes_ || areaID >= numAreas_[queryFilterType])
-        URHO3D_LOGWARNINGF(
-            "Query filter type %d and/or area id %d are not configured yet, returning the default area cost initialized by dtCrowd",
+        URHO3D_LOGWARNING(
+            "Query filter type {} and/or area id {} are not configured yet, returning the default area cost initialized by dtCrowd",
             queryFilterType, areaID);
     const dtQueryFilter* filter = GetDetourQueryFilter(queryFilterType);
     return filter ? filter->getAreaCost((int)areaID) : 1.f;
@@ -603,7 +603,7 @@ bool CrowdManager::CreateCrowd()
             // Keep adding until the crowd cannot take it anymore
             if (agents[i]->AddAgentToCrowd(true) == -1)
             {
-                URHO3D_LOGWARNINGF("CrowdManager: %d crowd agents orphaned", agents.Size() - i);
+                URHO3D_LOGWARNING("CrowdManager: {} crowd agents orphaned", agents.Size() - i);
                 break;
             }
         }
