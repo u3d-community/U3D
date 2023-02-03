@@ -393,9 +393,10 @@ bool AnimationSet2D::EndLoadSpriter()
                 unsigned key = folder->id_ << 16u | file->id_;
                 spriterFileSprites_[key] = sprite;
 
-                UnsubscribeFromEvent(E_DEVICERESET);
             }
         }
+
+        UnsubscribeFromEvent(E_DEVICERESET);
     }
     else
     {
