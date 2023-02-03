@@ -97,6 +97,7 @@ private:
     bool BeginLoadSpriter(Deserializer& source);
     /// Finish load scml.
     bool EndLoadSpriter();
+    /// Reload the animationSet on device reset.
     void HandleDeviceReset(StringHash eventType, VariantMap& eventData);
     /// Dispose all data.
     void Dispose();
