@@ -515,9 +515,12 @@ void AnimationSet2D::HandleDeviceReset(StringHash eventType, VariantMap& eventDa
 {
     auto* cache = GetSubsystem<ResourceCache>();
 
-    bool reloadResult = cache->ReloadResource(this);
+    bool success = false;
+    SharedPtr<File> file = cache->GetFile(GetName());
+    if (file)
+        success = Load(*(file.Get()));
 
-    if (!reloadResult)
+    if (!success)
     {
         URHO3D_LOGERROR("AnimationSet2D reload on device reset failed!");
     }
