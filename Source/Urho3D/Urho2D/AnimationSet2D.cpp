@@ -25,6 +25,7 @@
 #include "../Container/ArrayPtr.h"
 #include "../Core/Context.h"
 #include "../Graphics/Graphics.h"
+#include "../Graphics/GraphicsEvents.h"
 #include "../Graphics/Texture2D.h"
 #include "../IO/FileSystem.h"
 #include "../IO/Log.h"
@@ -391,8 +392,11 @@ bool AnimationSet2D::EndLoadSpriter()
 
                 unsigned key = folder->id_ << 16u | file->id_;
                 spriterFileSprites_[key] = sprite;
+
             }
         }
+
+        UnsubscribeFromEvent(E_DEVICERESET);
     }
     else
     {
@@ -500,9 +504,26 @@ bool AnimationSet2D::EndLoadSpriter()
             unsigned key = info.file_->folder_->id_ << 16u | info.file_->id_;
             spriterFileSprites_[key] = sprite_;
         }
+
+        SubscribeToEvent(E_DEVICERESET, URHO3D_HANDLER(AnimationSet2D, HandleDeviceReset));
     }
 
     return true;
+}
+
+void AnimationSet2D::HandleDeviceReset(StringHash eventType, VariantMap& eventData)
+{
+    auto* cache = GetSubsystem<ResourceCache>();
+
+    bool success = false;
+    SharedPtr<File> file = cache->GetFile(GetName());
+    if (file)
+        success = Load(*(file.Get()));
+
+    if (!success)
+    {
+        URHO3D_LOGERROR("AnimationSet2D reload on device reset failed!");
+    }
 }
 
 void AnimationSet2D::Dispose()

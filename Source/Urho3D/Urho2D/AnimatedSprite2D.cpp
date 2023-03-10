@@ -25,6 +25,7 @@
 #include "../Core/Context.h"
 #include "../IO/Log.h"
 #include "../Resource/ResourceCache.h"
+#include "../Graphics/GraphicsEvents.h"
 #include "../Scene/Scene.h"
 #include "../Scene/SceneEvents.h"
 #include "../Urho2D/AnimatedSprite2D.h"
@@ -105,6 +106,7 @@ void AnimatedSprite2D::SetAnimationSet(AnimationSet2D* animationSet)
         return;
 
     Dispose();
+    UnsubscribeFromEvent(E_DEVICERESET);
 
     animationSet_ = animationSet;
     if (!animationSet_)
@@ -144,6 +146,13 @@ void AnimatedSprite2D::SetAnimationSet(AnimationSet2D* animationSet)
                 entity_ = animationSet_->GetSpriterData()->entities_[0]->name_;
             spriterInstance_->SetEntity(entity_);
         }
+
+        if (!animationSet_->HasSpriteSheet())
+        {
+            // animated sprites without a spritesheet need to rebuild their spriter instance when openGL context is lost
+            SubscribeToEvent(E_DEVICERESET, URHO3D_HANDLER(AnimatedSprite2D, HandleDeviceReset));
+        }
+        
     }
 
     // Clear animation name
@@ -491,6 +500,15 @@ void AnimatedSprite2D::UpdateSourceBatchesSpriter()
         vertices.Push(vertex2);
         vertices.Push(vertex3);
     }
+}
+
+void AnimatedSprite2D::HandleDeviceReset(StringHash eventType, VariantMap& eventData)
+{
+    Dispose();
+
+    SetSprite(animationSet_->GetSprite());
+
+    SetSpriterAnimation();
 }
 
 void AnimatedSprite2D::Dispose()

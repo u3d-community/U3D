@@ -132,6 +132,8 @@ protected:
     void UpdateSpriterAnimation(float timeStep);
     /// Update vertices for spriter animation.
     void UpdateSourceBatchesSpriter();
+    /// Reload sprite and spriter data on device reset.
+    void HandleDeviceReset(StringHash eventType, VariantMap& eventData);
     /// Dispose.
     void Dispose();
 
