@@ -1073,8 +1073,15 @@ int GetResourceType(String path)
 
 int GetResourceType(String path, StringHash &out fileType, bool useCache = false)
 {
-    if (GetExtensionType(path, fileType) || GetBinaryType(path, fileType, useCache) || GetXmlType(path, fileType, useCache))
+    if(GetExtensionType(path, fileType)){
         return GetResourceType(fileType);
+    }
+    else if(GetBinaryType(path, fileType, useCache)){
+        return GetResourceType(fileType);
+    }
+    else if(GetXmlType(path, fileType, useCache)){
+        return GetResourceType(fileType);
+    }
 
     return RESOURCE_TYPE_UNKNOWN;
 }
