@@ -13,6 +13,7 @@ class HIDDeviceUSB implements HIDDevice {
 
     protected HIDDeviceManager mManager;
     protected UsbDevice mDevice;
+    protected int mInterfaceIndex;
     protected int mInterface;
     protected int mDeviceId;
     protected UsbDeviceConnection mConnection;
@@ -22,16 +23,17 @@ class HIDDeviceUSB implements HIDDevice {
     protected boolean mRunning;
     protected boolean mFrozen;
 
-    public HIDDeviceUSB(HIDDeviceManager manager, UsbDevice usbDevice, int interface_number) {
+    public HIDDeviceUSB(HIDDeviceManager manager, UsbDevice usbDevice, int interface_index) {
         mManager = manager;
         mDevice = usbDevice;
-        mInterface = interface_number;
+        mInterfaceIndex = interface_index;
+        mInterface = mDevice.getInterface(mInterfaceIndex).getId();
         mDeviceId = manager.getDeviceIDForIdentifier(getIdentifier());
         mRunning = false;
     }
 
     public String getIdentifier() {
-        return String.format("%s/%x/%x", mDevice.getDeviceName(), mDevice.getVendorId(), mDevice.getProductId());
+        return String.format("%s/%x/%x/%d", mDevice.getDeviceName(), mDevice.getVendorId(), mDevice.getProductId(), mInterfaceIndex);
     }
 
     @Override
@@ -53,7 +55,12 @@ class HIDDeviceUSB implements HIDDevice {
     public String getSerialNumber() {
         String result = null;
         if (Build.VERSION.SDK_INT >= 21) {
-            result = mDevice.getSerialNumber();
+            try {
+                result = mDevice.getSerialNumber();
+            }
+            catch (SecurityException exception) {
+                //Log.w(TAG, "App permissions mean we cannot get serial number for device " + getDeviceName() + " message: " + exception.getMessage());
+            }
         }
         if (result == null) {
             result = "";
@@ -90,6 +97,7 @@ class HIDDeviceUSB implements HIDDevice {
         return result;
     }
 
+    @Override
     public UsbDevice getDevice() {
         return mDevice;
     }
@@ -106,19 +114,15 @@ class HIDDeviceUSB implements HIDDevice {
             return false;
         }
 
-        // Force claim all interfaces
-        for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
-            UsbInterface iface = mDevice.getInterface(i);
-
-            if (!mConnection.claimInterface(iface, true)) {
-                Log.w(TAG, "Failed to claim interfaces on USB device " + getDeviceName());
-                close();
-                return false;
-            }
+        // Force claim our interface
+        UsbInterface iface = mDevice.getInterface(mInterfaceIndex);
+        if (!mConnection.claimInterface(iface, true)) {
+            Log.w(TAG, "Failed to claim interfaces on USB device " + getDeviceName());
+            close();
+            return false;
         }
 
         // Find the endpoints
-        UsbInterface iface = mDevice.getInterface(mInterface);
         for (int j = 0; j < iface.getEndpointCount(); j++) {
             UsbEndpoint endpt = iface.getEndpoint(j);
             switch (endpt.getDirection()) {
@@ -170,7 +174,7 @@ class HIDDeviceUSB implements HIDDevice {
             UsbConstants.USB_TYPE_CLASS | 0x01 /*RECIPIENT_INTERFACE*/ | UsbConstants.USB_DIR_OUT,
             0x09/*HID set_report*/,
             (3/*HID feature*/ << 8) | report_number,
-            0,
+            mInterface,
             report, offset, length,
             1000/*timeout millis*/);
       }
@@ -217,7 +221,7 @@ class HIDDeviceUSB implements HIDDevice {
             UsbConstants.USB_TYPE_CLASS | 0x01 /*RECIPIENT_INTERFACE*/ | UsbConstants.USB_DIR_IN,
             0x01/*HID get_report*/,
             (3/*HID feature*/ << 8) | report_number,
-            0,
+            mInterface,
             report, offset, length,
             1000/*timeout millis*/);
       }
@@ -258,10 +262,8 @@ class HIDDeviceUSB implements HIDDevice {
             mInputThread = null;
         }
         if (mConnection != null) {
-            for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
-                UsbInterface iface = mDevice.getInterface(i);
-                mConnection.releaseInterface(iface);
-            }
+            UsbInterface iface = mDevice.getInterface(mInterfaceIndex);
+            mConnection.releaseInterface(iface);
             mConnection.close();
             mConnection = null;
         }

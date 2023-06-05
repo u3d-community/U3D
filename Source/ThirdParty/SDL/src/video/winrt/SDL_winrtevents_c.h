@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -53,7 +53,7 @@ typedef enum {
 extern Windows::Foundation::Point WINRT_TransformCursorPosition(SDL_Window * window,
                                                                 Windows::Foundation::Point rawPosition,
                                                                 WINRT_CursorNormalizationType normalization);
-extern Uint8 WINRT_GetSDLButtonForPointerPoint(Windows::UI::Input::PointerPoint ^pt);
+extern SDL_bool WINRT_GetSDLButtonForPointerPoint(Windows::UI::Input::PointerPoint ^pt, Uint8 *button, Uint8 *pressed);
 extern void WINRT_ProcessPointerPressedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessPointerMovedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessPointerReleasedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
@@ -68,6 +68,7 @@ extern void WINRT_ProcessKeyUpEvent(Windows::UI::Core::KeyEventArgs ^args);
 extern void WINRT_ProcessCharacterReceivedEvent(Windows::UI::Core::CharacterReceivedEventArgs ^args);
 
 #if NTDDI_VERSION >= NTDDI_WIN10
+extern void WINTRT_InitialiseInputPaneEvents(_THIS);
 extern SDL_bool WINRT_HasScreenKeyboardSupport(_THIS);
 extern void WINRT_ShowScreenKeyboard(_THIS, SDL_Window *window);
 extern void WINRT_HideScreenKeyboard(_THIS, SDL_Window *window);

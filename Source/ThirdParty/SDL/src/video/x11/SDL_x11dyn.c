@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -41,20 +41,17 @@ typedef struct
     const char *libname;
 } x11dynlib;
 
-#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC NULL
-#endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT NULL
 #endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR NULL
 #endif
-#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA NULL
-#endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT2
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT2 NULL
+#endif
+#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XFIXES
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XFIXES NULL
 #endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR NULL
@@ -62,19 +59,15 @@ typedef struct
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS NULL
 #endif
-#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE NULL
-#endif
 
 static x11dynlib x11libs[] = {
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR},
-    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT2},
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XFIXES},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR},
-    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS},
-    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE}
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS}
 };
 
 static void *
@@ -127,7 +120,9 @@ SDL_X11_UnloadSymbols(void)
     /* Don't actually unload if more than one module is using the libs... */
     if (x11_load_refcount > 0) {
         if (--x11_load_refcount == 0) {
+#ifdef SDL_VIDEO_DRIVER_X11_DYNAMIC
             int i;
+#endif
 
             /* set all the function pointers to NULL. */
 #define SDL_X11_MODULE(modname) SDL_X11_HAVE_##modname = 0;

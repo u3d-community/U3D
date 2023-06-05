@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,19 +23,20 @@
 
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_WINDOWS
+#if SDL_VIDEO_DRIVER_WINDOWS && !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
 
-#include "SDL_assert.h"
 #include "SDL_windowsvideo.h"
 
 #include "../../events/SDL_mouse_c.h"
 
 
+DWORD SDL_last_warp_time = 0;
 HCURSOR SDL_cursor = NULL;
+static SDL_Cursor *SDL_blank_cursor = NULL;
 
 static int rawInputEnableCount = 0;
 
-static int 
+static int
 ToggleRawInput(SDL_bool enabled)
 {
     RAWINPUTDEVICE rawMouse = { 0x01, 0x02, 0, NULL }; /* Mouse: UsagePage = 1, Usage = 2 */
@@ -61,6 +62,9 @@ ToggleRawInput(SDL_bool enabled)
 
     /* (Un)register raw input for mice */
     if (RegisterRawInputDevices(&rawMouse, 1, sizeof(RAWINPUTDEVICE)) == FALSE) {
+        /* Reset the enable count, otherwise subsequent enable calls will
+           believe raw input is enabled */
+        rawInputEnableCount = 0;
 
         /* Only return an error when registering. If we unregister and fail,
            then it's probably that we unregistered twice. That's OK. */
@@ -95,6 +99,7 @@ WIN_CreateCursor(SDL_Surface * surface, int hot_x, int hot_y)
     const size_t pad = (sizeof (size_t) * 8);  /* 32 or 64, or whatever. */
     SDL_Cursor *cursor;
     HICON hicon;
+    HICON hcursor;
     HDC hdc;
     BITMAPV4HEADER bmh;
     LPVOID pixels;
@@ -149,14 +154,36 @@ WIN_CreateCursor(SDL_Surface * surface, int hot_x, int hot_y)
         return NULL;
     }
 
+    /* The cursor returned by CreateIconIndirect does not respect system cursor size
+        preference, use CopyImage to duplicate the cursor with desired sizes */
+    hcursor = CopyImage(hicon, IMAGE_CURSOR, surface->w, surface->h, 0);
+    DestroyIcon(hicon);
+
+    if (!hcursor) {
+        WIN_SetError("CopyImage()");
+        return NULL;
+    }
+
     cursor = SDL_calloc(1, sizeof(*cursor));
     if (cursor) {
-        cursor->driverdata = hicon;
+        cursor->driverdata = hcursor;
     } else {
-        DestroyIcon(hicon);
+        DestroyIcon(hcursor);
         SDL_OutOfMemory();
     }
 
+    return cursor;
+}
+
+static SDL_Cursor *
+WIN_CreateBlankCursor()
+{
+    SDL_Cursor *cursor = NULL;
+    SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, 32, 32, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (surface) {
+        cursor = WIN_CreateCursor(surface, 0, 0);
+        SDL_FreeSurface(surface);
+    }
     return cursor;
 }
 
@@ -211,6 +238,9 @@ WIN_FreeCursor(SDL_Cursor * cursor)
 static int
 WIN_ShowCursor(SDL_Cursor * cursor)
 {
+    if (!cursor) {
+        cursor = SDL_blank_cursor;
+    }
     if (cursor) {
         SDL_cursor = (HCURSOR)cursor->driverdata;
     } else {
@@ -220,6 +250,21 @@ WIN_ShowCursor(SDL_Cursor * cursor)
         SetCursor(SDL_cursor);
     }
     return 0;
+}
+
+void
+WIN_SetCursorPos(int x, int y)
+{
+    /* We need to jitter the value because otherwise Windows will occasionally inexplicably ignore the SetCursorPos() or SendInput() */
+    SetCursorPos(x, y);
+    SetCursorPos(x+1, y);
+    SetCursorPos(x, y);
+
+    /* Flush any mouse motion prior to or associated with this warp */
+    SDL_last_warp_time = GetTickCount();
+    if (!SDL_last_warp_time) {
+        SDL_last_warp_time = 1;
+    }
 }
 
 static void
@@ -238,7 +283,10 @@ WIN_WarpMouse(SDL_Window * window, int x, int y)
     pt.x = x;
     pt.y = y;
     ClientToScreen(hwnd, &pt);
-    SetCursorPos(pt.x, pt.y);
+    WIN_SetCursorPos(pt.x, pt.y);
+
+    /* Send the exact mouse motion associated with this warp */
+    SDL_SendMouseMotion(window, SDL_GetMouse()->mouseID, 0, x, y);
 }
 
 static int
@@ -246,6 +294,7 @@ WIN_WarpMouseGlobal(int x, int y)
 {
     POINT pt;
 
+    WIN_ScreenPointFromSDL(&x, &y, NULL);
     pt.x = x;
     pt.y = y;
     SetCursorPos(pt.x, pt.y);
@@ -261,18 +310,22 @@ WIN_SetRelativeMouseMode(SDL_bool enabled)
 static int
 WIN_CaptureMouse(SDL_Window *window)
 {
-    if (!window) {
-        SDL_Window *focusWin = SDL_GetKeyboardFocus();
-        if (focusWin) {
-            WIN_OnWindowEnter(SDL_GetVideoDevice(), focusWin);  /* make sure WM_MOUSELEAVE messages are (re)enabled. */
+    if (window) {
+        SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
+        SetCapture(data->hwnd);
+    } else {
+        SDL_Window *focus_window = SDL_GetMouseFocus();
+       
+        if (focus_window) {
+            SDL_WindowData *data = (SDL_WindowData *)focus_window->driverdata;
+            if (!data->mouse_tracked) {
+                SDL_SetMouseFocus(NULL);
+            }
         }
+        ReleaseCapture();
     }
 
-    /* While we were thinking of SetCapture() when designing this API in SDL,
-       we didn't count on the fact that SetCapture() only tracks while the
-       left mouse button is held down! Instead, we listen for raw mouse input
-       and manually query the mouse when it leaves the window. :/ */
-    return ToggleRawInput(window != NULL);
+    return 0;
 }
 
 static Uint32
@@ -280,12 +333,15 @@ WIN_GetGlobalMouseState(int *x, int *y)
 {
     Uint32 retval = 0;
     POINT pt = { 0, 0 };
+    SDL_bool swapButtons = GetSystemMetrics(SM_SWAPBUTTON) != 0;
+
     GetCursorPos(&pt);
     *x = (int) pt.x;
     *y = (int) pt.y;
+    WIN_ScreenPointToSDL(x, y);
 
-    retval |= GetAsyncKeyState(VK_LBUTTON) & 0x8000 ? SDL_BUTTON_LMASK : 0;
-    retval |= GetAsyncKeyState(VK_RBUTTON) & 0x8000 ? SDL_BUTTON_RMASK : 0;
+    retval |= GetAsyncKeyState(!swapButtons ? VK_LBUTTON : VK_RBUTTON) & 0x8000 ? SDL_BUTTON_LMASK : 0;
+    retval |= GetAsyncKeyState(!swapButtons ? VK_RBUTTON : VK_LBUTTON) & 0x8000 ? SDL_BUTTON_RMASK : 0;
     retval |= GetAsyncKeyState(VK_MBUTTON) & 0x8000 ? SDL_BUTTON_MMASK : 0;
     retval |= GetAsyncKeyState(VK_XBUTTON1) & 0x8000 ? SDL_BUTTON_X1MASK : 0;
     retval |= GetAsyncKeyState(VK_XBUTTON2) & 0x8000 ? SDL_BUTTON_X2MASK : 0;
@@ -309,6 +365,10 @@ WIN_InitMouse(_THIS)
     mouse->GetGlobalMouseState = WIN_GetGlobalMouseState;
 
     SDL_SetDefaultCursor(WIN_CreateDefaultCursor());
+
+    SDL_blank_cursor = WIN_CreateBlankCursor();
+
+    WIN_UpdateMouseSystemScale();
 }
 
 void
@@ -317,6 +377,114 @@ WIN_QuitMouse(_THIS)
     if (rawInputEnableCount) {  /* force RAWINPUT off here. */
         rawInputEnableCount = 1;
         ToggleRawInput(SDL_FALSE);
+    }
+
+    if (SDL_blank_cursor) {
+        WIN_FreeCursor(SDL_blank_cursor);
+        SDL_blank_cursor = NULL;
+    }
+}
+
+/* For a great description of how the enhanced mouse curve works, see:
+ * https://superuser.com/questions/278362/windows-mouse-acceleration-curve-smoothmousexcurve-and-smoothmouseycurve
+ * http://www.esreality.com/?a=post&id=1846538/
+ */
+static SDL_bool
+LoadFiveFixedPointFloats(BYTE *bytes, float *values)
+{
+    int i;
+
+    for (i = 0; i < 5; ++i) {
+        float fraction = (float)((Uint16) bytes[1] << 8 | bytes[0]) / 65535.0f;
+        float value = (float)(((Uint16)bytes[3] << 8) | bytes[2]) + fraction;
+        *values++ = value;
+        bytes += 8;
+    }
+    return SDL_TRUE;
+}
+
+static void
+WIN_SetEnhancedMouseScale(int mouse_speed)
+{
+    float scale = (float) mouse_speed / 10.0f;
+    HKEY hKey;
+    DWORD dwType = REG_BINARY;
+    BYTE value[40];
+    DWORD length = sizeof(value);
+    int i;
+    float xpoints[5];
+    float ypoints[5];
+    float scale_points[10];
+    const int dpi = 96; // FIXME, how do we handle different monitors with different DPI?
+    const float display_factor = 3.5f * (150.0f / dpi);
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Mouse", 0, KEY_READ, &hKey)  == ERROR_SUCCESS) {
+        if (RegQueryValueExW(hKey, L"SmoothMouseXCurve", 0, &dwType, value, &length) == ERROR_SUCCESS &&
+            LoadFiveFixedPointFloats(value, xpoints) &&
+            RegQueryValueExW(hKey, L"SmoothMouseYCurve", 0, &dwType, value, &length) == ERROR_SUCCESS &&
+            LoadFiveFixedPointFloats(value, ypoints)) {
+            for (i = 0; i < 5; ++i) {
+                float gain;
+                if (xpoints[i] > 0.0f) {
+                    gain = (ypoints[i] / xpoints[i]) * scale;
+                } else {
+                    gain = 0.0f;
+                }
+                scale_points[i * 2] = xpoints[i];
+                scale_points[i * 2 + 1] = gain / display_factor;
+                //SDL_Log("Point %d = %f,%f\n", i, scale_points[i * 2], scale_points[i * 2 + 1]);
+            }
+            SDL_SetMouseSystemScale(SDL_arraysize(scale_points), scale_points);
+        }
+        RegCloseKey(hKey);
+    }
+}
+
+static void
+WIN_SetLinearMouseScale(int mouse_speed)
+{
+    static float mouse_speed_scale[] = {
+        0.0f,
+        1 / 32.0f,
+        1 / 16.0f,
+        1 / 8.0f,
+        2 / 8.0f,
+        3 / 8.0f,
+        4 / 8.0f,
+        5 / 8.0f,
+        6 / 8.0f,
+        7 / 8.0f,
+        1.0f,
+        1.25f,
+        1.5f,
+        1.75f,
+        2.0f,
+        2.25f,
+        2.5f,
+        2.75f,
+        3.0f,
+        3.25f,
+        3.5f
+    };
+
+    if (mouse_speed > 0 && mouse_speed < SDL_arraysize(mouse_speed_scale)) {
+        SDL_SetMouseSystemScale(1, &mouse_speed_scale[mouse_speed]);
+    }
+}
+
+void
+WIN_UpdateMouseSystemScale()
+{
+    int mouse_speed;
+    int params[3] = { 0, 0, 0 };
+
+    if (SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouse_speed, 0) &&
+        SystemParametersInfo(SPI_GETMOUSE, 0, params, 0)) {
+        if (params[2]) {
+            WIN_SetEnhancedMouseScale(mouse_speed);
+        } else {
+            WIN_SetLinearMouseScale(mouse_speed);
+        }
     }
 }
 

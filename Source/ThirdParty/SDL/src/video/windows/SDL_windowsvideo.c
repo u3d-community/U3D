@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,7 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-// Modified by Lasse Oorni for Urho3D
+// Modified by Lasse Oorni and Nathanial Lydick for Urho3D
 
 #include "../../SDL_internal.h"
 
@@ -37,6 +37,8 @@
 #include "SDL_windowsframebuffer.h"
 #include "SDL_windowsshape.h"
 #include "SDL_windowsvulkan.h"
+
+/* #define HIGHDPI_DEBUG */
 
 /* Initialization/Query functions */
 static int WIN_VideoInit(_THIS);
@@ -66,6 +68,7 @@ UpdateWindowFrameUsableWhileCursorHidden(void *userdata, const char *name, const
     }
 }
 
+#if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
 static void WIN_SuspendScreenSaver(_THIS)
 {
     if (_this->suspend_screensaver) {
@@ -74,15 +77,14 @@ static void WIN_SuspendScreenSaver(_THIS)
         SetThreadExecutionState(ES_CONTINUOUS);
     }
 }
+#endif
+
+#if defined(__XBOXONE__) || defined(__XBOXSERIES__)
+extern void D3D12_XBOX_GetResolution(Uint32 *width, Uint32 *height);
+#endif
 
 
 /* Windows driver bootstrap functions */
-
-static int
-WIN_Available(void)
-{
-    return (1);
-}
 
 static void
 WIN_DeleteDevice(SDL_VideoDevice * device)
@@ -90,19 +92,23 @@ WIN_DeleteDevice(SDL_VideoDevice * device)
     SDL_VideoData *data = (SDL_VideoData *) device->driverdata;
 
     SDL_UnregisterApp();
+#if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
     if (data->userDLL) {
         SDL_UnloadObject(data->userDLL);
     }
     if (data->shcoreDLL) {
         SDL_UnloadObject(data->shcoreDLL);
     }
-
+#endif
+    if (device->wakeup_lock) {
+        SDL_DestroyMutex(device->wakeup_lock);
+    }
     SDL_free(device->driverdata);
     SDL_free(device);
 }
 
 static SDL_VideoDevice *
-WIN_CreateDevice(int devindex)
+WIN_CreateDevice(void)
 {
     SDL_VideoDevice *device;
     SDL_VideoData *data;
@@ -122,15 +128,26 @@ WIN_CreateDevice(int devindex)
         return NULL;
     }
     device->driverdata = data;
+    device->wakeup_lock = SDL_CreateMutex();
 
+#if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
     data->userDLL = SDL_LoadObject("USER32.DLL");
     if (data->userDLL) {
         data->CloseTouchInputHandle = (BOOL (WINAPI *)(HTOUCHINPUT)) SDL_LoadFunction(data->userDLL, "CloseTouchInputHandle");
         data->GetTouchInputInfo = (BOOL (WINAPI *)(HTOUCHINPUT, UINT, PTOUCHINPUT, int)) SDL_LoadFunction(data->userDLL, "GetTouchInputInfo");
         data->RegisterTouchWindow = (BOOL (WINAPI *)(HWND, ULONG)) SDL_LoadFunction(data->userDLL, "RegisterTouchWindow");
+        data->SetProcessDPIAware = (BOOL (WINAPI *)(void)) SDL_LoadFunction(data->userDLL, "SetProcessDPIAware");
+        data->SetProcessDpiAwarenessContext = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT)) SDL_LoadFunction(data->userDLL, "SetProcessDpiAwarenessContext");
+        data->SetThreadDpiAwarenessContext = (DPI_AWARENESS_CONTEXT (WINAPI *)(DPI_AWARENESS_CONTEXT)) SDL_LoadFunction(data->userDLL, "SetThreadDpiAwarenessContext");
+        data->GetThreadDpiAwarenessContext = (DPI_AWARENESS_CONTEXT (WINAPI *)(void)) SDL_LoadFunction(data->userDLL, "GetThreadDpiAwarenessContext");
+        data->GetAwarenessFromDpiAwarenessContext = (DPI_AWARENESS (WINAPI *)(DPI_AWARENESS_CONTEXT)) SDL_LoadFunction(data->userDLL, "GetAwarenessFromDpiAwarenessContext");
+        data->EnableNonClientDpiScaling = (BOOL (WINAPI *)(HWND)) SDL_LoadFunction(data->userDLL, "EnableNonClientDpiScaling");
+        data->AdjustWindowRectExForDpi = (BOOL (WINAPI *)(LPRECT, DWORD, BOOL, DWORD, UINT)) SDL_LoadFunction(data->userDLL, "AdjustWindowRectExForDpi");
+        data->GetDpiForWindow = (UINT (WINAPI *)(HWND)) SDL_LoadFunction(data->userDLL, "GetDpiForWindow");
+        data->AreDpiAwarenessContextsEqual = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT)) SDL_LoadFunction(data->userDLL, "AreDpiAwarenessContextsEqual");
+        data->IsValidDpiAwarenessContext = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT)) SDL_LoadFunction(data->userDLL, "IsValidDpiAwarenessContext");
 
         // Urho3D: call SetProcessDPIAware if available to prevent Windows 8.1 from performing unwanted scaling
-        data->SetProcessDPIAware = (BOOL (WINAPI *)()) SDL_LoadFunction(data->userDLL, "SetProcessDPIAware");
         if (data->SetProcessDPIAware)
             data->SetProcessDPIAware();
     } else {
@@ -140,20 +157,28 @@ WIN_CreateDevice(int devindex)
     data->shcoreDLL = SDL_LoadObject("SHCORE.DLL");
     if (data->shcoreDLL) {
         data->GetDpiForMonitor = (HRESULT (WINAPI *)(HMONITOR, MONITOR_DPI_TYPE, UINT *, UINT *)) SDL_LoadFunction(data->shcoreDLL, "GetDpiForMonitor");
+        data->SetProcessDpiAwareness = (HRESULT (WINAPI *)(PROCESS_DPI_AWARENESS)) SDL_LoadFunction(data->shcoreDLL, "SetProcessDpiAwareness");
     } else {
         SDL_ClearError();
     }
+#endif /* #if !defined(__XBOXONE__) && !defined(__XBOXSERIES__) */
 
     /* Set the function pointers */
     device->VideoInit = WIN_VideoInit;
     device->VideoQuit = WIN_VideoQuit;
+#if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
     device->GetDisplayBounds = WIN_GetDisplayBounds;
     device->GetDisplayUsableBounds = WIN_GetDisplayUsableBounds;
     device->GetDisplayDPI = WIN_GetDisplayDPI;
     device->GetDisplayModes = WIN_GetDisplayModes;
     device->SetDisplayMode = WIN_SetDisplayMode;
+#endif
     device->PumpEvents = WIN_PumpEvents;
+    device->WaitEventTimeout = WIN_WaitEventTimeout;
+#if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
+    device->SendWakeupEvent = WIN_SendWakeupEvent;
     device->SuspendScreenSaver = WIN_SuspendScreenSaver;
+#endif
 
     device->CreateSDLWindow = WIN_CreateWindow;
     device->CreateSDLWindowFrom = WIN_CreateWindowFrom;
