@@ -116,10 +116,9 @@ task :test => [:init] do
 
       gdb -batch -ex "set disable-randomization off" -ex=r -ex=bt --args bin/04_StaticScene -timeout 5
 
-    } or abort
-  else
-    system build_target(test, wrapper) or abort
+    }
   end
+  system build_target(test, wrapper) or abort
 end
 
 desc 'Generate documentation'
