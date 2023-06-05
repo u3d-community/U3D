@@ -106,7 +106,20 @@ task :test => [:init] do
   end
   wrapper = ENV['CI'] && ENV['PLATFORM'] == 'linux' ? 'xvfb-run' : ''
   test = /xcode|vs/ =~ ENV['GENERATOR'] ? 'RUN_TESTS' : 'test'
-  system build_target(test, wrapper) or abort
+  if /linux/ =~ ENV['PLATFORM'] # NEL: Temporary run the executable with gdb to see what is going wrong.
+    system %Q{
+      cd #{build_tree} && \\
+      ctest -VV --output-on-failure -R 04_StaticScene ;
+      echo "\n-- Run 04 with GDB --\n"
+
+      bash -c 'if ! command -v gdb &> /dev/null ; then echo "Installing GDB" ; sudo apt update && sudo apt install -y gdb ; fi'
+
+      gdb -batch -ex "set disable-randomization off" -ex=r -ex=bt --args bin/04_StaticScene -timeout 5
+
+    } or abort
+  else
+    system build_target(test, wrapper) or abort
+  end
 end
 
 desc 'Generate documentation'
