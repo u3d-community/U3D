@@ -111,9 +111,16 @@ task :test => [:init] do
     Rake::Task[:style].invoke
     next
   end
+  
   wrapper = ENV['CI'] && ENV['PLATFORM'] == 'linux' ? 'xvfb-run' : ''
   test = /xcode|vs/ =~ ENV['GENERATOR'] ? 'RUN_TESTS' : 'test'
-  if /linux/ =~ ENV['PLATFORM'] # NEL: Temporary run the executable with gdb to see what is going wrong.
+  if false and /linux/ =~ ENV['PLATFORM'] # NEL: Temporary run the executable with gdb to see what is going wrong.
+    # Enable useful coredumps https://askubuntu.com/a/1181036
+    # sudo sysctl -w kernel.core_pattern=core.%e.%t-%p
+    # And also re-enable apport:
+    # systemctl restart apport # to restore default apport settings
+    # Giving: `cat /proc/sys/kernel/core_pattern`
+    # |/usr/share/apport/apport -p%p -s%s -c%c -d%d -P%P -u%u -g%g -- %E
     system %Q{
       cd #{build_tree} && \\
       ctest -VV --output-on-failure -R 04_StaticScene ;
@@ -133,7 +140,36 @@ task :test => [:init] do
     
     print "\n\n======\n DONE \n======"
   end
-  # system build_target(test, wrapper) or abort
+  
+  #NEL: Must have core dumps enabled outside of docker (Use core.%e for the kernel.core_pattern).
+  # Disable limits on core dumps
+  # Install gdb.
+  # Remove existing core dumps
+  # Run all the tests (generating core dumps as needed).
+  # Run gdb on all the core dumps
+  
+  # ctest -VV --output-on-failure -R 04_StaticScene
+  system %Q{
+      # ulimit -c unlimited || echo FAILED TO SET ULIMIT # Fails for whatever reason
+      bash -c 'if ! command -v gdb &> /dev/null ; then echo "Installing GDB" ; sudo apt update && sudo apt install -y gdb ; fi'
+      cd #{build_tree} && \\
+      bash -c 'rm  Source/Samples/*/core.*'
+      bash -c 'ulimit -c unlimited ; ctest -VV --output-on-failure; echo ulimit `ulimit -c`'
+      cd -
+      cat /proc/sys/kernel/core_pattern
+      find #{build_tree} -name 'core.*'
+    }
+  
+    
+  Dir.glob("#{build_tree}/Source/Samples/*/core.*[0-9][0-9]_*").sort.each do|core|
+    file = "#{build_tree}/bin/#{File.basename(File.dirname(core))}"
+    
+    print "\n\nFailed with file '#{file}'\nRuning gdb on core '#{core}'...\n\n"
+    system %Q{
+      gdb -batch -ex=bt -ex=frame -ex=list -ex="info args" -ex="info locals" #{file} '#{core}'
+    }
+  end
+  #system build_target(test, wrapper) or abort
 end
 
 desc 'Generate documentation'

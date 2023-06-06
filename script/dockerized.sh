@@ -47,7 +47,8 @@ d () {
     if [[ $use_podman ]]; then
         podman "$@"
     else
-        docker "$@"
+        sudo --preserve-env docker "$@"
+        run_option="--ulimit core=-1"
     fi
 }
 

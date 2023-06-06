@@ -16,8 +16,8 @@ jobs:
           - linux-gcc
           - linux-clang
           - mingw
-          - rpi
-          - arm
+          #- rpi
+          #- arm
         lib-type:
           - static
           - shared
@@ -25,11 +25,11 @@ jobs:
           - 64
           - 32
         build-type:
-          - rel
+          #- rel
           - dbg
-        include:
-          - { platform: web, lib-type: static, architecture: wasm, build-type: rel }
-          - { platform: web, lib-type: static, architecture: wasm, build-type: dbg }
+        #include:
+          #- { platform: web, lib-type: static, architecture: wasm, build-type: rel }
+          #- { platform: web, lib-type: static, architecture: wasm, build-type: dbg }
     env:
       HOST: ${{ github.job }}
       PLATFORM: ${{ matrix.platform }}
@@ -62,6 +62,8 @@ jobs:
         run: script/dockerized.sh ${PLATFORM/-*} rake cmake
       - name: Build
         run: script/dockerized.sh ${PLATFORM/-*} rake build
+      - name: CoreDumps
+        run: sudo sysctl -w kernel.core_pattern=core.%E ; ulimit -c unlimited
       - name: Test
         run: script/dockerized.sh ${PLATFORM/-*} rake test
         if: startsWith(matrix.platform, 'linux') || matrix.platform == 'android'
