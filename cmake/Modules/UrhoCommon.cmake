@@ -957,7 +957,7 @@ macro (define_dependency_libs TARGET)
                     list (APPEND LIBS "-framework CoreMotion")
                 endif ()
             else ()
-                list (APPEND LIBS "-framework AudioToolbox" "-framework Carbon" "-framework Cocoa" "-framework CoreFoundation" "-framework SystemConfiguration" "-framework CoreAudio" "-framework CoreBluetooth" "-framework CoreServices" "-framework CoreVideo" "-framework ForceFeedback" "-framework IOKit" "-framework OpenGL")
+                list (APPEND LIBS "-framework AudioToolbox" "-framework Carbon" "-framework Cocoa" "-framework CoreFoundation" "-weak_framework CoreHaptics" "-framework SystemConfiguration" "-framework CoreAudio" "-framework CoreBluetooth" "-framework CoreServices" "-framework CoreVideo" "-framework ForceFeedback" "-framework IOKit" "-framework OpenGL")
             endif ()
         endif ()
 
