@@ -55,7 +55,6 @@ public class HIDDeviceManager {
 
     private Context mContext;
     private HashMap<Integer, HIDDevice> mDevicesById = new HashMap<Integer, HIDDevice>();
-    private HashMap<UsbDevice, HIDDeviceUSB> mUSBDevices = new HashMap<UsbDevice, HIDDeviceUSB>();
     private HashMap<BluetoothDevice, HIDDeviceBLESteamController> mBluetoothDevices = new HashMap<BluetoothDevice, HIDDeviceBLESteamController>();
     private int mNextDeviceId = 0;
     private SharedPreferences mSharedPreferences = null;
@@ -109,8 +108,6 @@ public class HIDDeviceManager {
     private HIDDeviceManager(final Context context) {
         mContext = context;
 
-        // Urho3D - HIDAPI is built-in inside our custom SDL library, so no need to load libhidapi.so
-
         HIDDeviceRegisterCallback();
 
         mSharedPreferences = mContext.getSharedPreferences("hidapi", Context.MODE_PRIVATE);
@@ -124,13 +121,6 @@ public class HIDDeviceManager {
 //        else
         {
             mNextDeviceId = mSharedPreferences.getInt("next_device_id", 0);
-        }
-
-        initializeUSB();
-
-        // Urho3D - check first if Bluetooth is available
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            initializeBluetooth();
         }
     }
 
@@ -565,34 +555,47 @@ public class HIDDeviceManager {
     ////////// JNI interface functions
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean initialize(boolean usb, boolean bluetooth) {
+        Log.v(TAG, "initialize(" + usb + ", " + bluetooth + ")");
+
+        if (usb) {
+            initializeUSB();
+        }
+        if (bluetooth) {
+            initializeBluetooth();
+        }
+        return true;
+    }
+
     public boolean openDevice(int deviceID) {
+        Log.v(TAG, "openDevice deviceID=" + deviceID);
+        HIDDevice device = getDevice(deviceID);
+        if (device == null) {
+            HIDDeviceDisconnected(deviceID);
+            return false;
+        }
+
         // Look to see if this is a USB device and we have permission to access it
-        for (HIDDeviceUSB device : mUSBDevices.values()) {
-            if (deviceID == device.getId()) {
-                UsbDevice usbDevice = device.getDevice();
-                if (!mUsbManager.hasPermission(usbDevice)) {
-                    HIDDeviceOpenPending(deviceID);
-                    try {
-                        mUsbManager.requestPermission(usbDevice, PendingIntent.getBroadcast(mContext, 0, new Intent(HIDDeviceManager.ACTION_USB_PERMISSION), 0));
-                    } catch (Exception e) {
-                        Log.v(TAG, "Couldn't request permission for USB device " + usbDevice);
-                        HIDDeviceOpenResult(deviceID, false);
-                    }
-                    return false;
+        UsbDevice usbDevice = device.getDevice();
+        if (usbDevice != null && !mUsbManager.hasPermission(usbDevice)) {
+            HIDDeviceOpenPending(deviceID);
+            try {
+                final int FLAG_MUTABLE = 0x02000000; // PendingIntent.FLAG_MUTABLE, but don't require SDK 31
+                int flags;
+                if (Build.VERSION.SDK_INT >= 31) {
+                    flags = FLAG_MUTABLE;
+                } else {
+                    flags = 0;
                 }
-                break;
+                mUsbManager.requestPermission(usbDevice, PendingIntent.getBroadcast(mContext, 0, new Intent(HIDDeviceManager.ACTION_USB_PERMISSION), flags));
+            } catch (Exception e) {
+                Log.v(TAG, "Couldn't request permission for USB device " + usbDevice);
+                HIDDeviceOpenResult(deviceID, false);
             }
+            return false;
         }
 
         try {
-            Log.v(TAG, "openDevice deviceID=" + deviceID);
-            HIDDevice device;
-            device = getDevice(deviceID);
-            if (device == null) {
-                HIDDeviceDisconnected(deviceID);
-                return false;
-            }
-
             return device.open();
         } catch (Exception e) {
             Log.e(TAG, "Got exception: " + Log.getStackTraceString(e));
@@ -602,7 +605,7 @@ public class HIDDeviceManager {
 
     public int sendOutputReport(int deviceID, byte[] report) {
         try {
-            Log.v(TAG, "sendOutputReport deviceID=" + deviceID + " length=" + report.length);
+            //Log.v(TAG, "sendOutputReport deviceID=" + deviceID + " length=" + report.length);
             HIDDevice device;
             device = getDevice(deviceID);
             if (device == null) {
@@ -619,7 +622,7 @@ public class HIDDeviceManager {
 
     public int sendFeatureReport(int deviceID, byte[] report) {
         try {
-            Log.v(TAG, "sendFeatureReport deviceID=" + deviceID + " length=" + report.length);
+            //Log.v(TAG, "sendFeatureReport deviceID=" + deviceID + " length=" + report.length);
             HIDDevice device;
             device = getDevice(deviceID);
             if (device == null) {
@@ -636,7 +639,7 @@ public class HIDDeviceManager {
 
     public boolean getFeatureReport(int deviceID, byte[] report) {
         try {
-            Log.v(TAG, "getFeatureReport deviceID=" + deviceID);
+            //Log.v(TAG, "getFeatureReport deviceID=" + deviceID);
             HIDDevice device;
             device = getDevice(deviceID);
             if (device == null) {
@@ -675,7 +678,7 @@ public class HIDDeviceManager {
     private native void HIDDeviceRegisterCallback();
     private native void HIDDeviceReleaseCallback();
 
-    native void HIDDeviceConnected(int deviceID, String identifier, int vendorId, int productId, String serial_number, int release_number, String manufacturer_string, String product_string, int interface_number);
+    native void HIDDeviceConnected(int deviceID, String identifier, int vendorId, int productId, String serial_number, int release_number, String manufacturer_string, String product_string, int interface_number, int interface_class, int interface_subclass, int interface_protocol);
     native void HIDDeviceOpenPending(int deviceID);
     native void HIDDeviceOpenResult(int deviceID, boolean opened);
     native void HIDDeviceDisconnected(int deviceID);
