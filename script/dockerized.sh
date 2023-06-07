@@ -47,6 +47,7 @@ d () {
     if [[ $use_podman ]]; then
         podman "$@"
     else
+        run_option="--ulimit core=-1"
         docker "$@"
     fi
 }
