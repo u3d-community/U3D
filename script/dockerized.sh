@@ -37,6 +37,7 @@ if ! docker --version >/dev/null 2>&1; then
         mount_option=,exec
         # Podman by default pull from other OS registries before trying 'docker.io', so we need to be more explicit to avoid the retries
         registry=docker.io/
+        echo "Using podman"
     else
         echo "Could not find Docker client or podman"
         exit 1
@@ -44,10 +45,10 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 
 d () {
+    echo core_pattern `cat /proc/sys/kernel/core_pattern`
     if [[ $use_podman ]]; then
         podman "$@"
     else
-        run_option="--ulimit core=-1"
         docker "$@"
     fi
 }
@@ -81,7 +82,7 @@ else
 fi
 if [[ $use_podman ]] || ( [[ $(d version -f '{{.Client.Version}}') =~ ^([0-9]+)\.0*([0-9]+)\. ]] && (( BASH_REMATCH[1] * 100 + BASH_REMATCH[2] >= 1809 )) ); then
     # podman or newer Docker client
-    d run $interactive -t --rm -h fishtank $run_option \
+    d run $interactive -t --rm -h fishtank --ulimit core=-1 $run_option \
         -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -e PROJECT_DIR="$PROJECT_DIR" \
         --env-file "$SCRIPT_DIR/.env-file" \
         --mount type=bind,source="$PROJECT_DIR",target="$PROJECT_DIR" \
@@ -89,7 +90,7 @@ if [[ $use_podman ]] || ( [[ $(d version -f '{{.Client.Version}}') =~ ^([0-9]+)\
         $dbe_image "$@"
 else
     # Fallback workaround on older Docker CLI version
-    d run $interactive -t --rm -h fishtank \
+    d run $interactive -t --rm -h fishtank --ulimit core=-1 \
         -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -e PROJECT_DIR="$PROJECT_DIR" \
         --env-file <(perl -ne 'chomp; print "$_\n" if defined $ENV{$_}' "$SCRIPT_DIR/.env-file") \
         --mount type=bind,source="$PROJECT_DIR",target="$PROJECT_DIR" \
