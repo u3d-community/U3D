@@ -62,6 +62,9 @@ jobs:
         run: script/dockerized.sh ${PLATFORM/-*} rake cmake
       - name: Build
         run: script/dockerized.sh ${PLATFORM/-*} rake build
+      - name: FIXME: Install 32bit libxi
+        run: script/dockerized.sh ${PLATFORM/-*} sudo apt install libxi-dev:i386
+        if: matrix.architecture != 64
       - name: Test
         run: script/dockerized.sh ${PLATFORM/-*} rake test
         if: startsWith(matrix.platform, 'linux') || matrix.platform == 'android'
