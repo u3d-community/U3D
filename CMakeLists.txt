@@ -176,6 +176,12 @@ if (URHO3D_MACOSX_BUNDLE OR (APPLE AND ARM))
     endif ()
 endif ()
 
+# Clang >= 14 warns even if you compile with -std=c99 or -std=gnu99
+check_c_compiler_flag(-Wdeclaration-after-statement HAVE_DECLARATION_AFTER_STATEMENT_WARNING)
+if (HAVE_DECLARATION_AFTER_STATEMENT_WARNING)
+    add_definitions(-Wno-declaration-after-statement)
+endif()
+
 # Setup SDK-like include dir in the build tree for building the Urho3D library
 set (THIRD_PARTY_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${DEST_INCLUDE_DIR}/ThirdParty)
 file (MAKE_DIRECTORY ${THIRD_PARTY_INCLUDE_DIR})
