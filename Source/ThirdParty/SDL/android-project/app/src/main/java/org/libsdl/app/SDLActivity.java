@@ -33,7 +33,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 
-import io.urho3d.UrhoActivity;
+import io.u3d.engine.UrhoActivity;
 
 /**
     SDL Activity

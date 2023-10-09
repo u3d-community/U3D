@@ -1,4 +1,4 @@
-name: MacOS Build
+name: 💻 MacOS
 on: [push, pull_request]
 
 concurrency:
@@ -7,53 +7,30 @@ concurrency:
 
 jobs:
   macOS:
-    name: 🍎
+    name: MacOS
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - macOS
         lib-type:
           - static
           - shared
-    env:
-      HOST: ${{ github.job }}
-      PLATFORM: ${{ matrix.platform }}
-      LIB_TYPE: ${{ matrix.lib-type }}
-      CMAKE_OSX_ARCHITECTURES: x86_64
+        build-type:
+          - Release
+          - Debug
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with: { fetch-depth: 0 }
+
       - name: Select Xcode
         run: sudo xcode-select --switch /Applications/Xcode_14.0.1.app
+
       - name: CMake
-        run: rake cmake
+        run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11
+
       - name: Build
-        run: rake build
-      - name: Test
-        run: rake test
-      - name: Install
-        run: rake install
-      - name: Scaffolding - new
-        run: rake new
-      - name: Scaffolding - build
-        run: |
-          cd ~/projects/UrhoApp
-          rake
-      - name: Scaffolding - test
-        run: |
-          cd ~/projects/UrhoApp
-          rake test
-      - name: Scaffolding - cleanup
-        run: rm -rf ~/{.urho3d,projects}
+        run: cmake --build build --config ${{ matrix.build-type }}
+
       - name: Package
-        run: rake package
-        if: github.event_name == 'push'
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-all-rel
-          path: build/ci/*.tar.gz
-        if: github.event_name == 'push'
+        #if: startsWith(github.ref, 'refs/tags/')
+        run: cmake --build build --target package --config ${{ matrix.build-type }}

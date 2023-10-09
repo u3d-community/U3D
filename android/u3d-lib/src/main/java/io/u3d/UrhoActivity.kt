@@ -1,11 +1,10 @@
-package io.urho3d
+package io.u3d.engine
 
 import android.content.Context
 import org.libsdl.app.SDLActivity
 import java.io.File
 
 open class UrhoActivity : SDLActivity() {
-
     companion object {
         private val regex = Regex("^lib(.*)\\.so$")
 
@@ -17,5 +16,4 @@ open class UrhoActivity : SDLActivity() {
                 regex.find(it.name)?.groupValues?.last() ?: throw IllegalStateException()
             }
     }
-
 }

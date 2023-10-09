@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="MissingPermission">
+        <ignore path="Source/ThirdParty/SDL/android-project/app/src/main/java/org/libsdl/app/" />
+    </issue>
+</lint>
