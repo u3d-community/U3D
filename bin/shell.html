@@ -6,12 +6,23 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
     <title>U3D</title>
     <style>
+        #clicktoplaydiv {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            color: white;
+            background-color: rgba(0,0,0,0.2);
+            position: absolute;
+        }
+
         body, html {
             padding: 0;
             margin: 0;
             margin: 0;
             overflow: hidden;
             font-family: sans-serif;
+            color: #ddd;
+            background-color: #111;
         }
 
         .emscripten {
@@ -190,6 +201,31 @@
             }, 100);
         }
 
+        // Set up the click to play message
+        var div = document.createElement('div');
+        div.id = 'clicktoplaydiv';
+        p = document.createElement('p');
+        p.innerHTML = 'Click or tap to begin.';
+        div.appendChild(p);
+        document.body.appendChild(div);
+        div.addEventListener('click', function (e) {
+            div.remove();
+
+            if (Module.calledRun)
+            {
+                // Loading has finished, we have run but not called main
+                callMain();
+                // This calls ready a second time, but it fixes the screen size
+                ready();
+            }
+            else
+            {
+                // If the module has not been run, just turn off noInitialRun
+                Module.noInitialRun = false;
+            }
+        }, { once: true });
+
+        // Emscripten Module
         var Module = {
             preRun: [],
             postRun: [],
@@ -203,6 +239,9 @@
             printErr: function(text) {
                 console.error(text);
             },
+
+            // Disable running until we have interacted with the page so we can run it on click
+            noInitialRun: true,
 
             // Urho3D called method which tells the canvas the current renderer resolution, based on E_SCREENMODE event values
             SetRendererSize: function(width, height) {
