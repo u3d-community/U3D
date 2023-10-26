@@ -347,8 +347,12 @@ Emscripten_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * di
 
 static void
 Emscripten_SetWindowTitle(_THIS, SDL_Window * window) {
+    // Urho3D: newer emscripten uses a free function and not one in the module. Taken from newer SDL.
     EM_ASM_INT({
-      if (typeof Module['setWindowTitle'] !== 'undefined') {
+      if (typeof setWindowTitle !== 'undefined') {
+        setWindowTitle(UTF8ToString($0));
+      }
+      else if (typeof Module['setWindowTitle'] !== 'undefined') {
         Module['setWindowTitle'](UTF8ToString($0));
       }
       return 0;
