@@ -645,3 +645,10 @@ endif ()
 if (URHO3D_FORCE_AS_MAX_PORTABILITY)
     add_definitions (-DAS_MAX_PORTABILITY)
 endif ()
+
+# Symlink/copy html shell for use by downstream projects
+if (WEB)
+    # Ensure the output directory exist before creating the symlink
+    file (MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    create_symlink (${CMAKE_SOURCE_DIR}/bin/shell.html ${CMAKE_BINARY_DIR}/bin/shell.html FALLBACK_TO_COPY)
+endif ()

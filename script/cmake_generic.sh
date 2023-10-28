@@ -47,9 +47,6 @@ for a in $@; do
         MINGW=1)
             OPTS=(-D CMAKE_TOOLCHAIN_FILE=$TOOLCHAINS/MinGW.cmake)
             ;;
-        WEB=1)
-            OPTS=(-D CMAKE_TOOLCHAIN_FILE=$TOOLCHAINS/Emscripten.cmake)
-            ;;
     esac
 done
 
