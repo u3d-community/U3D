@@ -409,7 +409,6 @@ void Input::Update()
 
     URHO3D_PROFILE(UpdateInput);
 
-#ifndef __EMSCRIPTEN__
     bool mouseMoved = false;
     if (mouseMove_ != IntVector2::ZERO)
         mouseMoved = true;
@@ -420,6 +419,7 @@ void Input::Update()
     while (SDL_PollEvent(&evt))
         HandleSDLEvent(&evt);
 
+#ifndef __EMSCRIPTEN__
     if (suppressNextMouseMove_ && (mouseMove_ != IntVector2::ZERO || mouseMoved))
         UnsuppressMouseMove();
 #endif
