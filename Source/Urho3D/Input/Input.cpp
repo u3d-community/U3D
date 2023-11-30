@@ -2343,6 +2343,8 @@ void Input::HandleSDLEvent(void* sdlEvent)
         break;
 
     case SDL_WINDOWEVENT:
+        // Emscripten has a WINDOWEVENT before Input::Initialize() is called from HandleScreenMode().
+        if (graphics_ || (graphics_ = GetSubsystem<Graphics>()))
         {
             switch (evt.window.event)
             {
