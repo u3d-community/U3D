@@ -66,6 +66,9 @@ public:
     /// @property
     void SetVisible(bool visible);
 
+    /// For tile layers, update animated tile sprites.
+    void UpdateAnimations();
+
     /// Return tile map.
     TileMap2D* GetTileMap() const;
 
