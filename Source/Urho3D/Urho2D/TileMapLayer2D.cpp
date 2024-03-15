@@ -246,6 +246,40 @@ void TileMapLayer2D::SetVisible(bool visible)
     }
 }
 
+void TileMapLayer2D::UpdateAnimations()
+{
+    if (GetLayerType() != LT_TILE_LAYER)
+        return;
+
+    TmxFile2D* tmxFile = GetTileMap()->GetTmxFile();
+    for (int y = 0; y < GetHeight(); y++)
+    {
+        for (int x = 0; x < GetWidth(); x++)
+        {
+            Tile2D* tile = GetTile(x, y);
+            if (!tile)
+                continue;
+
+            if (tile->IsAnimated())
+            {
+                Node* node = GetTileNode(x, y);
+                if (node)
+                {
+                    unsigned curGid = tile->GetGid();
+                    FrameSet2D* frameSet = tmxFile->GetTileFrameSet(curGid);
+                    unsigned newGid = frameSet->GetCurrentFrameGid();
+                    if (curGid != newGid)
+                    {
+                        Sprite2D* sprite = tmxFile->GetTileSprite(newGid);
+                        auto* spriteComponent = node->GetComponent<StaticSprite2D>();
+                        spriteComponent->SetSprite(sprite);
+                    }
+                }
+            }
+        }
+    }
+}
+
 TileMap2D* TileMapLayer2D::GetTileMap() const
 {
     return tileMap_;
