@@ -45,6 +45,8 @@ set "OPTS="
 set "BUILD_OPTS="
 set "arch="
 :loop
+:: Cache the first argument so substring operation can be performed on it
+set "ARG1=%~1"
 if not "%~1" == "" (
     if "%~1" == "-D" (
         if "%~2" == "MINGW" if "%~3" == "1" set "OPTS=-G "MinGW Makefiles""
@@ -54,6 +56,11 @@ if not "%~1" == "" (
         shift
         shift
         shift
+    ) else if "%ARG1:~0,2%" == "-D" (
+        :: Handle case where there is no space after "-D" in the options
+        set "BUILD_OPTS=%BUILD_OPTS% %~1=%~2"
+        shift
+        shift
     )
     if "%~1" == "-VS" (
         set "OPTS=-G "Visual Studio %~2" %arch% %TOOLSET%"
@@ -61,7 +68,12 @@ if not "%~1" == "" (
         shift
     )
     if "%~1" == "-G" (
-        set "OPTS=%OPTS% -G %~2"
+        :: Add quote to MinGW Makefiles flag since Emscripten's emcmake emits them without quotes and this breaks cmake
+        if "%~2" == "MinGW Makefiles" (
+            set "OPTS=%OPTS% -G "%~2""
+        ) else (
+            set "OPTS=%OPTS% -G %~2"
+        )
         shift
         shift
     )
