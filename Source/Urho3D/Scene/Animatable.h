@@ -146,9 +146,9 @@ protected:
     /// Return attribute animation info.
     AttributeAnimationInfo* GetAttributeAnimationInfo(const String& name) const;
     /// Handle attribute animation added.
-    void HandleAttributeAnimationAdded(StringHash eventType, VariantMap& eventData);
+    void HandleObjectAttributeAnimationAdded(StringHash eventType, VariantMap& eventData);
     /// Handle attribute animation removed.
-    void HandleAttributeAnimationRemoved(StringHash eventType, VariantMap& eventData);
+    void HandleObjectAttributeAnimationRemoved(StringHash eventType, VariantMap& eventData);
 
     /// Animation enabled.
     bool animationEnabled_;

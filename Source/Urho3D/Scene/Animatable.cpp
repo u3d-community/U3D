@@ -303,8 +303,8 @@ void Animatable::SetObjectAnimation(ObjectAnimation* objectAnimation)
     if (objectAnimation_)
     {
         OnObjectAnimationRemoved(objectAnimation_);
-        UnsubscribeFromEvent(objectAnimation_, E_ATTRIBUTEANIMATIONADDED);
-        UnsubscribeFromEvent(objectAnimation_, E_ATTRIBUTEANIMATIONREMOVED);
+        UnsubscribeFromEvent(objectAnimation_, E_OBJECTATTRIBUTEANIMATIONADDED);
+        UnsubscribeFromEvent(objectAnimation_, E_OBJECTATTRIBUTEANIMATIONREMOVED);
     }
 
     objectAnimation_ = objectAnimation;
@@ -312,8 +312,8 @@ void Animatable::SetObjectAnimation(ObjectAnimation* objectAnimation)
     if (objectAnimation_)
     {
         OnObjectAnimationAdded(objectAnimation_);
-        SubscribeToEvent(objectAnimation_, E_ATTRIBUTEANIMATIONADDED, URHO3D_HANDLER(Animatable, HandleAttributeAnimationAdded));
-        SubscribeToEvent(objectAnimation_, E_ATTRIBUTEANIMATIONREMOVED, URHO3D_HANDLER(Animatable, HandleAttributeAnimationRemoved));
+        SubscribeToEvent(objectAnimation_, E_OBJECTATTRIBUTEANIMATIONADDED, URHO3D_HANDLER(Animatable, HandleObjectAttributeAnimationAdded));
+        SubscribeToEvent(objectAnimation_, E_OBJECTATTRIBUTEANIMATIONREMOVED, URHO3D_HANDLER(Animatable, HandleObjectAttributeAnimationRemoved));
     }
 }
 
@@ -373,7 +373,14 @@ void Animatable::SetAttributeAnimation(const String& name, ValueAnimation* attri
         attributeAnimationInfos_[name] = new AttributeAnimationInfo(this, *attributeInfo, attributeAnimation, wrapMode, speed);
 
         if (!info)
+        {
             OnAttributeAnimationAdded();
+
+            using namespace AttributeAnimationAdded;
+            VariantMap& eventData = GetEventDataMap();
+            eventData[P_ATTRIBUTEANIMATIONNAME] = name;
+            SendEvent(E_ATTRIBUTEANIMATIONADDED, eventData);
+        }
     }
     else
     {
@@ -386,6 +393,11 @@ void Animatable::SetAttributeAnimation(const String& name, ValueAnimation* attri
 
         attributeAnimationInfos_.Erase(name);
         OnAttributeAnimationRemoved();
+
+        using namespace AttributeAnimationRemoved;
+        VariantMap& eventData = GetEventDataMap();
+        eventData[P_ATTRIBUTEANIMATIONNAME] = name;
+        SendEvent(E_ATTRIBUTEANIMATIONREMOVED, eventData);
     }
 }
 
@@ -544,12 +556,12 @@ AttributeAnimationInfo* Animatable::GetAttributeAnimationInfo(const String& name
     return nullptr;
 }
 
-void Animatable::HandleAttributeAnimationAdded(StringHash eventType, VariantMap& eventData)
+void Animatable::HandleObjectAttributeAnimationAdded(StringHash eventType, VariantMap& eventData)
 {
     if (!objectAnimation_)
         return;
 
-    using namespace AttributeAnimationAdded;
+    using namespace ObjectAttributeAnimationAdded;
     const String& name = eventData[P_ATTRIBUTEANIMATIONNAME].GetString();
 
     ValueAnimationInfo* info = objectAnimation_->GetAttributeAnimationInfo(name);
@@ -559,12 +571,12 @@ void Animatable::HandleAttributeAnimationAdded(StringHash eventType, VariantMap&
     SetObjectAttributeAnimation(name, info->GetAnimation(), info->GetWrapMode(), info->GetSpeed());
 }
 
-void Animatable::HandleAttributeAnimationRemoved(StringHash eventType, VariantMap& eventData)
+void Animatable::HandleObjectAttributeAnimationRemoved(StringHash eventType, VariantMap& eventData)
 {
     if (!objectAnimation_)
         return;
 
-    using namespace AttributeAnimationRemoved;
+    using namespace ObjectAttributeAnimationRemoved;
     const String& name = eventData[P_ATTRIBUTEANIMATIONNAME].GetString();
 
     SetObjectAttributeAnimation(name, nullptr, WM_LOOP, 1.0f);

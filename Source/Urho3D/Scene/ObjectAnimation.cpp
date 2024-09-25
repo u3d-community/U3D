@@ -298,20 +298,20 @@ ValueAnimationInfo* ObjectAnimation::GetAttributeAnimationInfo(const String& nam
 
 void ObjectAnimation::SendAttributeAnimationAddedEvent(const String& name)
 {
-    using namespace AttributeAnimationAdded;
+    using namespace ObjectAttributeAnimationAdded;
     VariantMap& eventData = GetEventDataMap();
     eventData[P_OBJECTANIMATION] = this;
     eventData[P_ATTRIBUTEANIMATIONNAME] = name;
-    SendEvent(E_ATTRIBUTEANIMATIONADDED, eventData);
+    SendEvent(E_OBJECTATTRIBUTEANIMATIONADDED, eventData);
 }
 
 void ObjectAnimation::SendAttributeAnimationRemovedEvent(const String& name)
 {
-    using namespace AttributeAnimationRemoved;
+    using namespace ObjectAttributeAnimationRemoved;
     VariantMap& eventData = GetEventDataMap();
     eventData[P_OBJECTANIMATION] = this;
     eventData[P_ATTRIBUTEANIMATIONNAME] = name;
-    SendEvent(E_ATTRIBUTEANIMATIONREMOVED, eventData);
+    SendEvent(E_OBJECTATTRIBUTEANIMATIONREMOVED, eventData);
 }
 
 }
