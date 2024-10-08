@@ -409,7 +409,6 @@ void Input::Update()
 
     URHO3D_PROFILE(UpdateInput);
 
-#ifndef __EMSCRIPTEN__
     bool mouseMoved = false;
     if (mouseMove_ != IntVector2::ZERO)
         mouseMoved = true;
@@ -420,6 +419,7 @@ void Input::Update()
     while (SDL_PollEvent(&evt))
         HandleSDLEvent(&evt);
 
+#ifndef __EMSCRIPTEN__
     if (suppressNextMouseMove_ && (mouseMove_ != IntVector2::ZERO || mouseMoved))
         UnsuppressMouseMove();
 #endif
@@ -2343,6 +2343,8 @@ void Input::HandleSDLEvent(void* sdlEvent)
         break;
 
     case SDL_WINDOWEVENT:
+        // Emscripten has a WINDOWEVENT before Input::Initialize() is called from HandleScreenMode().
+        if (graphics_ || (graphics_ = GetSubsystem<Graphics>()))
         {
             switch (evt.window.event)
             {
