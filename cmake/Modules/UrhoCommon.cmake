@@ -894,7 +894,10 @@ macro (define_dependency_libs TARGET)
             list (APPEND LIBS dl log android)
         else ()
             # Linux
-            if (NOT WEB)
+            if (${TARGET} MATCHES SDL)
+                # set external libraries dependencies for SDL and add them later to URHO3D
+                set (URHO3D_LIBRARIES ${EXTRA_LIBS} PARENT_SCOPE)
+            elseif (NOT WEB)                
                 list (APPEND LIBS dl m rt)
             endif ()
             if (RPI)
