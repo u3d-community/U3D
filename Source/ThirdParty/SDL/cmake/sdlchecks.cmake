@@ -665,9 +665,12 @@ macro(CheckWayland)
           set(SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_CURSOR "\"${WAYLAND_CURSOR_LIB_SONAME}\"")
           set(SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_XKBCOMMON "\"${XKBCOMMON_LIB_SONAME}\"")
           set(HAVE_WAYLAND_SHARED TRUE)
+          # workaround, add wayland-client for the moment
+          list (APPEND EXTRA_LIBS wayland-client)
         endif()
       else()
-        list (APPEND EXTRA_LIBS wayland-client)
+        # add all wayland dependencies
+        list (APPEND EXTRA_LIBS xkbcommon wayland-client wayland-egl wayland-cursor)
       endif()
 
       set(SDL_VIDEO_DRIVER_WAYLAND 1)
