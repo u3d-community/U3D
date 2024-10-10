@@ -27,9 +27,6 @@ jobs:
         build-type:
           - rel
           - dbg
-        include:
-          - { platform: web, lib-type: static, architecture: wasm, build-type: rel }
-          - { platform: web, lib-type: static, architecture: wasm, build-type: dbg }
     env:
       HOST: ${{ github.job }}
       PLATFORM: ${{ matrix.platform }}
@@ -82,7 +79,7 @@ jobs:
         run: rm -rf build/cache/{.urho3d,projects}
       - name: Package
         run: script/dockerized.sh ${PLATFORM/-*} rake package
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.build-type == 'dbg')
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
@@ -90,19 +87,5 @@ jobs:
           path: |
             build/ci/*.tar.gz
             build/*.out
-        if: github.event_name == 'push'
-        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
-      - name: Publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISHER_NAME: ${{ secrets.PUBLISHER_NAME }}
-          PUBLISHER_EMAIL: ${{ secrets.PUBLISHER_EMAIL }}
-          PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
-        run: script/dockerized.sh ${PLATFORM/-*} rake publish
-        if: |
-          github.event_name == 'push' &&
-          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
-          (matrix.platform == 'web' && matrix.build-type == 'rel')
+        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.build-type == 'dbg')
         continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
