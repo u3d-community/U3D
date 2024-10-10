@@ -26,6 +26,11 @@
 
 #ifdef HAVE_IBUS_IBUS_H
 #define SDL_USE_IBUS 1
+/* urho3d : on linux 32bit, skip GLib Test for Guint64 Overflow /
+            see: /usr/include/glib-2.0/glib/gtypes.h */
+#if defined(__i386__)
+    #define _GLIB_TEST_OVERFLOW_FALLBACK
+#endif
 #include "SDL_stdinc.h"
 #include <ibus-1.0/ibus.h>
 
