@@ -23,6 +23,9 @@
 #include "../Precompiled.h"
 
 #include "../Core/Context.h"
+#include "../IO/AbstractFile.h"
+#include "../IO/FileSystem.h"
+#include "../IO/Log.h"
 #include "../Resource/XMLFile.h"
 #include "../Resource/JSONFile.h"
 #include "../Scene/ObjectAnimation.h"
@@ -57,22 +60,57 @@ void ObjectAnimation::RegisterObject(Context* context)
 
 bool ObjectAnimation::BeginLoad(Deserializer& source)
 {
-    XMLFile xmlFile(context_);
-    if (!xmlFile.Load(source))
-        return false;
+    String extension = GetExtension(source.GetName());
 
-    return LoadXML(xmlFile.GetRoot());
+    if (extension == ".xml")
+    {
+        XMLFile xmlFile(context_);
+        if (xmlFile.Load(source))
+            return LoadXML(xmlFile.GetRoot());
+    }
+    else if (extension == ".json")
+    {
+        JSONFile jsonFile(context_);
+        if (jsonFile.Load(source))
+            return LoadJSON(jsonFile.GetRoot());
+    }
+
+    return false;
 }
 
 bool ObjectAnimation::Save(Serializer& dest) const
 {
-    XMLFile xmlFile(context_);
+    return Save(dest, ".xml");
+}
 
-    XMLElement rootElem = xmlFile.CreateRoot("objectanimation");
-    if (!SaveXML(rootElem))
-        return false;
+bool ObjectAnimation::Save(Serializer& dest, const String& extension) const
+{
+    if (extension == ".xml")
+    {
+        XMLFile xmlFile(context_);
+        XMLElement rootElem = xmlFile.CreateRoot("objectanimation");
+        if (!SaveXML(rootElem))
+        {
+            URHO3D_LOGERROR("ObjectAnimation SaveXML Error");
+            return false;
+        }
 
-    return xmlFile.Save(dest);
+        return xmlFile.Save(dest);
+    }
+    else if (extension == ".json")
+    {
+        JSONFile jsonFile(context_);
+        jsonFile.GetRoot() = "objectanimation";
+        if (!SaveJSON(jsonFile.GetRoot()))
+        {
+            URHO3D_LOGERROR("ObjectAnimation SaveJSON Error");
+            return false;
+        }
+
+        return jsonFile.Save(dest);
+    }
+
+    return false;
 }
 
 bool ObjectAnimation::LoadXML(const XMLElement& source)
