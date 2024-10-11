@@ -49,8 +49,10 @@ public:
 
     /// Load resource from stream. May be called from a worker thread. Return true if successful.
     bool BeginLoad(Deserializer& source) override;
-    /// Save resource. Return true if successful.
+    /// Save resource with default extension. Return true if successful.
     bool Save(Serializer& dest) const override;
+    /// Save resource with given extension. Return true if successful.
+    bool Save(Serializer& dest, const String& extension) const;
     /// Load from XML data. Return true if successful.
     bool LoadXML(const XMLElement& source);
     /// Save as XML data. Return true if successful.
