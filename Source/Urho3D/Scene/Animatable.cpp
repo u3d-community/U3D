@@ -100,7 +100,7 @@ bool Animatable::LoadXML(const XMLElement& source)
         if (!attributeAnimation->LoadXML(elem))
             return false;
 
-        String wrapModeString = source.GetAttribute("wrapmode");
+        String wrapModeString = elem.GetAttribute("wrapmode");
         WrapMode wrapMode = WM_LOOP;
         for (int i = 0; i <= WM_CLAMP; ++i)
         {
