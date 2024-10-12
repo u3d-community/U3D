@@ -25,6 +25,7 @@
 #include "../Core/Context.h"
 #include "../Core/StringUtils.h"
 #include "../IO/Deserializer.h"
+#include "../IO/FileSystem.h"
 #include "../IO/Log.h"
 #include "../IO/Serializer.h"
 #include "../Resource/XMLFile.h"
@@ -68,22 +69,57 @@ void ValueAnimation::RegisterObject(Context* context)
 
 bool ValueAnimation::BeginLoad(Deserializer& source)
 {
-    XMLFile xmlFile(context_);
-    if (!xmlFile.Load(source))
-        return false;
+    String extension = GetExtension(source.GetName());
 
-    return LoadXML(xmlFile.GetRoot());
+    if (extension == ".xml")
+    {
+        XMLFile xmlFile(context_);
+        if (xmlFile.Load(source))
+            return LoadXML(xmlFile.GetRoot());
+    }
+    else if (extension == ".json")
+    {
+        JSONFile jsonFile(context_);
+        if (jsonFile.Load(source))
+            return LoadJSON(jsonFile.GetRoot());
+    }
+
+    return false;
 }
 
 bool ValueAnimation::Save(Serializer& dest) const
 {
-    XMLFile xmlFile(context_);
+    return Save(dest, ".xml");
+}
 
-    XMLElement rootElem = xmlFile.CreateRoot("valueanimation");
-    if (!SaveXML(rootElem))
-        return false;
+bool ValueAnimation::Save(Serializer& dest, const String& extension) const
+{
+    if (extension == ".xml")
+    {
+        XMLFile xmlFile(context_);
+        XMLElement rootElem = xmlFile.CreateRoot("valueanimation");
+        if (!SaveXML(rootElem))
+        {
+            URHO3D_LOGERROR("ValueAnimation SaveXML Error");
+            return false;
+        }
 
-    return xmlFile.Save(dest);
+        return xmlFile.Save(dest);
+    }
+    else if (extension == ".json")
+    {
+        JSONFile jsonFile(context_);
+        jsonFile.GetRoot() = "valueanimation";
+        if (!SaveJSON(jsonFile.GetRoot()))
+        {
+            URHO3D_LOGERROR("ValueAnimation SaveJSON Error");
+            return false;
+        }
+
+        return jsonFile.Save(dest);
+    }
+
+    return false;
 }
 
 bool ValueAnimation::LoadXML(const XMLElement& source)
