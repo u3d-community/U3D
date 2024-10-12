@@ -27,9 +27,6 @@ jobs:
         build-type:
           - rel
           - dbg
-        include:
-          - { platform: web, lib-type: static, architecture: wasm, build-type: rel }
-          - { platform: web, lib-type: static, architecture: wasm, build-type: dbg }
     env:
       HOST: ${{ github.job }}
       PLATFORM: ${{ matrix.platform }}
@@ -39,13 +36,13 @@ jobs:
       DBE_TAG: master
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Source checksum
         id: source_checksum
         run: rake source_checksum
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             build/cache/.ccache
@@ -82,15 +79,15 @@ jobs:
         run: rm -rf build/cache/{.urho3d,projects}
       - name: Package
         run: script/dockerized.sh ${PLATFORM/-*} rake package
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.lib-type == 'static' && matrix.build-type == 'dbg')
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.architecture }}-${{ matrix.build-type }}
           path: |
             build/ci/*.tar.gz
             build/*.out
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.lib-type == 'static' && matrix.build-type == 'dbg')
         continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Publish
         env:
