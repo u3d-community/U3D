@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -147,7 +148,11 @@ else ()
         list (APPEND CMAKE_PREFIX_PATH ${URHO3D_HOME})
         set (SEARCH_OPT NO_CMAKE_FIND_ROOT_PATH)
     endif ()
-    find_path (URHO3D_BASE_INCLUDE_DIR Urho3D.h PATH_SUFFIXES ${PATH_SUFFIX} ${SEARCH_OPT} DOC "Urho3D include directory")
+    if (ANDROID AND URHO3D_HOME)
+        set (URHO3D_BASE_INCLUDE_DIR ${URHO3D_HOME}/include/Urho3D)
+    else ()
+        find_path (URHO3D_BASE_INCLUDE_DIR Urho3D.h PATH_SUFFIXES ${PATH_SUFFIX} ${SEARCH_OPT} DOC "Urho3D include directory")
+    endif ()
     if (URHO3D_BASE_INCLUDE_DIR)
         get_filename_component (URHO3D_INCLUDE_DIRS ${URHO3D_BASE_INCLUDE_DIR} PATH)
         if (NOT URHO3D_HOME)
