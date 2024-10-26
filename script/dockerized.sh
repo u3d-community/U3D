@@ -66,7 +66,11 @@ platform=$1; shift
 # temporary workaround for testing
 if [[ "$platform" == "android" ]]; then
     fishbone="U3D"
-    dbe_image="okkoman/u3d-android:latest"
+    if [[ $GITHUB_ACTIONS ]]; then
+        dbe_image="okkoman/u3d-android:latest"
+    else
+        dbe_image="u3d-android"
+    fi    
 else
     fishbone="urho3d"
     if [[ "$DBE_NAMING_SCHEME" == "tag" ]]; then
