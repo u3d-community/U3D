@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +63,17 @@ fi
 
 platform=$1; shift
 
-if [[ "$DBE_NAMING_SCHEME" == "tag" ]]; then
-  dbe_image=$DBE_NAME:$DBE_TAG-$platform
+# temporary workaround for testing
+if [[ "$platform" == "android" ]]; then
+    fishbone="U3D"
+    dbe_image="okkoman/u3d-android:latest"
 else
-  dbe_image=$DBE_NAME-$platform:$DBE_TAG
+    fishbone="urho3d"
+    if [[ "$DBE_NAMING_SCHEME" == "tag" ]]; then
+      dbe_image=$DBE_NAME:$DBE_TAG-$platform
+    else
+      dbe_image=$DBE_NAME-$platform:$DBE_TAG
+    fi
 fi
 
 if [[ $DBE_REFRESH == 1 ]]; then
@@ -73,9 +81,9 @@ if [[ $DBE_REFRESH == 1 ]]; then
 fi
 if [[ $GITHUB_ACTIONS ]]; then
   mkdir -p $GITHUB_WORKSPACE/build/cache
-  mount_home_dir="--mount type=bind,source=$GITHUB_WORKSPACE/build/cache,target=/home/urho3d$mount_option"
+  mount_home_dir="--mount type=bind,source=$GITHUB_WORKSPACE/build/cache,target=/home/$fishbone$mount_option"
 else
-  mount_home_dir="--mount type=volume,source=$(id -u).urho3d_home_dir,target=/home/urho3d$mount_option"
+  mount_home_dir="--mount type=volume,source=$(id -u).urho3d_home_dir,target=/home/$fishbone$mount_option"
   interactive=-i
 fi
 if [[ $use_podman ]] || ( [[ $(d version -f '{{.Client.Version}}') =~ ^([0-9]+)\.0*([0-9]+)\. ]] && (( BASH_REMATCH[1] * 100 + BASH_REMATCH[2] >= 1809 )) ); then

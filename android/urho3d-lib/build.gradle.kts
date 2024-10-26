@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2008-2022 the Urho3D project.
+// Copyright (c) 2022-2024 the U3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +26,7 @@ import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("com.android.library")
-    id("com.jfrog.bintray")
-    kotlin("android")
-    kotlin("android.extensions")
+    id("org.jetbrains.kotlin.android")
     `maven-publish`
 }
 
@@ -40,10 +39,8 @@ android {
     ndkVersion = ndkSideBySideVersion
     compileSdkVersion(30)
     defaultConfig {
-        minSdkVersion(18)
+        minSdkVersion(19)
         targetSdkVersion(30)
-        versionCode = 1
-        versionName = project.version.toString()
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
@@ -80,7 +77,7 @@ android {
         cmake {
             version = cmakeVersion
             path = project.file("../../CMakeLists.txt")
-            setBuildStagingDirectory(buildStagingDir)
+            buildStagingDirectory("$buildStagingDir/${LibType()}")
         }
     }
     sourceSets {
@@ -88,12 +85,15 @@ android {
             java.srcDir("../../Source/ThirdParty/SDL/android-project/app/src/main/java")
         }
     }
+    lintOptions {
+        isAbortOnError = true
+    }
 }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("com.getkeepsafe.relinker:relinker:1.4.1")
+    implementation("com.getkeepsafe.relinker:relinker:1.4.2")
     testImplementation("junit:junit:4.13.1")
     androidTestImplementation("androidx.test:runner:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
@@ -173,35 +173,13 @@ publishing {
     }
 }
 
-bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    publish = true
-    override = true
-    setPublications("UrhoRelease", "UrhoDebug")
-    pkg.apply {
-        repo = "maven"
-        name = project.name
-        setLicenses("MIT")
-        vcsUrl = "https://github.com/u3d-community/U3D.git"
-        userOrg = "urho3d"
-        setLabels("android", "game-development", "game-engine", "open-source", "urho3d")
-        websiteUrl = "https://urho3d.io/"
-        issueTrackerUrl = "https://github.com/u3d-community/U3D/issues"
-        githubRepo = "u3d-community/U3D"
-        publicDownloadNumbers = true
-        desc = project.description
-        version.apply {
-            name = project.version.toString()
-            desc = project.description
-        }
-    }
+fun LibType(): String {
+    return System.getenv("URHO3D_LIB_TYPE")?.toLowerCase() ?: "static"
 }
 
 fun MavenPublication.configure(config: String) {
-    val libType = System.getenv("URHO3D_LIB_TYPE")?.toLowerCase() ?: "static"
     groupId = project.group.toString()
-    artifactId = "${project.name}-$libType${if (config == "debug") "-debug" else ""}"
+    artifactId = "${project.name}-${LibType()}${if (config == "debug") "-debug" else "" }"
     afterEvaluate {
         from(components[config])
     }

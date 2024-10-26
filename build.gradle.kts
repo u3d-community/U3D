@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2008-2022 the Urho3D project.
+// Copyright (c) 2022-2024 the U3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,39 +25,44 @@ import org.gradle.internal.io.NullOutputStream
 import java.io.ByteArrayOutputStream
 
 buildscript {
+    extra["agpVersion"] = "4.2.0"
     extra["kotlinVersion"] = "1.4.10"
+    val agpVersion: String by extra
     val kotlinVersion: String by extra
+    
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
+    
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.2")
+        classpath("com.android.tools.build:gradle:$agpVersion")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
 }
 
-plugins {
-    id("com.jfrog.bintray") version "1.8.5" apply false
-}
-
+val agpVersion: String by ext
 val kotlinVersion: String by ext
 
 allprojects {
-    group = "io.urho3d"
+    group = "io.u3d"
     version = determineVersion()
     description = """
         Urho3D is a free lightweight, cross-platform 2D and 3D game engine implemented in C++ and
         released under the MIT license. Greatly inspired by OGRE and Horde3D.
     """.trimIndent().replace('\n', ' ')
+
     repositories {
         google()
-        jcenter()
+        mavenCentral()
+        mavenLocal()
     }
+    
     buildscript {
         ext {
-            set("kotlinVersion", kotlinVersion)
-            set("ndkSideBySideVersion", "21.3.6528147")
+            set("agpVersion", "$agpVersion")
+            set("kotlinVersion", "$kotlinVersion")
+            set("ndkSideBySideVersion", "21.4.7075529")
             set("cmakeVersion", "3.17.3+")
             set("buildStagingDir", ".cxx")
         }
