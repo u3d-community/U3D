@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -508,6 +509,9 @@ if (WIN32 AND NOT CMAKE_PROJECT_NAME MATCHES ^Urho3D-ExternalProject-)
     endif ()
 endif ()
 
+# SDL_LIBS : allow to link against Urho3D the external LIBS from SDL
+set (SDL_LIBS)
+
 # Platform and compiler specific options
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -894,16 +898,20 @@ macro (define_dependency_libs TARGET)
             list (APPEND LIBS dl log android)
         else ()
             # Linux
-            if (${TARGET} MATCHES SDL)
-                # set external libraries dependencies for SDL and add them later to URHO3D
-                set (URHO3D_LIBRARIES ${EXTRA_LIBS} PARENT_SCOPE)
-            elseif (NOT WEB)                
+            if (NOT WEB)
                 list (APPEND LIBS dl m rt)
             endif ()
             if (RPI)
                 list (APPEND ABSOLUTE_PATH_LIBS ${VIDEOCORE_LIBRARIES})
             endif ()
         endif ()
+    endif ()
+
+    # Set extra dependencies from SDL and add them later to URHO3D
+    # Android : need OpenSLES
+    # Linux   : may need Wayland and X11 (only for X11-static)
+    if (${TARGET} MATCHES SDL)
+       set (SDL_LIBS ${EXTRA_LIBS} PARENT_SCOPE)
     endif ()
 
     # ThirdParty/Civetweb external dependency
@@ -1779,7 +1787,9 @@ macro (_setup_target)
     include_directories (${INCLUDE_DIRS})
     # Link libraries
     define_dependency_libs (${TARGET_NAME})
-    target_link_libraries (${TARGET_NAME} ${ABSOLUTE_PATH_LIBS} ${LIBS})
+    # Needed external libraries for the current target (SDL_LIBS added)
+    target_link_libraries (${TARGET_NAME} ${ABSOLUTE_PATH_LIBS} ${SDL_LIBS} ${LIBS})
+    set (SDL_LIBS)
     # Enable PCH if requested
     if (${TARGET_NAME}_HEADER_PATHNAME)
         enable_pch (${${TARGET_NAME}_HEADER_PATHNAME})

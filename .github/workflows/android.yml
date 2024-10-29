@@ -24,7 +24,7 @@ jobs:
       DBE_TAG: master
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Free up space
         run: |
@@ -35,7 +35,7 @@ jobs:
         id: source_checksum
         run: rake source_checksum
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             build/cache/.ccache
@@ -71,7 +71,7 @@ jobs:
           rm -rf build/cache/.m2
           find build/cache/.gradle -newer build/cache/.gradle/mark -type d |xargs rm -rf
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-${{ matrix.lib-type }}-all-both
           path: |
@@ -88,8 +88,6 @@ jobs:
           PUBLISHER_NAME: ${{ secrets.PUBLISHER_NAME }}
           PUBLISHER_EMAIL: ${{ secrets.PUBLISHER_EMAIL }}
           PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
         run: script/dockerized.sh ${PLATFORM/-*} rake publish
         if: |
           github.event_name == 'push' &&
