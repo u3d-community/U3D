@@ -6,15 +6,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows:
-    name: 🏁
+  windows-vs:
+    name: win-vs 🏁
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - win-vs
-          - win-gcc
+
         lib-type:
           - static
           - shared
@@ -23,10 +21,67 @@ jobs:
           - OpenGL
     env:
       HOST: ${{ github.job }}
-      PLATFORM: ${{ matrix.platform }}
+      PLATFORM: win-vs
       LIB_TYPE: ${{ matrix.lib-type }}
       GRAPHICS_API: ${{ matrix.graphics-api }}
       URHO3D_DOCS: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Set cache TTL
+        run: |
+          echo ("CACHE_MONTH=" + $(date '+%b %Y')) >> $env:GITHUB_ENV
+      - name: CMake
+        run: rake cmake
+      - name: Build
+        run: rake build
+      - name: Test
+        run: rake test
+        if: matrix.graphics-api != 'OpenGL'
+      - name: Install
+        run: rake install
+      - name: Scaffolding - new
+        run: rake new
+      - name: Scaffolding - build
+        run: |
+          cd ~/projects/UrhoApp
+          rake
+      - name: Scaffolding - test
+        run: |
+          cd ~/projects/UrhoApp
+          rake test
+        if: matrix.graphics-api != 'OpenGL'
+      - name: Scaffolding - cleanup
+        run: rm -r -fo ~/.urho3d, ~/Projects
+      - name: Package
+        run: rake package
+        if: github.event_name == 'push'
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-vs-${{ matrix.lib-type }}-64-${{ matrix.graphics-api }}-rel
+          path: build/ci/*.zip
+        if: github.event_name == 'push'
+  windows-gcc:
+    name: win-gcc 🏁
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lib-type:
+          - static
+          - shared
+        graphics-api:
+          - DX11
+          - OpenGL
+    env:
+      HOST: ${{ github.job }}
+      PLATFORM: win-gcc
+      LIB_TYPE: ${{ matrix.lib-type }}
+      GRAPHICS_API: ${{ matrix.graphics-api }}
+      URHO3D_DOCS: 0
+      MINGW_SYSROOT: 'C:/ProgramData/chocolatey/lib/mingw'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,15 +91,14 @@ jobs:
           echo ("CACHE_MONTH=" + $(date '+%b %Y')) >> $env:GITHUB_ENV
       - name: Cache MinGW installation
         id: cache-mingw
-        uses: actions/cache@v3
-        if: matrix.platform == 'win-gcc'
+        uses: actions/cache@v4
         with:
           path: C:\ProgramData\chocolatey\lib\mingw
           key: ${{ env.CACHE_MONTH }}
       - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        if: matrix.platform == 'win-gcc'
+        uses: egor-tensin/setup-mingw@v2.2.0
         with:
+          version: 12.2.0 
           platform: x64
       - name: CMake
         run: rake cmake
@@ -72,8 +126,8 @@ jobs:
         run: rake package
         if: github.event_name == 'push'
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-64-${{ matrix.graphics-api }}-rel
+          name: win-gcc-${{ matrix.lib-type }}-64-${{ matrix.graphics-api }}-rel
           path: build/ci/*.zip
         if: github.event_name == 'push'
