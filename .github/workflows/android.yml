@@ -7,7 +7,7 @@ concurrency:
 
 jobs:
   android:
-    name: 📱
+    name: android📱
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
