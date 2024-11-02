@@ -21,7 +21,6 @@ jobs:
       HOST: ${{ github.job }}
       PLATFORM: ${{ matrix.platform }}
       LIB_TYPE: ${{ matrix.lib-type }}
-      CMAKE_OSX_ARCHITECTURES: x86_64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
