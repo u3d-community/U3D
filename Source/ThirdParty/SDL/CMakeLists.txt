@@ -429,15 +429,7 @@ if(USE_GCC OR USE_CLANG)
     list(APPEND EXTRA_CFLAGS "-fno-strict-aliasing")
   endif()
 
-  check_c_compiler_flag(-Wdeclaration-after-statement HAVE_GCC_WDECLARATION_AFTER_STATEMENT)
-  if(HAVE_GCC_WDECLARATION_AFTER_STATEMENT)
-    check_c_compiler_flag(-Werror=declaration-after-statement HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT)
-    # Urho3D - bug fix - SDL does not build cleanly for Android platform with this flag on, make a tweak here rather than changing on their code
-    if(HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT AND NOT ANDROID)
-      list(APPEND EXTRA_CFLAGS "-Werror=declaration-after-statement")
-    endif()
-    list(APPEND EXTRA_CFLAGS "-Wdeclaration-after-statement")
-  endif()
+  # Urho3D : Remove -Wdeclaration-after-statement (with this flag, issue in hid code ; don't need to check old C < std99)
 
   if(DEPENDENCY_TRACKING)
     check_c_source_compiles("

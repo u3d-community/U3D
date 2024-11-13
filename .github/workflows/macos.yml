@@ -21,13 +21,12 @@ jobs:
       HOST: ${{ github.job }}
       PLATFORM: ${{ matrix.platform }}
       LIB_TYPE: ${{ matrix.lib-type }}
-      CMAKE_OSX_ARCHITECTURES: x86_64
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Select Xcode
-        run: sudo xcode-select --switch /Applications/Xcode_14.0.1.app
+        run: sudo xcode-select --switch /Applications/Xcode_15.4.app
       - name: CMake
         run: rake cmake
       - name: Build
@@ -52,7 +51,7 @@ jobs:
         run: rake package
         if: github.event_name == 'push'
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.lib-type }}-all-rel
           path: build/ci/*.tar.gz
