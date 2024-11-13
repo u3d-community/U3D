@@ -21,6 +21,12 @@ macro(DEP_OPTION _NAME _DESC _DEFLT _DEPTEST _FAILDFLT)
   cmake_dependent_option("${_NAME}" "${_DESC}" "${_DEFLT}" "${_DEPTEST}" "${_FAILDFLT}")
 endmacro()
 
+# Urho3D - allow more complex DEPTEST expression (see SDL_X11 option)
+macro(DEP_OPTION2 _NAME _DESC _DEFLT _DEPTEST _FAILDFLT)
+  add_to_alloptions(${_NAME})
+  cmake_dependent_option("${_NAME}" "${_DESC}" "${_DEFLT}" ${_DEPTEST} "${_FAILDFLT}")
+endmacro()
+
 macro(OPTION_STRING _NAME _DESC _VALUE)
   add_to_alloptions(${_NAME})
   set(${_NAME} ${_VALUE} CACHE STRING "${_DESC}")

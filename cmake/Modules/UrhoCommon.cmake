@@ -524,9 +524,6 @@ if (WIN32 AND NOT CMAKE_PROJECT_NAME MATCHES ^Urho3D-ExternalProject-)
     endif ()
 endif ()
 
-# SDL_LIBS : allow to link against Urho3D the external LIBS from SDL
-set (SDL_LIBS)
-
 # Platform and compiler specific options
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -722,7 +719,8 @@ else ()
                 # (See https://github.com/kripken/emscripten/commit/f2191c1223e8261bf45f4e27d2ba4d2e9d8b3341 for more detail)
                 # Since version 1.39.5 emcc disables deprecated find event target behavior by default; we revert the flag for now until the support is removed
                 # (See https://github.com/emscripten-core/emscripten/commit/948af470be12559367e7629f31cf7c841fbeb2a9#diff-291d81f9d42b322a89881b6d91f7a122 for more detail)
-                set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=\"['Pointer_stringify']\" -s FORCE_FILESYSTEM=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0")
+                # replace deprecated EXTRA_EXPORTED_RUNTIME_METHODS by EXPORTED_RUNTIME_METHODS
+                set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s EXPORTED_RUNTIME_METHODS=\"['Pointer_stringify']\" -s FORCE_FILESYSTEM=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0")
                 set (CMAKE_C_FLAGS_RELEASE "-Oz -DNDEBUG")
                 set (CMAKE_CXX_FLAGS_RELEASE "-Oz -DNDEBUG")
                 # Remove variables to make the -O3 regalloc easier
@@ -910,7 +908,7 @@ macro (define_dependency_libs TARGET)
         elseif (APPLE)
             list (APPEND LIBS iconv)
         elseif (ANDROID)
-            list (APPEND LIBS dl log android)
+            list (APPEND LIBS dl log android OpenSLES)
         else ()
             # Linux
             if (NOT WEB)
@@ -920,13 +918,6 @@ macro (define_dependency_libs TARGET)
                 list (APPEND ABSOLUTE_PATH_LIBS ${VIDEOCORE_LIBRARIES})
             endif ()
         endif ()
-    endif ()
-
-    # Set extra dependencies from SDL and add them later to URHO3D
-    # Android : need OpenSLES
-    # Linux   : may need Wayland and X11 (only for X11-static)
-    if (${TARGET} MATCHES SDL)
-       set (SDL_LIBS ${EXTRA_LIBS} PARENT_SCOPE)
     endif ()
 
     # ThirdParty/Civetweb external dependency
@@ -977,21 +968,16 @@ macro (define_dependency_libs TARGET)
                 list (APPEND LIBS dbghelp)
             endif ()
         elseif (APPLE)
-            # use find_library to retrieve compatible frameworks for ios/tvos (compatible with cmake 3.28+)
-            if (ARM)
-                set (FRAMEWORKS AudioToolbox AVFoundation CoreAudio CoreBluetooth CoreGraphics Foundation GameController OpenGLES QuartzCore UIKit)
-                if (NOT TVOS)
+            if (IOS OR TVOS)
+                set (FRAMEWORKS AudioToolbox AVFoundation CoreAudio CoreBluetooth CoreGraphics CoreHaptics Foundation GameController Metal OpenGLES QuartzCore UIKit)
+                if (IOS)
                     set (FRAMEWORKS ${FRAMEWORKS} CoreMotion)
                 endif ()
             else ()
-                set (FRAMEWORKS AudioToolbox Carbon Cocoa CoreFoundation SystemConfiguration CoreAudio CoreBluetooth CoreServices CoreVideo ForceFeedback IOKit OpenGL) 
+                set (FRAMEWORKS AudioToolbox Carbon Cocoa CoreFoundation SystemConfiguration CoreAudio CoreBluetooth CoreServices CoreVideo CoreHaptics GameController ForceFeedback IOKit OpenGL) 
             endif ()
             foreach (FRAMEWORK ${FRAMEWORKS})
-                find_library(LIB ${FRAMEWORK} NO_CACHE)
-                if (LIB)
-                    list (APPEND LIBS ${LIB})
-                endif ()
-                unset (LIB)
+                list (APPEND LIBS "-framework ${FRAMEWORK}")
             endforeach ()
         endif ()
 
@@ -1810,9 +1796,8 @@ macro (_setup_target)
     include_directories (${INCLUDE_DIRS})
     # Link libraries
     define_dependency_libs (${TARGET_NAME})
-    # Needed external libraries for the current target (SDL_LIBS added)
-    target_link_libraries (${TARGET_NAME} ${ABSOLUTE_PATH_LIBS} ${SDL_LIBS} ${LIBS})
-    set (SDL_LIBS)
+    # Needed external libraries for the current target
+    target_link_libraries (${TARGET_NAME} ${ABSOLUTE_PATH_LIBS} ${LIBS})
     # Enable PCH if requested
     if (${TARGET_NAME}_HEADER_PATHNAME)
         enable_pch (${${TARGET_NAME}_HEADER_PATHNAME})

@@ -875,14 +875,29 @@ endmacro()
 
 # Requires:
 # - nada
+# Urho3D - rename the macro to be generic OpenGL check and make it also work for OSX platform
 macro(CheckOpenGL)
   if(SDL_OPENGL)
+    if (APPLE)
+      check_c_source_compiles ("
+        #include <OpenGL/OpenGL.h>
+        #include <OpenGL/CGLRenderers.h>
+        int main(int argc, char** argv) { return 0; }" HAVE_VIDEO_OPENGL)
+    else ()
     check_c_source_compiles("
         #include <GL/gl.h>
-        #include <GL/glext.h>
-        int main(int argc, char** argv) { return 0; }" HAVE_OPENGL)
-    if(HAVE_OPENGL)
+        #include <GL/glx.h>
+        int main(int argc, char** argv) { return 0; }" HAVE_VIDEO_OPENGL)
+    endif ()
+
+    if(HAVE_VIDEO_OPENGL)
+      set(HAVE_VIDEO_OPENGL TRUE)
       set(SDL_VIDEO_OPENGL 1)
+      if (APPLE)
+        set (SDL_VIDEO_OPENGL_CGL 1)
+      else ()
+        set(SDL_VIDEO_OPENGL_GLX 1)
+      endif ()
       set(SDL_VIDEO_RENDER_OGL 1)
     endif()
   endif()
@@ -987,8 +1002,8 @@ macro(CheckPTHREAD)
     endif()
 
     # Run some tests
-    set(ORIG_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
-    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${PTHREAD_CFLAGS} ${PTHREAD_LDFLAGS}")
+    # Urho3D - remove copy CMAKE_REQUIRED_FLAGS in ORIG_CMAKE_REQUIRED_FLAGS
+    set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} ${PTHREAD_CFLAGS} ${PTHREAD_LDFLAGS}")
     check_c_source_compiles("
       #include <pthread.h>
       int main(int argc, char** argv) {
@@ -1110,8 +1125,8 @@ macro(CheckUSBHID)
     endif()
   endif()
 
-  set(ORIG_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${USB_CFLAGS}")
+  # Urho3D - remove copy CMAKE_REQUIRED_FLAGS in ORIG_CMAKE_REQUIRED_FLAGS
+  set(CMAKE_REQUIRED_FLAGS "${USB_CFLAGS} ${ORIG_CMAKE_REQUIRED_FLAGS}")
   set(CMAKE_REQUIRED_LIBRARIES "${USB_LIBS}")
   check_c_source_compiles("
        #include <sys/types.h>
@@ -1286,8 +1301,8 @@ macro(CheckRPI)
     listtostr(VIDEO_RPI_INCLUDE_DIRS VIDEO_RPI_INCLUDE_FLAGS "-I")
     listtostr(VIDEO_RPI_LIBRARY_DIRS VIDEO_RPI_LIBRARY_FLAGS "-L")
 
-    set(ORIG_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
-    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${VIDEO_RPI_INCLUDE_FLAGS} ${VIDEO_RPI_LIBRARY_FLAGS}")
+    # Urho3D - remove copy CMAKE_REQUIRED_FLAGS in ORIG_CMAKE_REQUIRED_FLAGS
+    set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} ${VIDEO_RPI_INCLUDE_FLAGS} ${VIDEO_RPI_LIBRARY_FLAGS}")
     set(CMAKE_REQUIRED_LIBRARIES "${VIDEO_RPI_LIBRARIES}")
     check_c_source_compiles("
         #include <bcm_host.h>
@@ -1311,6 +1326,23 @@ macro(CheckRPI)
     endif()
   endif()
 endmacro()
+
+# Requires:
+# - n/a
+macro(CheckOldRPI)
+  if(SDL_RPI)                        
+    check_c_source_compiles("
+        #include <bcm_host.h>
+        int main(int argc, char **argv) {}" HAVE_VIDEO_RPI)
+    if(SDL_VIDEO AND HAVE_VIDEO_RPI)
+      set(HAVE_SDL_VIDEO TRUE)
+      set(SDL_VIDEO_DRIVER_RPI 1)
+      file(GLOB VIDEO_RPI_SOURCES ${SDL2_SOURCE_DIR}/src/video/raspberry/*.c)
+      set(SOURCE_FILES ${SOURCE_FILES} ${VIDEO_RPI_SOURCES})
+      list (APPEND EXTRA_LIBS bcm_host)
+    endif(SDL_VIDEO AND HAVE_VIDEO_RPI)
+  endif(SDL_RPI)
+endmacro(CheckOldRPI)
 
 # Requires:
 # - EGL
