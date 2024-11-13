@@ -35,7 +35,10 @@ extern "C" {
 
 struct _SDL_JoystickDriver;
 struct SDL_SteamVirtualGamepadInfo;
+// Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+#ifndef SDL_JOYSTICK_EMSCRIPTEN
 extern char SDL_joystick_magic;
+#endif
 
 /* Initialization and shutdown functions */
 extern int SDL_JoystickInit(void);

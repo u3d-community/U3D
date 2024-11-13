@@ -124,7 +124,10 @@ static SDL_atomic_t SDL_next_joystick_instance_id SDL_GUARDED_BY(SDL_joystick_lo
 static int SDL_joystick_player_count SDL_GUARDED_BY(SDL_joystick_lock) = 0;
 static SDL_JoystickID *SDL_joystick_players SDL_GUARDED_BY(SDL_joystick_lock) = NULL;
 static SDL_bool SDL_joystick_allows_background_events = SDL_FALSE;
+// Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+#ifndef SDL_JOYSTICK_EMSCRIPTEN
 char SDL_joystick_magic;
+#endif
 
 static Uint32 initial_arcadestick_devices[] = {
     MAKE_VIDPID(0x0079, 0x181a), /* Venom Arcade Stick */
@@ -421,12 +424,22 @@ static SDL_vidpid_list zero_centered_devices = {
     SDL_FALSE
 };
 
+// Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+#ifndef SDL_JOYSTICK_EMSCRIPTEN
 #define CHECK_JOYSTICK_MAGIC(joystick, retval)             \
     if (!joystick || joystick->magic != &SDL_joystick_magic) { \
         SDL_InvalidParamError("joystick");                 \
         SDL_UnlockJoysticks();                             \
         return retval;                                     \
     }
+#else
+#define CHECK_JOYSTICK_MAGIC(joystick, retval)             \
+    if (!joystick) { \
+        SDL_InvalidParamError("joystick");                 \
+        SDL_UnlockJoysticks();                             \
+        return retval;                                     \
+    }
+#endif
 
 SDL_bool SDL_JoysticksInitialized(void)
 {
@@ -818,7 +831,12 @@ SDL_Joystick *SDL_JoystickOpen(int device_index)
         SDL_UnlockJoysticks();
         return NULL;
     }
+    // Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+    #ifndef SDL_JOYSTICK_EMSCRIPTEN
     joystick->magic = &SDL_joystick_magic;
+    #else
+    joystick->magic = NULL;
+    #endif
     joystick->driver = driver;
     joystick->instance_id = instance_id;
     joystick->attached = SDL_TRUE;
@@ -1033,7 +1051,12 @@ int SDL_JoystickSetVirtualHat(SDL_Joystick *joystick, int hat, Uint8 value)
 SDL_bool SDL_PrivateJoystickValid(SDL_Joystick *joystick)
 {
     SDL_AssertJoysticksLocked();
+// Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+#ifdef SDL_JOYSTICK_EMSCRIPTEN
+    return (joystick != NULL);
+#else
     return (joystick && joystick->magic == &SDL_joystick_magic);
+#endif
 }
 
 SDL_bool SDL_PrivateJoystickGetAutoGamepadMapping(int device_index, SDL_GamepadMapping *out)

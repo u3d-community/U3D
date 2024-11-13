@@ -2347,7 +2347,12 @@ static SDL_bool LINUX_JoystickGetGamepadMapping(int device_index, SDL_GamepadMap
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
+// Urho3D - workaround with SDL_joystick_magic on EMSCRIPTEN
+#ifndef SDL_JOYSTICK_EMSCRIPTEN
     joystick->magic = &SDL_joystick_magic;
+#else
+    joystick->magic = NULL;
+#endif
     SDL_memcpy(&joystick->guid, &item->guid, sizeof(item->guid));
 
     joystick->hwdata = (struct joystick_hwdata *)
