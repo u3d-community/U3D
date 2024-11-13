@@ -19,6 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+// Modified by Yao Wei Tjong for Urho3D
+
 /**
  *  \file SDL_surface.h
  *
@@ -53,7 +55,12 @@ extern "C" {
 #define SDL_PREALLOC        0x00000001  /**< Surface uses preallocated memory */
 #define SDL_RLEACCEL        0x00000002  /**< Surface is RLE encoded */
 #define SDL_DONTFREE        0x00000004  /**< Surface is referenced internally */
+// Urho3D - bug fix - check if SIMD is supported
+#ifdef __EMSCRIPTEN__
+#define SDL_SIMD_ALIGNED    0
+#else
 #define SDL_SIMD_ALIGNED    0x00000008  /**< Surface uses aligned memory */
+#endif
 /* @} *//* Surface flags */
 
 /**

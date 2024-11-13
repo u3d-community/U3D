@@ -19,6 +19,9 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+// Modified by Lasse Oorni, Yao Wei Tjong, Rainer Deyke for Urho3D
+// Modified by Christophe Ville for U3D
+
 #include "../SDL_internal.h"
 
 /* The high-level video driver subsystem */
@@ -220,6 +223,8 @@ static Uint32 SDL_DefaultGraphicsBackends(SDL_VideoDevice *_this)
     return 0;
 }
 
+// Urho3D : don't need theses functions if the render is disabled
+#if !SDL_RENDER_DISABLED
 static int SDL_CreateWindowTexture(SDL_VideoDevice *_this, SDL_Window *window, Uint32 *format, void **pixels, int *pitch)
 {
     SDL_RendererInfo info;
@@ -348,10 +353,13 @@ static int SDL_CreateWindowTexture(SDL_VideoDevice *_this, SDL_Window *window, U
 
     return 0;
 }
+#endif
 
 static SDL_VideoDevice *_this = NULL;
 static SDL_atomic_t SDL_messagebox_count;
 
+// Urho3D : don't need theses functions if the render is disabled
+#if !SDL_RENDER_DISABLED
 static int SDL_UpdateWindowTexture(SDL_VideoDevice *unused, SDL_Window *window, const SDL_Rect *rects, int numrects)
 {
     SDL_WindowTextureData *data;
@@ -401,6 +409,7 @@ static void SDL_DestroyWindowTexture(SDL_VideoDevice *unused, SDL_Window *window
     SDL_free(data->pixels);
     SDL_free(data);
 }
+#endif 
 
 static int SDLCALL cmpmodes(const void *A, const void *B)
 {
@@ -1846,10 +1855,10 @@ SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint
     return window;
 }
 
-SDL_Window *SDL_CreateWindowFrom(const void *data)
+// Urho3D: added flags parameter
+SDL_Window *SDL_CreateWindowFrom(const void *data, Uint32 flags)
 {
     SDL_Window *window;
-    Uint32 flags = SDL_WINDOW_FOREIGN;
 
     if (!_this) {
         SDL_UninitializedVideo();
@@ -1904,6 +1913,16 @@ SDL_Window *SDL_CreateWindowFrom(const void *data)
     }
     _this->windows = window;
 
+    // Urho3D: load OpenGL if initializing an external OpenGL window
+    if (flags & SDL_WINDOW_OPENGL) {
+        if (!_this->GL_CreateContext) {
+            SDL_SetError("No OpenGL support in video driver");
+            SDL_DestroyWindow(window);
+            return NULL;
+        }
+        SDL_GL_LoadLibrary(NULL);
+        window->flags |= SDL_WINDOW_OPENGL;
+    }
     if (_this->CreateSDLWindowFrom(_this, window, data) < 0) {
         SDL_DestroyWindow(window);
         return NULL;
@@ -2654,6 +2673,8 @@ int SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags)
     return -1;
 }
 
+// Urho3D : don't need theses functions if the render is disabled
+#if !SDL_RENDER_DISABLED
 static SDL_bool ShouldAttemptTextureFramebuffer(void)
 {
     const char *hint;
@@ -2694,9 +2715,12 @@ static SDL_bool ShouldAttemptTextureFramebuffer(void)
     }
     return attempt_texture_framebuffer;
 }
+#endif
 
 static SDL_Surface *SDL_CreateWindowFramebuffer(SDL_Window *window)
 {
+// Urho3D : if the render is disabled skip create framebuffer
+#if !SDL_RENDER_DISABLED
     Uint32 format = 0;
     void *pixels = NULL;
     int pitch = 0;
@@ -2753,6 +2777,9 @@ static SDL_Surface *SDL_CreateWindowFramebuffer(SDL_Window *window)
     }
 
     return SDL_CreateRGBSurfaceFrom(pixels, w, h, bpp, pitch, Rmask, Gmask, Bmask, Amask);
+#else
+    return NULL;
+#endif
 }
 
 SDL_bool SDL_HasWindowSurface(SDL_Window *window)

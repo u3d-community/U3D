@@ -18,6 +18,9 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+
+// Modified by Lasse Oorni and Yao Wei Tjong for Urho3D
+
 #include "../../SDL_internal.h"
 
 #ifdef SDL_VIDEO_DRIVER_UIKIT
@@ -50,6 +53,10 @@ static int forward_argc;
 static char **forward_argv;
 static int exit_status;
 
+// Urho3D: added variables
+const char* resource_dir = 0;
+const char* documents_dir = 0;
+
 int SDL_UIKitRunApp(int argc, char *argv[], SDL_main_func mainFunction)
 {
     int i;
@@ -77,6 +84,51 @@ int SDL_UIKitRunApp(int argc, char *argv[], SDL_main_func mainFunction)
 
     return exit_status;
 }
+
+// Urho3D: added function
+void SDL_IOS_LogMessage(const char *message)
+{
+    #ifdef _DEBUG
+    NSLog(@"%@", [NSString stringWithUTF8String: message]);
+    #endif
+}
+
+// Urho3D: added function
+const char* SDL_IOS_GetResourceDir()
+{
+    if (!resource_dir)
+    {
+        const char *temp = [[[NSBundle mainBundle] resourcePath] UTF8String];
+        resource_dir = malloc(strlen(temp) + 1);
+        strcpy(resource_dir, temp);
+    }
+
+    return resource_dir;
+}
+
+// Urho3D: added function
+const char* SDL_IOS_GetDocumentsDir()
+{
+    if (!documents_dir)
+    {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+
+        const char *temp = [basePath UTF8String];
+        documents_dir = malloc(strlen(temp) + 1);
+        strcpy(documents_dir, temp);
+    }
+
+    return documents_dir;
+}
+
+// Urho3D: added function
+#if TARGET_OS_TV
+unsigned SDL_TVOS_GetActiveProcessorCount()
+{
+    return [NSProcessInfo class] ? (unsigned)[[NSProcessInfo processInfo] activeProcessorCount] : 1;
+}
+#endif
 
 static void SDLCALL
 SDL_IdleTimerDisabledChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
@@ -487,6 +539,43 @@ static UIImage *SDL_LoadLaunchImageNamed(NSString *name, int screenh)
 - (void)setWindow:(UIWindow *)window
 {
     /* Do nothing. */
+}
+
+#if !TARGET_OS_TV
+- (void)application:(UIApplication *)application didChangeStatusBarOrientation:(UIInterfaceOrientation)oldStatusBarOrientation
+{
+    SDL_OnApplicationDidChangeStatusBarOrientation();
+}
+#endif
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    SDL_OnApplicationWillTerminate();
+}
+
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
+{
+    SDL_OnApplicationDidReceiveMemoryWarning();
+}
+
+- (void)applicationWillResignActive:(UIApplication*)application
+{
+    SDL_OnApplicationWillResignActive();
+}
+
+- (void)applicationDidEnterBackground:(UIApplication*)application
+{
+    SDL_OnApplicationDidEnterBackground();
+}
+
+- (void)applicationWillEnterForeground:(UIApplication*)application
+{
+    SDL_OnApplicationWillEnterForeground();
+}
+
+- (void)applicationDidBecomeActive:(UIApplication*)application
+{
+    SDL_OnApplicationDidBecomeActive();
 }
 
 - (void)sendDropFileForURL:(NSURL *)url

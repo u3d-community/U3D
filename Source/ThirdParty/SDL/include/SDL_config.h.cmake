@@ -538,6 +538,8 @@
 /* Platform specific definitions */
 #cmakedefine SDL_IPHONE_KEYBOARD @SDL_IPHONE_KEYBOARD@
 #cmakedefine SDL_IPHONE_LAUNCHSCREEN @SDL_IPHONE_LAUNCHSCREEN@
+// Urho3D - needed on iOS/tvOS platform
+#cmakedefine SDL_IPHONE_MAX_GFORCE @SDL_IPHONE_MAX_GFORCE@
 
 #cmakedefine SDL_VIDEO_VITA_PIB @SDL_VIDEO_VITA_PIB@
 #cmakedefine SDL_VIDEO_VITA_PVR @SDL_VIDEO_VITA_PVR@

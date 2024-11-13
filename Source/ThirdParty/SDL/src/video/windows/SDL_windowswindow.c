@@ -18,6 +18,9 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+
+// Modified by Lasse Oorni for Urho3D
+
 #include "../../SDL_internal.h"
 
 #ifdef SDL_VIDEO_DRIVER_WINDOWS
@@ -594,6 +597,13 @@ int WIN_CreateWindowFrom(_THIS, SDL_Window *window, const void *data)
 
     if (SetupWindowData(_this, window, hwnd, GetParent(hwnd), SDL_FALSE) < 0) {
         return -1;
+    }
+
+    // Urho3D: if window will be used for OpenGL, choose pixel format
+    if (window->flags & SDL_WINDOW_OPENGL) {
+        if (WIN_GL_SetupWindow(_this, window) < 0) {
+            return -1;
+        }
     }
 
 #ifdef SDL_VIDEO_OPENGL_WGL
