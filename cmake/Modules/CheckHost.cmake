@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,13 +39,29 @@
 if (CMAKE_HOST_WIN32)
     set (NULL_DEVICE nul)
     if (NOT DEFINED HAS_MKLINK)
-        # Test whether the host system is capable of setting up symbolic link
-        execute_process (COMMAND cmd /C mklink test-link CMakeCache.txt WORKING_DIRECTORY ${CMAKE_BINARY_DIR} RESULT_VARIABLE MKLINK_EXIT_CODE OUTPUT_QUIET ERROR_QUIET)
-        if (MKLINK_EXIT_CODE EQUAL 0)
-            set (HAS_MKLINK TRUE)
-            file (REMOVE ${CMAKE_BINARY_DIR}/test-link)
-        else ()
-            set (HAS_MKLINK FALSE)
+        # Performs a full test to cover cases where symbolic links are malformed (case on dockur/windows)
+        find_program(MLINK_EXECUTABLE mlink)
+        set(HAS_MKLINK FALSE)
+        if (MLINK_EXECUTABLE)
+            execute_process (COMMAND ${MLINK_EXECUTABLE} --version RESULT_VARIABLE MLINK_RESULT OUTPUT_VARIABLE MLINK_OUTPUT ERROR_VARIABLE MLINK_ERROR)
+            if (MLINK_RESULT EQUAL 0)
+                # Test create a symlink
+                set(TEST_SOURCE_FILE "/tmp/test_source")
+                set(TEST_LINK_FILE "/tmp/test_link")
+                file(WRITE ${TEST_SOURCE_FILE} "test file.")
+                execute_process(COMMAND ${MLINK_EXECUTABLE} ${TEST_SOURCE_FILE} ${TEST_LINK_FILE} RESULT_VARIABLE LINK_RESULT)
+                # Check if symlink is really working
+                if (LINK_RESULT EQUAL 0 AND EXISTS ${TEST_LINK_FILE})
+                    file(READ ${TEST_LINK_FILE} LINK_CONTENTS)        
+                    if (LINK_CONTENTS STREQUAL "test file.")
+                        set(HAS_MKLINK TRUE)
+                    endif()
+                    # Remove the test link and file
+                    file(REMOVE ${TEST_LINK_FILE} ${TEST_SOURCE_FILE})
+                endif()
+            endif()
+        endif ()
+        if (NOT HAS_MKLINK)
             message (WARNING "Could not use MKLINK to setup symbolic links as this Windows user account does not have the privilege to do so. "
                 "When MKLINK is not available then the build system will fallback to use file/directory copy of the library headers from source tree to build tree. "
                 "In order to prevent stale headers being used in the build, this file/directory copy will be redone also as a post-build step for each library targets. "
@@ -54,6 +71,7 @@ if (CMAKE_HOST_WIN32)
         endif ()
         set (HAS_MKLINK ${HAS_MKLINK} CACHE INTERNAL "MKLINK capability")
     endif ()
+
 else ()
     set (NULL_DEVICE /dev/null)
     if (NOT DEFINED HAS_LIB64)

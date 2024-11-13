@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -240,5 +241,8 @@ foreach (COMPONENT DInput DSound XInput)
 endforeach ()
 set (CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES_SAVED})
 
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (DirectX REQUIRED_VARS HAVE_DIRECTX HANDLE_COMPONENTS FAIL_MESSAGE ${FAIL_MESSAGE})
+# do we need this for MINGW ?
+if (NOT MINGW)
+    include (FindPackageHandleStandardArgs)
+    find_package_handle_standard_args (DirectX REQUIRED_VARS HAVE_DIRECTX HANDLE_COMPONENTS FAIL_MESSAGE ${FAIL_MESSAGE})
+endif()

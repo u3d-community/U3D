@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2008-2022 the Urho3D project.
+# Copyright (c) 2022-2024 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,12 +43,12 @@ task :cmake => [:init] do
       system 'bash', '-c', 'rm -rf ~/.{ccache,gradle}' or abort 'Failed to clear the build cache'
     end
   end
-  next if ENV['PLATFORM'] == 'android' || (Dir.exists?(build_tree) and not ARGV.include?('cmake'))
+  next if ENV['PLATFORM'] == 'android' || (Dir.exist?(build_tree) and not ARGV.include?('cmake'))
   ['CMAKE_INSTALL_PREFIX', 'URHO3D_HOME'].each { |var|
     if ENV[var] == 'system'
       ENV.delete(var)
     elsif !ENV[var]
-      ENV[var] = install_dir if var == 'CMAKE_INSTALL_PREFIX' || Dir.exists?(install_dir)
+      ENV[var] = install_dir if var == 'CMAKE_INSTALL_PREFIX' || Dir.exist?(install_dir)
     end
   }
   script = "script/cmake_#{ENV['GENERATOR']}#{ENV['OS'] ? '.bat' : '.sh'}"
@@ -143,7 +144,7 @@ end
 desc 'Publish build artifact'
 task :publish => [:init] do
   if ENV['PLATFORM'] == 'android'
-    Rake::Task[:gradle].invoke("publish #{/refs\/tags\// =~ ENV['GITHUB_REF'] ? 'bintrayUpload' : ''}")
+    Rake::Task[:gradle].invoke('publish')
     next
   end
   Rake::Task[$publish_task.to_sym].invoke if $publish_task
@@ -157,7 +158,7 @@ task :new, [:name, :parent_dir, :use_copy] => [:init] do |_, args|
   parent_dir = verify_path(args[:parent_dir])
   dir = "#{parent_dir}/#{name}"
   use_copy = args[:use_copy] || dockerized?
-  abort "The directory '#{dir}' already exists!" if Dir.exists?(dir)
+  abort "The directory '#{dir}' already exist!" if Dir.exist?(dir)
   puts "Creating a new project in #{dir}..."
   func = FileUtils.method(use_copy ? :cp_r : :ln_s)
   source_tree(name).split("\n").each do |it|
@@ -297,7 +298,7 @@ task :init do
     unless ENV['PLATFORM']
       if /x86/ =~ `uname -m`
         ENV['PLATFORM'] = 'linux'
-      elsif Dir.exists?('/opt/vc')
+      elsif Dir.exist?('/opt/vc')
         ENV['PLATFORM'] = 'rpi'
       else
         ENV['PLATFORM'] = 'arm'
@@ -418,7 +419,7 @@ def default_path
 end
 
 def dockerized?
-  File.exists?('/entrypoint.sh')
+  File.exist?('/entrypoint.sh')
 end
 
 def install_dir
@@ -433,7 +434,7 @@ def verify_path(path, auto_create = false)
   require 'pathname'
   begin
     expanded_path = File.expand_path(path)
-    FileUtils.mkdir_p(expanded_path) if (auto_create && !Dir.exists?(expanded_path))
+    FileUtils.mkdir_p(expanded_path) if (auto_create && !Dir.exist?(expanded_path))
     Pathname.new(expanded_path).realdirpath.to_s
   rescue
     abort "The specified path '#{path}' is invalid!"
@@ -445,7 +446,7 @@ def first_match(regex, from)
     if from.instance_of?(Array)
       array = from
     else
-      array = File.exists?(from) ? File.readlines(from) : from.split("\n")
+      array = File.exist?(from) ? File.readlines(from) : from.split("\n")
     end
     array.grep(regex).first.match(regex).captures.first
   rescue
@@ -562,7 +563,7 @@ android {
         cmake {
             version = cmakeVersion
             path = project.file("../CMakeLists.txt")
-            setBuildStagingDirectory(buildStagingDir)
+            buildStagingDirectory(buildStagingDir)
         }
     }
     sourceSets {
@@ -579,8 +580,8 @@ val urhoDebugImpl by configurations.creating { isCanBeResolved = true }
 configurations.debugImplementation.get().extendsFrom(urhoDebugImpl)
 
 dependencies {
-    urhoReleaseImpl("io.urho3d:urho3d-lib-#{type}:#{aar_version}")
-    urhoDebugImpl("io.urho3d:urho3d-lib-#{type}-debug:#{aar_version}")
+    urhoReleaseImpl("io.u3d:urho3d-lib-#{type}:#{aar_version}")
+    urhoDebugImpl("io.u3d:urho3d-lib-#{type}-debug:#{aar_version}")
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("androidx.core:core-ktx:#{first_match(/"androidx.core:core-ktx:(.+)"/, template)}")
@@ -622,14 +623,16 @@ def root_build_gradle_kts(_)
   template = File.readlines('build.gradle.kts')
   <<-EOF
 buildscript {
+    extra["agpVersion"] = "#{first_match(/extra\["agpVersion"\] = "(.+)"/, template)}"
     extra["kotlinVersion"] = "#{first_match(/extra\["kotlinVersion"\] = "(.+)"/, template)}"
+    val agpVersion: String by extra
     val kotlinVersion: String by extra
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:#{first_match(/"com.android.tools.build:gradle:(.+)"/, template)}")
+        classpath("com.android.tools.build:gradle:$agpVersion")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
 }
@@ -639,7 +642,7 @@ val kotlinVersion: String by ext
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         // Remove below two repos if you are only using released AAR from JCenter
         mavenLocal()
         if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
