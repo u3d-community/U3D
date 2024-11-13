@@ -373,7 +373,14 @@ void Animatable::SetAttributeAnimation(const String& name, ValueAnimation* attri
         attributeAnimationInfos_[name] = new AttributeAnimationInfo(this, *attributeInfo, attributeAnimation, wrapMode, speed);
 
         if (!info)
+        {
             OnAttributeAnimationAdded();
+
+            using namespace AttributeAnimationAdded;
+            VariantMap& eventData = GetEventDataMap();
+            eventData[P_ATTRIBUTEANIMATIONNAME] = name;
+            SendEvent(E_ATTRIBUTEANIMATIONADDED, eventData);
+        }
     }
     else
     {
@@ -386,6 +393,11 @@ void Animatable::SetAttributeAnimation(const String& name, ValueAnimation* attri
 
         attributeAnimationInfos_.Erase(name);
         OnAttributeAnimationRemoved();
+
+        using namespace AttributeAnimationRemoved;
+        VariantMap& eventData = GetEventDataMap();
+        eventData[P_ATTRIBUTEANIMATIONNAME] = name;
+        SendEvent(E_ATTRIBUTEANIMATIONREMOVED, eventData);
     }
 }
 
