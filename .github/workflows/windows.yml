@@ -7,7 +7,7 @@ concurrency:
 
 jobs:
   windows-vs:
-    name: win-vs 🏁
+    name: 🏁
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -31,7 +31,7 @@ jobs:
         with: { fetch-depth: 0 }
       - name: Set cache TTL
         run: |
-          echo ("CACHE_MONTH=" + $(date '+%b %Y')) >> $env:GITHUB_ENV
+          echo ("CACHE_MONTH=vs_" + $(date '+%b %Y')) >> $env:GITHUB_ENV
       - name: CMake
         run: rake cmake
       - name: Build
@@ -84,11 +84,11 @@ jobs:
       MINGW_SYSROOT: 'C:/ProgramData/chocolatey/lib/mingw'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Set cache TTL
         run: |
-          echo ("CACHE_MONTH=" + $(date '+%b %Y')) >> $env:GITHUB_ENV
+          echo ("CACHE_MONTH=gcc_" + $(date '+%b %Y')) >> $env:GITHUB_ENV
       - name: Cache MinGW installation
         id: cache-mingw
         uses: actions/cache@v4
