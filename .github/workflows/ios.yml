@@ -59,4 +59,4 @@ jobs:
         if: github.event_name == 'push'
       - name: Clean
         run: |
-            rm -rf {build/ci/bin,build/ci/lib}
+            rm -rf {build/ci/lib,build/ci/bin/*.app}
