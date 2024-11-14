@@ -7,7 +7,7 @@ concurrency:
 
 jobs:
   windows-vs:
-    name: 🏁
+    name: win-vs 🏁
     runs-on: windows-latest
     strategy:
       fail-fast: false
