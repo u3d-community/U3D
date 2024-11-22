@@ -83,11 +83,6 @@ task :build, [:target] => [:cmake] do |_, args|
   when 'xcode'
     concurrent = '' # Assume xcodebuild will do the right things without the '-jobs'
     filter = '|xcpretty -c && exit ${PIPESTATUS[0]}' if system('xcpretty -v >/dev/null 2>&1') && ENV['USE_XCPRETTY']
-    if ENV['PLATFORM'] == 'iOS'
-      platform = "-sdk iphoneos"
-    elsif ENV['PLATFORM'] == 'tvOS'
-      platform = "-sdk appletvos"
-    end
   when 'vs'
     concurrent = '/maxCpuCount'
   else
