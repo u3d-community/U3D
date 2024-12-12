@@ -42,7 +42,8 @@
 # 3) Add libassimp using the file lists (eliminates duplication of file names between
 #    source groups and library command)
 #
-cmake_minimum_required( VERSION 3.22 )
+# U3D : downgrade cmake version from 3.22 to 3.17
+cmake_minimum_required( VERSION 3.17 )
 SET( HEADER_PATH ../include/assimp )
 
 if(NOT ANDROID AND ASSIMP_ANDROID_JNIIOSYSTEM)

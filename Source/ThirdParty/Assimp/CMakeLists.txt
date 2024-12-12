@@ -38,7 +38,8 @@ SET(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
 SET(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 SET(CMAKE_POLICY_DEFAULT_CMP0092 NEW)
 
-CMAKE_MINIMUM_REQUIRED( VERSION 3.22 )
+# U3D : downgrade cmake version from 3.22 to 3.17
+CMAKE_MINIMUM_REQUIRED( VERSION 3.17 )
 
 # Experimental USD importer: disabled, need to opt-in
 # Note: assimp github PR automatic checks will fail the PR due to compiler warnings in
