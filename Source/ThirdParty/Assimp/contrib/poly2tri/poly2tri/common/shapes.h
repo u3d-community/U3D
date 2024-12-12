@@ -38,8 +38,9 @@
 #include <stdexcept>
 #include <vector>
 
-
-#if defined(_WIN32)
+// U3D : only for MSVC / don't work for mingw
+#ifdef _MSC_VER
+//#if defined(_WIN32)
 #  pragma warning( disable: 4251)
 #endif
 namespace p2t {
