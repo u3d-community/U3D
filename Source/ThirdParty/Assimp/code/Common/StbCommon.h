@@ -113,7 +113,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define stbi_zlib_decode_noheader_malloc assimp_stbi_zlib_decode_noheader_malloc
 #endif
 
-#include "stb/stb_image.h"
+#include "stb_image.h"
 
 #if _MSC_VER
 #pragma warning(pop)

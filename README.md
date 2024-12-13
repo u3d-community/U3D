@@ -139,7 +139,7 @@ U3D uses the following third-party libraries:
 - SDL 2.30.9 (https://www.libsdl.org)
 - SQLite 3.36.0 (https://www.sqlite.org)
 - StanHull (https://codesuppository.blogspot.com/2006/03/john-ratcliffs-code-suppository-blog.html)
-- stb_image 2.27 (https://nothings.org)
+- stb_image 2.29 (https://nothings.org)
 - stb_image_write 1.16 (https://nothings.org)
 - stb_rect_pack 1.01 (https://nothings.org)
 - stb_vorbis 1.22 (https://nothings.org)

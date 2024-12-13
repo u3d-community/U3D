@@ -1244,8 +1244,9 @@ IF(ASSIMP_HUNTER_ENABLED)
   find_package(stb CONFIG REQUIRED)
 ELSE()
   SET( stb_SRCS
-    ../contrib/stb/stb_image.h
+    ../../STB/stb_image.h
   )
+  INCLUDE_DIRECTORIES("../../STB")
   INCLUDE_DIRECTORIES("../contrib")
   SOURCE_GROUP( Contrib\\stb FILES ${stb_SRCS})
 ENDIF()
