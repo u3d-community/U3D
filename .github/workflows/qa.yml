@@ -18,6 +18,7 @@ jobs:
       LIB_TYPE: shared
       ARCH: 64
       DBE_TAG: master
+      URHO3D_DOCS: 1
       USE_CCACHE: 1
       LLVM_USE_SPLIT_DWARF: 1
       LLVM_ENABLE_ASSERTIONS: 1
