@@ -1055,11 +1055,12 @@ IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(pugixml)
   find_package(pugixml CONFIG REQUIRED)
 ELSE()
+  # U3D - use urho3d thirdparty
   SET( Pugixml_SRCS
-    ../contrib/pugixml/src/pugiconfig.hpp
-    ../contrib/pugixml/src/pugixml.hpp
+    ../../PugiXml/src/pugiconfig.hpp
+    ../../PugiXml/src/pugixml.hpp
   )
-  INCLUDE_DIRECTORIES("../contrib/pugixml/src")
+  INCLUDE_DIRECTORIES("../../PugiXml/src")
   SOURCE_GROUP( Contrib\\Pugixml FILES ${Pugixml_SRCS})
 ENDIF()
 
@@ -1224,7 +1225,8 @@ IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(RapidJSON)
   find_package(RapidJSON CONFIG REQUIRED)
 ELSE()
-  INCLUDE_DIRECTORIES("../contrib/rapidjson/include")
+  # U3D - use urho3d thirdparty
+  INCLUDE_DIRECTORIES("../../rapidjson/include")
   ADD_DEFINITIONS( -DRAPIDJSON_HAS_STDSTRING=1)
   option( ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR "Suppress rapidjson warning on MSVC (NOTE: breaks android build)" ON )
   if(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR)
@@ -1440,6 +1442,8 @@ ELSE()
   if (ASSIMP_BUILD_DRACO)
     target_link_libraries(assimp ${draco_LIBRARIES})
   endif()
+  # U3D - PugiXml from urho3d thirdparty
+  target_link_libraries(assimp PugiXml)
 ENDIF()
 
 if(ASSIMP_ANDROID_JNIIOSYSTEM)

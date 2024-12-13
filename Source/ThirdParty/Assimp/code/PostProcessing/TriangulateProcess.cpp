@@ -221,9 +221,9 @@ bool TriangulateProcess::TriangulateMesh( aiMesh* pMesh) {
             max_out = std::max(max_out,face.mNumIndices);
         }
     }
-    
+
     // U3D : numeric limits of max_out
-     max_out = std::min(std::numeric_limits<uint32_t>::max()-2, max_out);
+    max_out = std::min(std::numeric_limits<uint32_t>::max()-2, max_out);
 
     // Just another check whether aiMesh::mPrimitiveTypes is correct
     if (numOut == pMesh->mNumFaces) {
