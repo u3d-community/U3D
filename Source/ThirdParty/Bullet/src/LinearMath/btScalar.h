@@ -12,8 +12,6 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-// Modified by Lasse Oorni and Yao Wei Tjong for Urho3D
-
 #ifndef BT_SCALAR_H
 #define BT_SCALAR_H
 
@@ -27,7 +25,7 @@ subject to the following restrictions:
 #include <float.h>
 
 /* SVN $Revision$ on $Date$ from http://bullet.googlecode.com*/
-#define BT_BULLET_VERSION 305
+#define BT_BULLET_VERSION 326
 
 inline int btGetVersion()
 {
@@ -74,12 +72,7 @@ inline int btIsDoublePrecision()
 	#define BT_DEBUG
 #endif
 
-// Urho3D: commented out original
-//#ifdef _WIN32
-
-// Urho3D: enable BT_USE_SSE for MinGW
-#if defined(_WIN32) && !defined(__MINGW32__)
-
+#ifdef _WIN32
 	#if  defined(__GNUC__)	// it should handle both MINGW and CYGWIN
         	#define SIMD_FORCE_INLINE        __inline__ __attribute__((always_inline))
         	#define ATTRIBUTE_ALIGNED16(a)   a __attribute__((aligned(16)))
@@ -114,14 +107,9 @@ inline int btIsDoublePrecision()
  			#define btFsel(a,b,c) __fsel((a),(b),(c))
 		#else
 
-#if defined (_M_ARM)
+#if defined (_M_ARM) || defined (_M_ARM64)
             //Do not turn SSE on for ARM (may want to turn on BT_USE_NEON however)
-
-// Urho3D: commented out original
-//#elif (defined (_WIN32) && (_MSC_VER) && _MSC_VER >= 1400) && (!defined (BT_USE_DOUBLE_PRECISION))
-
-// Urho3D: allow to disable SSE
-#elif ((!defined(_M_IX86_FP) || _M_IX86_FP) && defined (_WIN32) && (_MSC_VER) && _MSC_VER >= 1400) && (!defined (BT_USE_DOUBLE_PRECISION))
+#elif (defined (_WIN32) && (_MSC_VER) && _MSC_VER >= 1400) && (!defined (BT_USE_DOUBLE_PRECISION))
 
 #ifdef __clang__
 #define __BT_DISABLE_SSE__
@@ -225,16 +213,8 @@ inline int btIsDoublePrecision()
 		#else//USE_LIBSPE2
 	//non-windows systems
 
-	// Urho3D: OR MinGW
-
-			// Urho3D: commented out original
-			//#if (defined (__APPLE__) && (!defined (BT_USE_DOUBLE_PRECISION)))
-			//	#if defined (__i386__) || defined (__x86_64__)
-
-			// Urho3D: allow to disable SSE/NEON and let Linux, MinGW, & Android platforms in besides Apple
-			#if (!defined (BT_USE_DOUBLE_PRECISION))
-				#if defined(__SSE__)
-
+			#if (defined (__APPLE__) && (!defined (BT_USE_DOUBLE_PRECISION)))
+				#if defined (__i386__) || defined (__x86_64__)
 					#define BT_USE_SIMD_VECTOR3
 					#define BT_USE_SSE
 					//BT_USE_SSE_IN_API is enabled on Mac OSX by default, because memory is automatically aligned on 16-byte boundaries
@@ -342,12 +322,7 @@ inline int btIsDoublePrecision()
 
 #if defined(BT_USE_SSE)
 	//#if defined BT_USE_SSE_IN_API && defined (BT_USE_SSE)
-
-	// Urho3D: commented out original
-	//#ifdef _WIN32
-
-	// Urho3D: enable BT_USE_SSE for MinGW
-	#if defined(_WIN32) && !defined(__MINGW32__)
+	#ifdef _WIN32
 
 		#ifndef BT_NAN
 			static int btNanMask = 0x7F800001;

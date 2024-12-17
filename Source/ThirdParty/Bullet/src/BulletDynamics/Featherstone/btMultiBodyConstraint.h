@@ -31,7 +31,7 @@ enum btTypedMultiBodyConstraintType
 	MULTIBODY_CONSTRAINT_SLIDER,
 	MULTIBODY_CONSTRAINT_SPHERICAL_MOTOR,
 	MULTIBODY_CONSTRAINT_FIXED,
-	
+	MULTIBODY_CONSTRAINT_SPHERICAL_LIMIT,
 	MAX_MULTIBODY_CONSTRAINT_TYPE,
 };
 
@@ -94,7 +94,7 @@ protected:
 									 bool angConstraint = false,
 
 									 btScalar relaxation = 1.f,
-									 bool isFriction = false, btScalar desiredVelocity = 0, btScalar cfmSlip = 0);
+									 bool isFriction = false, btScalar desiredVelocity = 0, btScalar cfmSlip = 0, btScalar damping = 1.0);
 
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
