@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -1691,12 +1691,19 @@ struct btSoftColliders
 						if (cti.m_colObj->getInternalType() == btCollisionObject::CO_RIGID_BODY)
 						{
 							const btTransform& wtr = m_rigidBody ? m_rigidBody->getWorldTransform() : m_colObj1Wrap->getCollisionObject()->getWorldTransform();
-							static const btMatrix3x3 iwiStatic(0, 0, 0, 0, 0, 0, 0, 0, 0);
-							const btMatrix3x3& iwi = m_rigidBody ? m_rigidBody->getInvInertiaTensorWorld() : iwiStatic;
 							const btVector3 ra = n.m_x - wtr.getOrigin();
 
-							c.m_c0 = ImpulseMatrix(1, n.m_effectiveMass_inv, imb, iwi, ra);
-							//                            c.m_c0 = ImpulseMatrix(1, ima, imb, iwi, ra);
+							static const btMatrix3x3 iwiStatic(0, 0, 0, 0, 0, 0, 0, 0, 0);
+							const btMatrix3x3& iwi = m_rigidBody ? m_rigidBody->getInvInertiaTensorWorld() : iwiStatic;
+							if (psb->m_reducedModel)
+							{
+								c.m_c0 = MassMatrix(imb, iwi, ra); //impulse factor K of the rigid body only (not the inverse)
+							}
+							else
+							{
+								c.m_c0 = ImpulseMatrix(1, n.m_effectiveMass_inv, imb, iwi, ra);
+								//                            c.m_c0 = ImpulseMatrix(1, ima, imb, iwi, ra);
+							}
 							c.m_c1 = ra;
 						}
 						else if (cti.m_colObj->getInternalType() == btCollisionObject::CO_FEATHERSTONE_LINK)
@@ -1724,7 +1731,16 @@ struct btSoftColliders
 												t1.getX(), t1.getY(), t1.getZ(),
 												t2.getX(), t2.getY(), t2.getZ());  // world frame to local frame
 								const int ndof = multibodyLinkCol->m_multiBody->getNumDofs() + 6;
-								btMatrix3x3 local_impulse_matrix = (n.m_effectiveMass_inv + OuterProduct(J_n, J_t1, J_t2, u_n, u_t1, u_t2, ndof)).inverse();
+								
+								btMatrix3x3 local_impulse_matrix;
+								if (psb->m_reducedModel)
+								{
+									local_impulse_matrix = OuterProduct(J_n, J_t1, J_t2, u_n, u_t1, u_t2, ndof);
+								}
+								else
+								{
+									local_impulse_matrix = (n.m_effectiveMass_inv + OuterProduct(J_n, J_t1, J_t2, u_n, u_t1, u_t2, ndof)).inverse();
+								}
 								c.m_c0 = rot.transpose() * local_impulse_matrix * rot;
 								c.jacobianData_normal = jacobianData_normal;
 								c.jacobianData_t1 = jacobianData_t1;
@@ -1940,6 +1956,11 @@ struct btSoftColliders
 					c.m_face = face;
 					c.m_bary = w;
 					c.m_friction = psb[0]->m_cfg.kDF * psb[1]->m_cfg.kDF;
+					// Initialize unused fields.
+					c.m_weights = btVector3(0, 0, 0);
+					c.m_imf = 0;
+					c.m_c0 = 0;
+					c.m_colObj = psb[1];
 					psb[0]->m_faceNodeContacts.push_back(c);
 				}
 			}
@@ -2011,6 +2032,11 @@ struct btSoftColliders
 				c.m_face = face;
 				c.m_bary = bary;
 				c.m_friction = psb[0]->m_cfg.kDF * psb[1]->m_cfg.kDF;
+				// Initialize unused fields.
+				c.m_weights = btVector3(0, 0, 0);
+				c.m_imf = 0;
+				c.m_c0 = 0;
+				c.m_colObj = psb[1];
 				psb[0]->m_faceNodeContacts.push_back(c);
 			}
 		}
@@ -2037,7 +2063,13 @@ struct btSoftColliders
 				c.m_face = face;
 				c.m_bary = bary;
 				c.m_friction = psb[0]->m_cfg.kDF * psb[1]->m_cfg.kDF;
-				psb[0]->m_faceNodeContacts.push_back(c);
+				// Initialize unused fields.
+				c.m_weights = btVector3(0, 0, 0);
+				c.m_margin = mrg;
+				c.m_imf = 0;
+				c.m_c0 = 0;
+				c.m_colObj = psb[1];
+				psb[0]->m_faceNodeContactsCCD.push_back(c);
 			}
 		}
 		void Process(const btDbvntNode* lface1,
@@ -2096,7 +2128,13 @@ struct btSoftColliders
 					c.m_face = face;
 					c.m_bary = bary;
 					c.m_friction = psb[0]->m_cfg.kDF * psb[1]->m_cfg.kDF;
-					psb[0]->m_faceNodeContacts.push_back(c);
+					// Initialize unused fields.
+					c.m_weights = btVector3(0, 0, 0);
+					c.m_margin = mrg;
+					c.m_imf = 0;
+					c.m_c0 = 0;
+					c.m_colObj = psb[1];
+					psb[0]->m_faceNodeContactsCCD.push_back(c);
 				}
 			}
 		}
