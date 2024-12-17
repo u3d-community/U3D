@@ -8,7 +8,7 @@ concurrency:
 jobs:
   qa:
     name: 🔬 Quality Assurance
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
     env:
@@ -18,18 +18,19 @@ jobs:
       LIB_TYPE: shared
       ARCH: 64
       DBE_TAG: master
+      URHO3D_DOCS: 1
       USE_CCACHE: 1
       LLVM_USE_SPLIT_DWARF: 1
       LLVM_ENABLE_ASSERTIONS: 1
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Source checksum
         id: source_checksum
         run: rake source_checksum
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             build/cache/.ccache
