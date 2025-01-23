@@ -289,9 +289,7 @@ if (URHO3D_LUA)
         check_native_compiler_exist ()
         # When cross-compiling or using LuaJIT, build the tolua++ host tool as external project using normal Lua (there is not much point using LuaJIT for the tool building even when technically it can)
         include (ExternalProject)
-        if (ANDROID AND DEFINED ENV{TRAVIS})
-            set (TRAVIS_ANDROID_FIX -DURHO3D_DEPLOYMENT_TARGET=generic)
-        endif ()
+        # remove TRAVIS FIX
         if (IOS OR TVOS)
             set (ALTERNATE_COMMAND CMAKE_COMMAND /usr/bin/env -i PATH=$ENV{PATH} CC=${SAVED_CC} CXX=${SAVED_CXX} CI=$ENV{CI} ${CMAKE_COMMAND} BUILD_COMMAND )
         else ()
@@ -300,7 +298,6 @@ if (URHO3D_LUA)
         ExternalProject_Add (tolua++bin
             SOURCE_DIR ${URHO3D_SOURCE_DIR}/ThirdParty/toluapp/src/bin
             CMAKE_ARGS -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${URHO3D_BUILD_DIR}/bin/tool -D BAKED_CMAKE_SOURCE_DIR=${URHO3D_ROOT_DIR} -D URHO3D_UPDATE_SOURCE_TREE=${URHO3D_UPDATE_SOURCE_TREE} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM} -D URHO3D_CMAKE_MODULE=${URHO3D_CMAKE_MODULE}
-            ${TRAVIS_ANDROID_FIX}
             ${ALTERNATE_COMMAND})
         add_make_clean_files (${URHO3D_BUILD_DIR}/bin/tool/tolua++)
         message("Added tolua++ as an external project")
