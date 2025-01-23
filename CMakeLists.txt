@@ -30,7 +30,9 @@ project (Urho3D)
 set (IS_URHO3D TRUE)
 
 # Set CMake modules search path
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+if (NOT URHO3D_CMAKE_MODULE)
+    list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+endif ()
 
 # Include UrhoCommon.cmake module after setting project name
 include (UrhoCommon)
@@ -61,12 +63,13 @@ set (DEST_BUNDLE_DIR ${DEST_SHARE_DIR}/Applications)
 set (DEST_LIBRARY_DIR lib${LIB_SUFFIX}/${PATH_SUFFIX})
 set (DEST_PKGCONFIG_DIR lib${LIB_SUFFIX}/pkgconfig)
 # Install application launcher scripts
-file (GLOB APP_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/*${SCRIPT_EXT})
-install (PROGRAMS ${APP_SCRIPTS} DESTINATION ${DEST_RUNTIME_DIR})   # DEST_RUNTIME_DIR variable is set by the set_output_directories() macro call in the UrhoCommon module
+# TODO : do we need install application scripts in urho3d sdk ? this part should be in user project cmakefiles
+#file (GLOB APP_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/*${SCRIPT_EXT})
+#install (PROGRAMS ${APP_SCRIPTS} DESTINATION ${DEST_RUNTIME_DIR})   # DEST_RUNTIME_DIR variable is set by the set_output_directories() macro call in the UrhoCommon module
 # Install CMake modules and toolchains provided by and for Urho3D
-install (DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/ DESTINATION ${DEST_SHARE_DIR}/cmake)    # Note: the trailing slash is significant
+install (DIRECTORY ${URHO3D_ROOT_DIR}/cmake/ DESTINATION ${DEST_SHARE_DIR}/cmake)    # Note: the trailing slash is significant
 # Install CMake build scripts and rakefile
-file (GLOB CMAKE_SCRIPTS ${CMAKE_SOURCE_DIR}/script/*${SCRIPT_EXT})
+file (GLOB CMAKE_SCRIPTS ${URHO3D_ROOT_DIR}/script/*${SCRIPT_EXT})
 install (PROGRAMS ${CMAKE_SCRIPTS} DESTINATION ${DEST_SHARE_DIR}/scripts)
 install (FILES rakefile DESTINATION ${DEST_SHARE_DIR})
 
@@ -76,7 +79,7 @@ set (CPACK_PACKAGE_DESCRIPTION_SUMMARY ${URHO3D_DESCRIPTION})
 set (URHO3D_URL "https://github.com/u3d-community/U3D")
 set (CPACK_PACKAGE_VENDOR ${URHO3D_URL})
 set (CPACK_PACKAGE_CONTACT ${URHO3D_URL})
-execute_process (COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/GetUrhoRevision.cmake WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE URHO3D_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${CMAKE_COMMAND} -P ${URHO3D_ROOT_DIR}/cmake/Modules/GetUrhoRevision.cmake WORKING_DIRECTORY ${URHO3D_ROOT_DIR} OUTPUT_VARIABLE URHO3D_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 set (CPACK_PACKAGE_VERSION ${URHO3D_VERSION})
 string (REGEX MATCH "([^.]+)\\.([^.]+)\\.(.+)" MATCHED ${URHO3D_VERSION})
 if (MATCHED)
@@ -84,7 +87,7 @@ if (MATCHED)
     set (CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
     set (CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 endif ()
-set (CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE)
+set (CPACK_RESOURCE_FILE_LICENSE ${URHO3D_ROOT_DIR}/LICENSE)
 set (CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
 set (CPACK_GENERATOR TGZ)
 if (ANDROID)
@@ -182,7 +185,7 @@ if (URHO3D_MACOSX_BUNDLE OR (APPLE AND ARM))
 endif ()
 
 # Setup SDK-like include dir in the build tree for building the Urho3D library
-set (THIRD_PARTY_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${DEST_INCLUDE_DIR}/ThirdParty)
+set (THIRD_PARTY_INCLUDE_DIR ${URHO3D_BUILD_DIR}/${DEST_INCLUDE_DIR}/ThirdParty)
 file (MAKE_DIRECTORY ${THIRD_PARTY_INCLUDE_DIR})
 
 # Urho3D source

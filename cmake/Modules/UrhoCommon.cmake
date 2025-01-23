@@ -22,9 +22,19 @@
 #
 
 # Save the initial values of CC and CXX environment variables
-if (NOT CMAKE_CROSSCOMPILING)
+# only need on top level project
+# TODO : upgrade to cmake 3.22 and use PROJECT_IS_TOP_LEVEL
+if (NOT CMAKE_CROSSCOMPILING AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set (SAVED_CC $ENV{CC} CACHE INTERNAL "Initial value for CC")
     set (SAVED_CXX $ENV{CXX} CACHE INTERNAL "Initial value for CXX")
+endif ()
+
+# Define CMake Module path, if not already done
+if (URHO3D_CMAKE_MODULE)
+    list (REMOVE_ITEM CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
+    list (PREPEND CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
+elseif (NOT CMAKE_MODULE_PATH)
+    set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 endif ()
 
 # Limit the supported build configurations
@@ -889,6 +899,36 @@ macro (add_make_clean_files)
     set_directory_properties (PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${ADDITIONAL_MAKE_CLEAN_FILES};${ARGN}")
 endmacro ()
 
+# Helper function to retrieve the appropriate project name based on the scoped target 
+# in the build tree. This function determines whether the current project or subproject 
+# is part of Urho3D or if it should return the top-level project name.
+function (get_project_name project_name)
+    unset (${name} PARENT_SCOPE)
+    if (IS_URHO3D)
+        set (${project_name} "Urho3D" PARENT_SCOPE)
+    else ()
+        set (${project_name} "${CMAKE_PROJECT_NAME}" PARENT_SCOPE)
+    endif ()    
+endfunction ()
+# same purpose but for the root_dir
+function (get_project_root_dir root_dir)
+    unset (${root_dir} PARENT_SCOPE)
+    if (IS_URHO3D)
+        set (${root_dir} "${URHO3D_ROOT_DIR}" PARENT_SCOPE)
+    else ()
+        set (${root_dir} "${CMAKE_SOURCE_DIR}" PARENT_SCOPE)
+    endif ()
+endfunction ()
+# same purpose but for the binary_dir
+function (get_project_binary_dir binary_dir)
+    unset (${binary_dir} PARENT_SCOPE)
+    if (IS_URHO3D)
+        set (${binary_dir} "${URHO3D_BUILD_DIR}" PARENT_SCOPE)
+    else ()
+        set (${binary_dir} "${CMAKE_BINARY_DIR}" PARENT_SCOPE)
+    endif ()
+endfunction ()
+
 # *** THIS IS A DEPRECATED MACRO ***
 # Macro for defining external library dependencies
 # The purpose of this macro is emulate CMake to set the external library dependencies transitively
@@ -1080,7 +1120,8 @@ macro (define_resource_dirs)
     endif ()
     # If not explicitly specified then use the Urho3D project structure convention
     if (NOT ARG_GLOB_PATTERNS)
-        set (ARG_GLOB_PATTERNS ${CMAKE_SOURCE_DIR}/bin/*Data)
+        get_project_root_dir (root_dir)
+        set (ARG_GLOB_PATTERNS "${root_dir}/bin/*Data")
     endif ()
     file (GLOB GLOB_RESULTS ${ARG_GLOB_PATTERNS})
     unset (GLOB_DIRS)
@@ -1179,19 +1220,24 @@ macro (add_html_shell)
         elseif (EXISTS ${CMAKE_SOURCE_DIR}/bin/shell.html)
             # Fallback to the shell present in the project source
             set (HTML_SHELL ${CMAKE_SOURCE_DIR}/bin/shell.html)
-        elseif (DEFINED URHO3D_HOME AND EXISTS ${URHO3D_HOME}/bin/shell.html)
+        elseif (DEFINED URHO3D_ROOT_DIR AND EXISTS ${URHO3D_ROOT_DIR}/bin/shell.html)
             # Then to the Urho3D shell (full window/screen with no console output)
-            set (HTML_SHELL ${URHO3D_HOME}/bin/shell.html)
+            set (HTML_SHELL ${URHO3D_ROOT_DIR}/bin/shell.html)
         elseif (EXISTS ${EMSCRIPTEN_ROOT_PATH}/src/shell.html)
             # Finally create a shell from the emscripten one that embeds the Urho project logo
-            message (WARNING "Deprecated: Could not find '\${URHO3D_HOME}/bin/shell.html'. Falling back to '${EMSCRIPTEN_ROOT_PATH}/src/shell.html'. This behavior will be removed in a future release.")
+            message (WARNING "Deprecated: Could not find '\${URHO3D_HOME}/bin/shell.html'.
+                              Falling back to '${EMSCRIPTEN_ROOT_PATH}/src/shell.html'.
+                              This behavior will be removed in a future release.")
             file (READ ${EMSCRIPTEN_ROOT_PATH}/src/shell.html HTML_SHELL)
-            string (REPLACE "<!doctype html>" "<!-- This is a generated file. DO NOT EDIT!-->\n\n<!doctype html>" HTML_SHELL "${HTML_SHELL}")     # Stringify to preserve semicolons
+            # Stringify to preserve semicolons
+            string (REPLACE "<!doctype html>" "<!-- This is a generated file. DO NOT EDIT!-->\n\n<!doctype html>" HTML_SHELL "${HTML_SHELL}")     
             string (REPLACE "<body>" "<body>\n<script>document.body.innerHTML=document.body.innerHTML.replace(/^#!.*\\n/, '');</script>\n<a href=\"https://urho3d.io\" title=\"Urho3D Homepage\"><img src=\"https://urho3d.io/assets/images/logo.png\" alt=\"link to https://urho3d.io\" height=\"80\" width=\"160\" /></a>\n" HTML_SHELL "${HTML_SHELL}")
             file (WRITE ${CMAKE_BINARY_DIR}/Source/shell.html "${HTML_SHELL}")
             set (HTML_SHELL ${CMAKE_BINARY_DIR}/Source/shell.html)
         else ()
-            message (ERROR "Deducing HTML_SHELL failed. \nPlease add \${CMAKE_SOURCE_DIR}/bin/shell.html or update Urho so it provides \${URHO3D_HOME}/bin/shell.html")
+            message (ERROR "Deducing HTML_SHELL failed. \n
+                            Please add \${CMAKE_SOURCE_DIR}/bin/shell.html 
+                            or update Urho so it provides \${URHO3D_ROOT_DIR}/bin/shell.html")
         endif ()
         if (NOT EXISTS "${HTML_SHELL}")
             message (ERROR "Could not find html shell '${HTML_SHELL}'")
@@ -1384,7 +1430,7 @@ macro (find_Urho3D_tool VAR NAME)
     find_program (${VAR} ${NAME} HINTS ${ARG_HINTS} PATHS ${ARG_PATHS} PATH_SUFFIXES ${ARG_PATH_SUFFIXES} DOC ${ARG_DOC} NO_DEFAULT_PATH)
     mark_as_advanced (${VAR})  # Hide it from cmake-gui in non-advanced mode
     if (NOT ${VAR})
-        set (${VAR} ${CMAKE_BINARY_DIR}/bin/tool/${NAME})
+        set (${VAR} ${URHO3D_BUILD_DIR}/bin/tool/${NAME})
         if (ARG_MSG_MODE AND NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
             message (${ARG_MSG_MODE}
                 "Could not find ${VAR} tool in the Urho3D build tree or Urho3D SDK. Your project may not build successfully without this tool. "
@@ -1436,7 +1482,11 @@ macro (install_header_files)
         # Reparse the arguments for the create_symlink macro to "install" the header files in the build tree
         if (NOT ARG_BASE)
             # Use build tree as base path
-            set (ARG_BASE ${CMAKE_BINARY_DIR})
+            if (URHO3D_BUILD_DIR)
+                set (ARG_BASE ${URHO3D_BUILD_DIR})
+            else ()
+                set (ARG_BASE ${CMAKE_BINARY_DIR})
+            endif ()
         endif ()
         foreach (INSTALL_SOURCE ${INSTALL_SOURCES})
             if (NOT IS_ABSOLUTE ${INSTALL_SOURCE})
@@ -1490,12 +1540,16 @@ endmacro ()
 
 # Macro for setting common output directories
 macro (set_output_directories OUTPUT_PATH)
-    cmake_parse_arguments (ARG LOCAL "" "" ${ARGN})
+    # Argument BASE added : allow to specify the base dir for REL_OUTPUT_PATH
+    cmake_parse_arguments (ARG LOCAL BASE "" ${ARGN})
     if (ARG_LOCAL)
         unset (SCOPE)
         unset (OUTPUT_DIRECTORY_PROPERTIES)
     else ()
         set (SCOPE CMAKE_)
+    endif ()
+    if (NOT ARG_BASE)
+        set (ARG_BASE ${CMAKE_CURRENT_BINARY_DIR})
     endif ()
     foreach (TYPE ${ARG_UNPARSED_ARGUMENTS})
         set (${SCOPE}${TYPE}_OUTPUT_DIRECTORY ${OUTPUT_PATH})
@@ -1506,8 +1560,8 @@ macro (set_output_directories OUTPUT_PATH)
             list (APPEND OUTPUT_DIRECTORY_PROPERTIES ${TYPE}_OUTPUT_DIRECTORY_${CONFIG} ${${TYPE}_OUTPUT_DIRECTORY_${CONFIG}})
         endforeach ()
         if (TYPE STREQUAL RUNTIME AND NOT ${OUTPUT_PATH} STREQUAL .)
-            file (RELATIVE_PATH REL_OUTPUT_PATH ${CMAKE_BINARY_DIR} ${OUTPUT_PATH})
-            set (DEST_RUNTIME_DIR ${REL_OUTPUT_PATH})
+            file (RELATIVE_PATH REL_OUTPUT_PATH ${ARG_BASE} ${OUTPUT_PATH})
+            set (DEST_RUNTIME_DIR ${CURRENT_INSTALL_PREFIX}${REL_OUTPUT_PATH})
         endif ()
     endforeach ()
     if (ARG_LOCAL)
@@ -1541,8 +1595,8 @@ macro (setup_executable)
     if (ARG_TOOL)
         list (APPEND TARGET_PROPERTIES XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
         if (NOT ARG_PRIVATE AND NOT DEST_RUNTIME_DIR MATCHES tool)
-            set_output_directories (${CMAKE_BINARY_DIR}/bin/tool LOCAL RUNTIME PDB)
-            set (RUNTIME_DIR ${CMAKE_BINARY_DIR}/bin/tool)
+            set (RUNTIME_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tool)
+            set_output_directories (${RUNTIME_DIR} BASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} LOCAL RUNTIME PDB)
         endif ()
     endif ()
     if (NOT ARG_NODEPS)
@@ -1552,6 +1606,22 @@ macro (setup_executable)
         # Xcode universal build linker flags when targeting 64-bit OSX with LuaJIT enabled
         list (APPEND TARGET_PROPERTIES XCODE_ATTRIBUTE_OTHER_LDFLAGS[arch=x86_64] "${LUAJIT_EXE_LINKER_FLAGS_APPLE} $(OTHER_LDFLAGS)")
     endif ()
+
+    # Create symbolic links in the build tree
+    if (RESOURCE_DIRS AND NOT ANDROID AND NOT URHO3D_PACKAGING AND RUNTIME_DIR)
+        foreach (I ${RESOURCE_DIRS})
+            get_filename_component (NAME ${I} NAME)
+            if (EXISTS ${I})
+                if (NOT EXISTS ${RUNTIME_DIR})
+                    file (MAKE_DIRECTORY ${RUNTIME_DIR})
+                endif ()
+                if (NOT EXISTS ${RUNTIME_DIR}/${NAME})
+                    create_symlink (${I} ${RUNTIME_DIR}/${NAME} FALLBACK_TO_COPY)
+                endif ()
+            endif ()
+        endforeach ()
+    endif ()
+
     _setup_target ()
 
     if (URHO3D_SCP_TO_TARGET)
@@ -1718,7 +1788,7 @@ macro (setup_main_executable)
         if (URHO3D_PACKAGING)
             # Urho3D project builds the PackageTool as required; downstream project uses PackageTool found in the Urho3D build tree or Urho3D SDK
             find_Urho3d_tool (PACKAGE_TOOL PackageTool
-                HINTS ${CMAKE_BINARY_DIR}/bin/tool ${URHO3D_HOME}/bin/tool
+                HINTS ${URHO3D_BUILD_DIR}/bin/tool ${URHO3D_ROOT_DIR}/bin/tool ${CMAKE_SOURCE_DIR}/bin/tool
                 DOC "Path to PackageTool" MSG_MODE WARNING)
             if (CMAKE_PROJECT_NAME STREQUAL Urho3D)
                 set (PACKAGING_DEP DEPENDS PackageTool)
@@ -1872,17 +1942,6 @@ macro (_setup_target)
         set_target_properties (${TARGET_NAME} PROPERTIES ${TARGET_PROPERTIES})
         unset (TARGET_PROPERTIES)
     endif ()
-    # Create symbolic links in the build tree
-    if (NOT ANDROID AND NOT URHO3D_PACKAGING)
-        # Ensure the asset root directory exist before creating the symlinks
-        file (MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-        foreach (I ${RESOURCE_DIRS})
-            get_filename_component (NAME ${I} NAME)
-            if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/${NAME} AND EXISTS ${I})
-                create_symlink (${I} ${CMAKE_BINARY_DIR}/bin/${NAME} FALLBACK_TO_COPY)
-            endif ()
-        endforeach ()
-    endif ()
 endmacro()
 
 # Macro for setting up a test case
@@ -1906,12 +1965,13 @@ endmacro ()
 
 # Set common binary output directory if not already set (note that this module can be included in an external project which may already have DEST_RUNTIME_DIR preset)
 if (NOT DEST_RUNTIME_DIR)
-    set_output_directories (${CMAKE_BINARY_DIR}/bin RUNTIME PDB)
+    get_project_binary_dir (binary_dir)
+    set_output_directories ("${binary_dir}/bin" BASE "${binary_dir}" RUNTIME PDB)
 endif ()
 
 if (WEB)
-    if (EMSCRIPTEN_SHARE_DATA AND NOT EXISTS ${CMAKE_BINARY_DIR}/Source/pak-loader.js)
-        file (WRITE ${CMAKE_BINARY_DIR}/Source/pak-loader.js "var Module;if(typeof Module==='undefined')Module=eval('(function(){try{return Module||{}}catch(e){return{}}})()');var s=document.createElement('script');s.src='${CMAKE_PROJECT_NAME}.js';document.body.appendChild(s);Module['preRun'].push(function(){Module['addRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')});s.onload=function(){Module['removeRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')};")
+    if (EMSCRIPTEN_SHARE_DATA AND NOT EXISTS ${URHO3D_BUILD_DIR}/Source/pak-loader.js)
+        file (WRITE ${URHO3D_BUILD_DIR}/Source/pak-loader.js "var Module;if(typeof Module==='undefined')Module=eval('(function(){try{return Module||{}}catch(e){return{}}})()');var s=document.createElement('script');s.src='${CMAKE_PROJECT_NAME}.js';document.body.appendChild(s);Module['preRun'].push(function(){Module['addRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')});s.onload=function(){Module['removeRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')};")
     endif ()
 endif ()
 
@@ -1937,13 +1997,13 @@ if (IOS)
         # Due to a bug in the CMake/Xcode generator (fixed in 3.4) that prevents iOS targets (library and bundle) to be installed correctly
         # (see http://public.kitware.com/Bug/bug_relationship_graph.php?bug_id=12506&graph=dependency),
         # below temporary fix is required to work around the bug
-        list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\$$\(EFFECTIVE_PLATFORM_NAME\)//g' ${CMAKE_BINARY_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
+        list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\$$\(EFFECTIVE_PLATFORM_NAME\)//g' ${URHO3D_BUILD_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
         message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse.urho3d.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629 for more info.")
     endif ()
 elseif (TVOS)
     # Almost the same bug as iOS one above but not quite, most probably because CMake does not support AppleTV platform yet
-    list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\)\$$\(EFFECTIVE_PLATFORM_NAME\)/\) -DEFFECTIVE_PLATFORM_NAME=$$\(EFFECTIVE_PLATFORM_NAME\)/g' ${CMAKE_BINARY_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
-    add_custom_target (APPLETV_POST_CMAKE_FIX COMMAND sed -i '' -E 's,\(Debug|RelWithDebInfo|Release\)/,$$\(CONFIGURATION\)$$\(EFFECTIVE_PLATFORM_NAME\)/,g' ${CMAKE_BINARY_DIR}/Source/Urho3D/CMakeScripts/Urho3D_cmakeRulesBuildPhase.make* || exit 0)
+    list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\)\$$\(EFFECTIVE_PLATFORM_NAME\)/\) -DEFFECTIVE_PLATFORM_NAME=$$\(EFFECTIVE_PLATFORM_NAME\)/g' ${URHO3D_BUILD_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
+    add_custom_target (APPLETV_POST_CMAKE_FIX COMMAND sed -i '' -E 's,\(Debug|RelWithDebInfo|Release\)/,$$\(CONFIGURATION\)$$\(EFFECTIVE_PLATFORM_NAME\)/,g' ${URHO3D_BUILD_DIR}/Source/Urho3D/CMakeScripts/Urho3D_cmakeRulesBuildPhase.make* || exit 0)
 	message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse.urho3d.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629 for more info.")
 endif ()
 if (POST_CMAKE_FIXES)

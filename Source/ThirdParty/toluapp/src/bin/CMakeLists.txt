@@ -20,7 +20,7 @@
 # THE SOFTWARE.
 #
 
-if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
+if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D AND NOT URHO3D_AS_SUBMODULE)
     # Set CMake minimum version
     cmake_minimum_required (VERSION 3.10.2)
 
@@ -28,7 +28,7 @@ if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
     project (Urho3D-ExternalProject-tolua++)
 
     # Set CMake modules search path
-    set (CMAKE_MODULE_PATH ${BAKED_CMAKE_SOURCE_DIR}/cmake/Modules)
+    set (CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
 
     # Include UrhoCommon.cmake module after setting project name
     include (UrhoCommon)
@@ -52,7 +52,7 @@ if (URHO3D_UPDATE_SOURCE_TREE)
 endif ()
 file (GLOB TOLUA lua/*.lua)
 add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c
-    COMMAND ${CMAKE_BINARY_DIR}/bin/tool/tolua++ -o ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c -H ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.h -n tolua tolua_scons.pkg 2>${NULL_DEVICE} || ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/toluabind.c ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c
+    COMMAND ${URHO3D_BUILD_DIR}/bin/tool/tolua++ -o ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c -H ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.h -n tolua tolua_scons.pkg 2>${NULL_DEVICE} || ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/toluabind.c ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c
     ${UPDATE_COMMAND}
     DEPENDS ${TOLUA} tolua_scons.pkg
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -72,5 +72,5 @@ set (INCLUDE_DIRS ../../include ../../../../ThirdParty/Lua/src)
 setup_executable (TOOL NODEPS)
 
 # Wrapper target for tolua++ executable to be used externally.
-add_custom_target (tolua++bin 
-	DEPENDS tolua++ ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c)
+add_custom_target (tolua++bin DEPENDS tolua++ ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c)
+
