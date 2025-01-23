@@ -83,9 +83,9 @@ public :
     {
         for (auto& i: categories_)
         {
-            auto symbol = result.Nodes.getNodeAs<StringLiteral>(i);
+            auto symbol = result.Nodes.getNodeAs<clang::StringLiteral>(i);
             if (symbol)
-                categoryData_[i].exposedSymbols_.insert(symbol->getString());
+                categoryData_[i].exposedSymbols_.insert(symbol->getString().str());
         }
     }
 
@@ -108,15 +108,15 @@ public :
     {
         for (auto& i: categories_)
         {
-            auto symbol = result.Nodes.getNodeAs<NamedDecl>(i);
+            auto symbol = result.Nodes.getNodeAs<clang::NamedDecl>(i);
             if (symbol)
             {
                 auto& data = categoryData_[i];
-                if (data.annotatedSymbols_.find(symbol->getName()) == data.annotatedSymbols_.end() &&
-                    data.exposedSymbols_.find(symbol->getName()) == data.exposedSymbols_.end())
+                if (data.annotatedSymbols_.find(symbol->getName().str()) == data.annotatedSymbols_.end() &&
+                    data.exposedSymbols_.find(symbol->getName().str()) == data.exposedSymbols_.end())
                 {
-                    replacements_.insert(Replacement(*result.SourceManager, symbol->getLocation(), 0, "NONSCRIPTABLE "));
-                    data.annotatedSymbols_.insert(symbol->getName());
+                    auto error = replacements_.add(Replacement(*result.SourceManager, symbol->getLocation(), 0, "NONSCRIPTABLE "));
+                    data.annotatedSymbols_.insert(symbol->getName().str());
                 }
             }
         }
@@ -135,37 +135,34 @@ private:
 int main(int argc, const char** argv)
 {
     // Parse the arguments and pass them to the the internal sub-tools
-    CommonOptionsParser optionsParser(argc, argv, annotatorCategory);
-    PathFilter bindingPathFilter
-        (optionsParser.getSourcePathList(), [](const std::string& path) { return path.find("API.cpp") != std::string::npos; });
-    PathFilter nonBindingPathFilter
-        (optionsParser.getSourcePathList(), [](const std::string& path) { return path.find("API.cpp") == std::string::npos; });
-    ClangTool bindingExtractor(optionsParser.getCompilations(), bindingPathFilter.GetPathList());
-    RefactoringTool annotator(optionsParser.getCompilations(), nonBindingPathFilter.GetPathList());
+    static llvm::Expected<CommonOptionsParser> optionsParser = CommonOptionsParser::create(argc, argv, annotatorCategory);
+    PathFilter bindingPathFilter(optionsParser.get().getSourcePathList(), 
+                                    [](const std::string& path) { return path.find("API.cpp") != std::string::npos; });
+    PathFilter nonBindingPathFilter(optionsParser.get().getSourcePathList(), 
+                                    [](const std::string& path) { return path.find("API.cpp") == std::string::npos; });
+    ClangTool bindingExtractor(optionsParser.get().getCompilations(), bindingPathFilter.GetPathList());
+    RefactoringTool annotator(optionsParser.get().getCompilations(), nonBindingPathFilter.GetPathList());
 
     // Setup finder to match against AST nodes from existing AngelScript binding source files
     ExtractCallback extractCallback;
     MatchFinder bindingFinder;
     // Find exposed classes (they are registered through RegisterObjectType(), RegisterRefCounted(), RegisterObject(), etc)
     bindingFinder.addMatcher(
-        memberCallExpr(
-            callee(
-                methodDecl(hasName("RegisterObjectType"))),
-            hasArgument(0, stringLiteral().bind("class"))), &extractCallback);
+        cxxMemberCallExpr(callee(cxxMethodDecl(hasName("RegisterObjectType"))), hasArgument(0, stringLiteral().bind("class")))
+        , &extractCallback);
     bindingFinder.addMatcher(
-        callExpr(
-            hasDeclaration(
-                functionDecl(hasParameter(1, hasName("className")))),
-            hasArgument(1, stringLiteral().bind("class"))), &extractCallback);
+        callExpr(hasDeclaration(functionDecl(hasParameter(1, hasName("className")))), hasArgument(1, stringLiteral().bind("class")))
+        , &extractCallback);
     // Find exposed enums
     bindingFinder.addMatcher(
-        memberCallExpr(
-            callee(
-                methodDecl(hasName("RegisterEnum"))),
-            hasArgument(0, stringLiteral().bind("enum"))), &extractCallback);
+        cxxMemberCallExpr(callee(cxxMethodDecl(hasName("RegisterEnum"))), hasArgument(0, stringLiteral().bind("enum")))
+        , &extractCallback);
 
     // Setup finder to match against AST nodes for annotating Urho3D library source files
-    AnnotateCallback annotateCallback(annotator.getReplacements());
+    bool valid = false;
+    for (auto& replacement : annotator.getReplacements())
+    {
+        AnnotateCallback annotateCallback(replacement.second);
     MatchFinder annotateFinder;
     // Find exported class declarations with Urho3D namespace
     annotateFinder.addMatcher(
@@ -187,10 +184,13 @@ int main(int argc, const char** argv)
     outs().SetUnbuffered();
 
     // Success when both sub-tools are run successfully
-    return (outs() << "Extracting", true) &&
-           bindingExtractor.run(newFrontendActionFactory(&bindingFinder).get()) == EXIT_SUCCESS &&
-           (outs() << "\nAnnotating", true) &&
-           annotator.runAndSave(newFrontendActionFactory(&annotateFinder).get()) == EXIT_SUCCESS &&
-           (outs() << "\n", true) ?
-        EXIT_SUCCESS : EXIT_FAILURE;
+        valid = (outs() << "Extracting", true) && bindingExtractor.run(newFrontendActionFactory(&bindingFinder).get()) == EXIT_SUCCESS &&
+                (outs() << "\nAnnotating", true) && annotator.runAndSave(newFrontendActionFactory(&annotateFinder).get()) == EXIT_SUCCESS &&
+                (outs() << "\n", true);
+
+        if (!valid)
+            break;
+    }
+
+    return valid ? EXIT_SUCCESS : EXIT_FAILURE;
 }

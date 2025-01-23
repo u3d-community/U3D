@@ -52,7 +52,7 @@ static cl::extrahelp moreHelp(
 );
 
 static cl::OptionCategory autobinderCategory("AutoBinder options");
-static std::unique_ptr<opt::OptTable> options(createDriverOptTable());
+static const llvm::opt::OptTable& option = getDriverOptTable();
 static cl::opt<std::string> templatePath("t", cl::desc("Template path"), cl::cat(autobinderCategory));
 static cl::opt<std::string> outputPath("o", cl::desc("Output path"), cl::cat(autobinderCategory));
 static cl::list<std::string> scripts("s", cl::desc("Script subsystems"), cl::cat(autobinderCategory));
@@ -72,9 +72,9 @@ public :
     {
         for (auto& i: categories_)
         {
-            auto symbol = result.Nodes.getNodeAs<StringLiteral>(i);
+            auto symbol = result.Nodes.getNodeAs<clang::StringLiteral>(i);
             if (symbol)
-                categoryData_[i].symbols_.insert(symbol->getString());
+                categoryData_[i].symbols_.insert(symbol->getString().str());
         }
     }
 
@@ -94,8 +94,8 @@ static int BindingGenerator()
 int main(int argc, const char** argv)
 {
     // Parse the arguments and pass them to the the internal sub-tools
-    CommonOptionsParser optionsParser(argc, argv, autobinderCategory);
-    ClangTool bindingExtractor(optionsParser.getCompilations(), optionsParser.getSourcePathList());
+    static llvm::Expected<CommonOptionsParser> optionsParser = CommonOptionsParser::create(argc, argv, autobinderCategory);
+    ClangTool bindingExtractor(optionsParser.get().getCompilations(), optionsParser.get().getSourcePathList());
 
     // Setup finder to match against AST nodes from Urho3D library source files
     ExtractCallback extractCallback;
