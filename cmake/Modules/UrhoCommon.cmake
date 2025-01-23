@@ -424,6 +424,10 @@ endif ()
 if (WEB AND EMSCRIPTEN)
     set (SDL_THREADS ${URHO3D_THREADING})
     set (URHO3D_PACKAGING TRUE)  
+    # add file_packager used to generate common shared data files (EMSCRIPTEN_SHARE_DATA=1 required)
+    if (NOT EMPACKAGER AND EXISTS ${EMSCRIPTEN_ROOT_PATH}/tools/file_packager)
+        set (EMPACKAGER ${EMSCRIPTEN_ROOT_PATH}/tools/file_packager)
+    endif ()
 endif ()
 if (NOT CMAKE_CONFIGURATION_TYPES)
     set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${URHO3D_BUILD_CONFIGURATIONS})
@@ -1185,30 +1189,27 @@ macro (define_resource_dirs)
             endif ()
         endforeach ()
         set_property (SOURCE ${RESOURCE_PAKS} PROPERTY GENERATED TRUE)
-        if (WEB)
-            if (EMSCRIPTEN)
-                # Set the custom EMCC_OPTION property to preload the generated shared data file
-                if (EMSCRIPTEN_SHARE_DATA)
-                    set (SHARED_RESOURCE_JS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_PROJECT_NAME}.js)
-                    list (APPEND SOURCE_FILES ${SHARED_RESOURCE_JS} ${SHARED_RESOURCE_JS}.data)
-                    # DEST_BUNDLE_DIR may be empty when macro caller does not wish to install anything
-                    if (DEST_BUNDLE_DIR)
-                        install (FILES ${SHARED_RESOURCE_JS} ${SHARED_RESOURCE_JS}.data DESTINATION ${DEST_BUNDLE_DIR})
-                    endif ()
-                    # Define a custom command for generating a shared data file
-                    if (RESOURCE_PAKS)
-                        # When sharing a single data file, all main targets are assumed to use a same set of resource paks
-                        foreach (FILE ${RESOURCE_PAKS})
-                            get_filename_component (NAME ${FILE} NAME)
-                            list (APPEND PAK_NAMES ${NAME})
-                        endforeach ()
-                        add_custom_command (OUTPUT ${SHARED_RESOURCE_JS} ${SHARED_RESOURCE_JS}.data
-                            COMMAND ${EMPACKAGER} ${SHARED_RESOURCE_JS}.data --preload ${PAK_NAMES} --js-output=${SHARED_RESOURCE_JS} --use-preload-cache
-                            DEPENDS RESOURCE_CHECK ${RESOURCE_PAKS}
-                            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                            COMMENT "Generating shared data file")
-                    endif ()
-                endif ()
+
+        # Set generating a shared data file for the main targets in the same build tree
+        # When sharing a single data file, all main targets are assumed to use a same set of resource paks
+        # pak-loader.js replaced by the js file generated with EMPACKAGER
+        if (WEB AND EMSCRIPTEN AND EMSCRIPTEN_SHARE_DATA AND EMPACKAGER)
+            get_project_name (projectname)
+            set (SHAREDPAKS_FILENAME ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${projectname}-paks)
+            list (APPEND SOURCE_FILES ${SHAREDPAKS_FILENAME}.js ${SHAREDPAKS_FILENAME}.data)
+            # Define a custom command for generating a single shared data file
+            foreach (FILE ${RESOURCE_PAKS})
+                get_filename_component (NAME ${FILE} NAME)
+                list (APPEND PAK_NAMES ${NAME})
+            endforeach ()
+            add_custom_command (OUTPUT ${SHAREDPAKS_FILENAME}.js ${SHAREDPAKS_FILENAME}.data
+                                COMMAND ${EMPACKAGER} ${SHAREDPAKS_FILENAME}.data --preload ${PAK_NAMES} --js-output=${SHAREDPAKS_FILENAME}.js --use-preload-cache
+                                DEPENDS RESOURCE_CHECK ${RESOURCE_PAKS}
+                                WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+                                COMMENT "Generating shared data file ${SHAREDPAKS_FILENAME}.data for ${projectname} PAKs ${PAK_NAMES}")
+            # DEST_BUNDLE_DIR may be empty when macro caller does not wish to install anything
+            if (DEST_BUNDLE_DIR)
+                install (FILES ${SHAREDPAKS_FILENAME}.js ${SHAREDPAKS_FILENAME}.data DESTINATION ${DEST_BUNDLE_DIR})
             endif ()
         endif ()
     endif ()
@@ -1945,15 +1946,20 @@ macro (_setup_target)
         endif ()
     endif ()
     # Extra linker flags for Emscripten
-    if (EMSCRIPTEN)
+    if (WEB AND EMSCRIPTEN)
         # These flags are set only once in the main executable
         if (NOT LIB_TYPE)   # LIB_TYPE is empty for executable target
             list (APPEND LINK_FLAGS "-s TOTAL_MEMORY=${EMSCRIPTEN_TOTAL_MEMORY}")
             if (EMSCRIPTEN_ALLOW_MEMORY_GROWTH)
                 list (APPEND LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 --no-heap-copy")
             endif ()
-            if (EMSCRIPTEN_SHARE_DATA)
-                list (APPEND LINK_FLAGS "--pre-js \"${CMAKE_BINARY_DIR}/Source/pak-loader.js\"")
+            # pak-loader.js replaced by generated ${project_name}-paks.js (see define_resource_dirs)
+            # add to link flags for the current target
+            if (EMSCRIPTEN_SHARE_DATA AND RESOURCE_DIRS)
+                get_project_name (project_name)
+                set (SHAREDPAKS_JS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${project_name}-paks.js)
+                list (APPEND LINK_FLAGS "--pre-js \"${SHAREDPAKS_JS}\"")
+                message ("Setup Target ${TARGET_NAME} add LINK_FLAGS = ${LINK_FLAGS}")
             endif ()
             if (URHO3D_TESTING)
                 list (APPEND LINK_FLAGS --emrun)
@@ -2035,12 +2041,6 @@ set_install_prefix ()
 if (NOT DEST_RUNTIME_DIR)
     get_project_binary_dir (binary_dir)
     set_output_directories ("${binary_dir}/bin" BASE "${binary_dir}" RUNTIME PDB)
-endif ()
-
-if (WEB)
-    if (EMSCRIPTEN_SHARE_DATA AND NOT EXISTS ${URHO3D_BUILD_DIR}/Source/pak-loader.js)
-        file (WRITE ${URHO3D_BUILD_DIR}/Source/pak-loader.js "var Module;if(typeof Module==='undefined')Module=eval('(function(){try{return Module||{}}catch(e){return{}}})()');var s=document.createElement('script');s.src='${CMAKE_PROJECT_NAME}.js';document.body.appendChild(s);Module['preRun'].push(function(){Module['addRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')});s.onload=function(){Module['removeRunDependency']('${CMAKE_PROJECT_NAME}.js.loader')};")
-    endif ()
 endif ()
 
 # Warn user if PATH environment variable has not been correctly set for using ccache
