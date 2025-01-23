@@ -179,6 +179,7 @@ macro (urho_find_sources_dirs)
                 string (REPLACE "/Source/Urho3D/CMakeLists.txt" "" DIR ${DIR})
                 list (APPEND ${PROJECTNAME}_URHO3D_DIRS ${DIR})
                 math (EXPR NUM_SOURCE_DIRS "${NUM_SOURCE_DIRS} + 1")
+                message (" ... source: ${DIR}")
             endif ()
         endforeach ()
     endif ()        
@@ -229,8 +230,14 @@ macro (urho_find_builds_dirs)
                         continue ()
                     endif ()
                 endif ()
-                file (GLOB LIB_FILES LIST_DIRECTORIES FALSE "${DIR}/lib/*.a" "${DIR}/lib/*.lib" "${DIR}/lib/*.so" "${DIR}/lib/*.dll*" "${DIR}/lib/*.dylib")
+                file (GLOB LIB_FILES LIST_DIRECTORIES FALSE 
+                        "${DIR}/lib*/*Urho3D.a" "${DIR}/lib*/Urho3D/*Urho3D.a"
+                        "${DIR}/lib*/*Urho3D.lib" "${DIR}/lib*/Urho3D/*Urho3D.lib" 
+                        "${DIR}/lib*/*Urho3D.so" "${DIR}/lib*/Urho3D/*Urho3D.so" 
+                        "${DIR}/lib*/*Urho3D.dll*" "${DIR}/lib*/Urho3D/*Urho3D.dll*" 
+                        "${DIR}/lib*/*Urho3D.dylib" "${DIR}/lib*/Urho3D/*Urho3D.dylib")
                 if (LIB_FILES)
+                    message (" ... library: ${LIB_FILES}")
                     list (APPEND ${PROJECTNAME}_URHO3D_DIRS ${DIR})
                     math (EXPR NUM_BUILD_DIRS "${NUM_BUILD_DIRS} + 1")
                 endif()
@@ -308,10 +315,6 @@ macro (unset_cache_variables_without prefix)
     endforeach ()
 endmacro ()
 
-if (URHO3D_HOME AND NOT EXISTS ${URHO3D_HOME})
-    set (URHO3D_HOME "")
-endif ()
-
 set (${PROJECTNAME}_URHO3D_SEARCH_PATH "" CACHE PATH "Root path for searching Urho3D")
 if (NOT ${PROJECTNAME}_URHO3D_SEARCH_PATH)
     if (URHO3D_SEARCH_PATH)
@@ -322,13 +325,12 @@ if (NOT ${PROJECTNAME}_URHO3D_SEARCH_PATH)
     endif ()
 endif ()
 
-if (FORCEDISCOVER)
-    unset (${PROJECTNAME}_URHO3D_SEARCH_PATH_LAST CACHE)
-endif ()
-
-if (NOT "${${PROJECTNAME}_URHO3D_SEARCH_PATH_LAST}" STREQUAL "${${PROJECTNAME}_URHO3D_SEARCH_PATH}")
+# Conditions to launch the search of Urho3D directories
+if ((NOT URHO3D_HOME AND NOT ${PROJECTNAME}_URHO3D_DIRS) OR FORCEDISCOVER OR
+    (DEFINED ${PROJECTNAME}_URHO3D_SEARCH_PATH_LAST AND NOT "${${PROJECTNAME}_URHO3D_SEARCH_PATH_LAST}" STREQUAL "${${PROJECTNAME}_URHO3D_SEARCH_PATH}"))
     set (${PROJECTNAME}_URHO3D_SEARCH_PATH_LAST ${${PROJECTNAME}_URHO3D_SEARCH_PATH} CACHE INTERNAL STRING)        
     set (SEARCH_URHO3D_ENABLE TRUE)
+    unset (FORCEDISCOVER CACHE)    
 else ()
     set (SEARCH_URHO3D_ENABLE FALSE)
 endif ()

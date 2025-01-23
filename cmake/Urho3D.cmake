@@ -108,34 +108,27 @@ else()
     return ()
 endif ()
 
-if (NOT EXISTS "${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake")
-    set (URHO3D_DISCOVER_ENABLE FALSE)
-else ()
-    set (URHO3D_DISCOVER_EXISTS TRUE)
-endif ()
-if (NOT EXISTS "${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake")
-    set (URHO3D_PATCHER_ENABLE FALSE)
-else()
-    set (URHO3D_PATCHER_EXISTS TRUE)
-endif ()
-
-if (NOT DEFINED URHO3D_HOME AND NOT URHO3D_DISCOVER_ENABLE AND DEFINED ENV{URHO3D_HOME} AND
+# Check URHO3D_HOME
+if (NOT DEFINED URHO3D_HOME AND DEFINED ENV{URHO3D_HOME} AND
         EXISTS $ENV{URHO3D_HOME}/cmake/Modules/UrhoCommon.cmake)
     set (URHO3D_HOME $ENV{URHO3D_HOME})
     message ("URHO3D_HOME defined from environment variable: ${URHO3D_HOME}")
 endif ()
+if (URHO3D_HOME AND NOT EXISTS ${URHO3D_HOME})
+    unset (URHO3D_HOME)
+endif ()
 
 # Add UrhoDiscover
-if (URHO3D_DISCOVER_EXISTS)
-    if (URHO3D_HOME STREQUAL "" OR FORCEDISCOVER)
-        set (URHO3D_DISCOVER_ENABLE TRUE)
-    endif ()
-    if (URHO3D_DISCOVER_ENABLE)
-        include (${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake)
-    endif ()
+if (EXISTS "${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake")
+    include (${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake)
 endif ()
 
 # Add UrhoPatcher and remove previously patched CMake files, restoring the originals.
+if (EXISTS "${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake")
+    set (URHO3D_PATCHER_EXISTS TRUE)
+else ()
+    set (URHO3D_PATCHER_EXISTS FALSE)
+endif ()
 if (URHO3D_PATCHER_EXISTS AND URHO3D_PATCHER_ENABLE)
     set (URHO3D_PATCHER_RESTORE TRUE)
     include (${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake)
@@ -144,7 +137,7 @@ endif()
 # Stop here if URHO3D_HOME is empty or undefined.
 # URHO3D_HOME should be set manually.
 if (NOT URHO3D_HOME AND NOT ANDROID) # TODO : android quick fix
-    if (URHO3D_DISCOVER_ENABLE AND ${PROJECTNAME}_URHO3D_DIRS)
+    if (${PROJECTNAME}_URHO3D_DIRS)
         message ("URHO3D_DISCOVER has found some Urho3D folders. Please select one with cmake-gui.")
     else ()
         message ("URHO3D_HOME is undefined!")
@@ -168,7 +161,7 @@ if (NOT ANDROID) # TODO : android quick fix
     urho_find_origin ("${URHO3D_HOME}" URHO3D_ROOT_DIR URHO3D_SOURCE_DIR origin)
     if (NOT origin)
         message (FATAL_ERROR "The Urho3D path appears to be invalid!")
-        endif ()
+    endif ()
 endif ()
 
 if (origin STREQUAL "source")
@@ -197,11 +190,12 @@ list (PREPEND CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
 
 if (origin)
     # Apply patches if enabled.
-    if (URHO3D_PATCHER_ENABLE)
+    if (URHO3D_PATCHER_EXISTS AND URHO3D_PATCHER_ENABLE)
         set (URHO3D_PATCHER_APPLY TRUE)
         include (${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake)
     endif ()
 
+    message (" -- from ${origin}")
     message (" -- Using URHO3D_HOME: ${URHO3D_HOME}")
     message (" -- Using CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 

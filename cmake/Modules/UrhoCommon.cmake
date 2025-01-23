@@ -37,7 +37,7 @@ if (NOT URHO3D_ROOT_DIR)
     elseif (NOT CMAKE_PROJECT_NAME MATCHES ^Urho3D-ExternalProject-)
         if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
             include (${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
-            if (NOT URHO3D_HOME AND NOT ANDROID)
+            if (NOT URHO3D_HOME AND NOT ANDROID) # TODO : quick fix android
                 return ()
             endif ()
         endif ()
