@@ -111,6 +111,7 @@ if (URHO3D_URHO2D)
     if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spine)
         add_subdirectory (ThirdParty/spine)
         # Add definition for Spine
+        set (URHO3D_SPINE TRUE)
         add_definitions (-DURHO3D_SPINE)
     endif ()
 endif ()

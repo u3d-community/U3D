@@ -2066,14 +2066,14 @@ if (IOS)
         # (see http://public.kitware.com/Bug/bug_relationship_graph.php?bug_id=12506&graph=dependency),
         # below temporary fix is required to work around the bug
         list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\$$\(EFFECTIVE_PLATFORM_NAME\)//g' ${URHO3D_BUILD_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
-        message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse.urho3d.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629 for more info.")
+        message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse-urho3d.github.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629/ for more info.")
     endif ()
-elseif (TVOS)
+elseif (TVOS AND NOT TARGET APPLETV_POST_CMAKE_FIX)
     # Almost the same bug as iOS one above but not quite, most probably because CMake does not support AppleTV platform yet
     list (APPEND POST_CMAKE_FIXES COMMAND sed -i '' 's/\)\$$\(EFFECTIVE_PLATFORM_NAME\)/\) -DEFFECTIVE_PLATFORM_NAME=$$\(EFFECTIVE_PLATFORM_NAME\)/g' ${URHO3D_BUILD_DIR}/CMakeScripts/install_postBuildPhase.make* || exit 0)
     add_custom_target (APPLETV_POST_CMAKE_FIX COMMAND sed -i '' -E 's,\(Debug|RelWithDebInfo|Release\)/,$$\(CONFIGURATION\)$$\(EFFECTIVE_PLATFORM_NAME\)/,g' ${URHO3D_BUILD_DIR}/Source/Urho3D/CMakeScripts/Urho3D_cmakeRulesBuildPhase.make* || exit 0)
-	message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse.urho3d.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629 for more info.")
+    message (WARNING "Added a possibly broken 'fix' to an Xcode generator bug as ${CMAKE_VERSION} VERSION_LESS 3.4. See https://discourse-urho3d.github.io/t/ios-xcode-sed-cant-read-s-effective-platform-name-g-n/1629/ for more info.")
 endif ()
-if (POST_CMAKE_FIXES)
+if (POST_CMAKE_FIXES AND NOT TARGET POST_CMAKE_FIXES)
     add_custom_target (POST_CMAKE_FIXES ALL ${POST_CMAKE_FIXES} COMMENT "Applying post-cmake fixes")
 endif ()
