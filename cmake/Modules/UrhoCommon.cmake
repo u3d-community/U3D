@@ -21,6 +21,29 @@
 # THE SOFTWARE.
 #
 
+# This ensures compatibility with older versions of Urho3D's CMake files.
+# Define new Urho3D variables with default values if they are not already set.
+# If you are using "Urho3D.cmake" in your user project, these variables should 
+# already be configured automatically.
+if (NOT URHO3D_ROOT_DIR)
+    # For the main Urho3D build, ensure compatibility when using with older versions of Urho3D's CMake files.
+    if (CMAKE_PROJECT_NAME STREQUAL Urho3D) 
+        set (URHO3D_ROOT_DIR     ${CMAKE_SOURCE_DIR})
+        set (URHO3D_SOURCE_DIR   ${CMAKE_SOURCE_DIR}/Source)
+        set (URHO3D_BUILD_DIR    ${CMAKE_BINARY_DIR})
+        set (URHO3D_CMAKE_MODULE ${CMAKE_SOURCE_DIR}/cmake/Modules)
+    # If this is a user project (not an Urho3D main or external project),
+    # the "Urho3D.cmake" file will handle the variable configuration.
+    elseif (NOT CMAKE_PROJECT_NAME MATCHES ^Urho3D-ExternalProject-)
+        if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+            include (${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+            if (NOT URHO3D_HOME AND NOT ANDROID)
+                return ()
+            endif ()
+        endif ()
+    endif ()
+endif ()
+
 # Save the initial values of CC and CXX environment variables
 # only need on top level project
 # TODO : upgrade to cmake 3.22 and use PROJECT_IS_TOP_LEVEL

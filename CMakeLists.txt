@@ -37,6 +37,16 @@ endif ()
 # Include UrhoCommon.cmake module after setting project name
 include (UrhoCommon)
 
+# Ensure Compatibility if using old UrhoCommon module
+if (NOT URHO3D_ROOT_DIR)
+    message (WARNING "You're using old cmake modules !/n
+        new urho3d cmake modules are available for better urho3d/user project separation")
+    set (URHO3D_ROOT_DIR ${CMAKE_SOURCE_DIR})
+    set (URHO3D_SOURCE_DIR ${CMAKE_SOURCE_DIR}/Source)
+    set (URHO3D_BUILD_DIR ${CMAKE_BINARY_DIR})    
+    set (URHO3D_CMAKE_MODULE ${CMAKE_SOURCE_DIR}/cmake/Modules)
+endif ()
+
 # Setup SDK install destinations
 set (PATH_SUFFIX Urho3D)
 if (WIN32)
