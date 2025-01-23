@@ -26,6 +26,9 @@ cmake_minimum_required (VERSION 3.10.2)
 # Set project name
 project (Urho3D)
 
+# indicates that we are currently in Urho3D cmakefiles, used by UrhoCommon module
+set (IS_URHO3D TRUE)
+
 # Set CMake modules search path
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
