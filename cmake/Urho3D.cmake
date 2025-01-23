@@ -41,6 +41,7 @@
 # TODO: Patcher to finish
 # TODO: finish the tag list generation in discover module
 # TODO: allow select crosscompiled build
+# TODO: remove android quick fix
 
 string (TOUPPER ${CMAKE_PROJECT_NAME} PROJECTNAME)
 
@@ -142,7 +143,7 @@ endif()
 
 # Stop here if URHO3D_HOME is empty or undefined.
 # URHO3D_HOME should be set manually.
-if (NOT URHO3D_HOME)
+if (NOT URHO3D_HOME AND NOT ANDROID) # TODO : android quick fix
     if (URHO3D_DISCOVER_ENABLE AND ${PROJECTNAME}_URHO3D_DIRS)
         message ("URHO3D_DISCOVER has found some Urho3D folders. Please select one with cmake-gui.")
     else ()
@@ -163,9 +164,11 @@ set (URHO3D_AS_SUBMODULE FALSE CACHE INTERNAL BOOLEAN)
 # Example: Retrieve URHO3D_ROOT_DIR="/path/to/urho3d/urho3d-1.x/" from URHO3D_HOME="/path/to/urho3d/urho3d-1.x/build/linux/static/release".
 unset (origin)
 
-urho_find_origin ("${URHO3D_HOME}" URHO3D_ROOT_DIR URHO3D_SOURCE_DIR origin)
-if (NOT origin)
-    message (FATAL_ERROR "The Urho3D path appears to be invalid!")
+if (NOT ANDROID) # TODO : android quick fix
+    urho_find_origin ("${URHO3D_HOME}" URHO3D_ROOT_DIR URHO3D_SOURCE_DIR origin)
+    if (NOT origin)
+        message (FATAL_ERROR "The Urho3D path appears to be invalid!")
+        endif ()
 endif ()
 
 if (origin STREQUAL "source")
