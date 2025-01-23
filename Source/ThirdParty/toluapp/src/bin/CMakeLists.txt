@@ -70,6 +70,9 @@ set (INCLUDE_DIRS ../../include ../../../../ThirdParty/Lua/src)
 
 # Setup target
 setup_executable (TOOL NODEPS)
+if (TARGET Lua)
+    add_dependencies (${TARGET_NAME} Lua)
+endif ()
 
 # Wrapper target for tolua++ executable to be used externally.
 add_custom_target (tolua++bin DEPENDS tolua++ ${CMAKE_CURRENT_BINARY_DIR}/generated/toluabind.c)
