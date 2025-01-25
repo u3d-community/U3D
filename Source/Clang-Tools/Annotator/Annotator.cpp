@@ -169,7 +169,7 @@ int main(int argc, const char** argv)
 #ifndef _MSC_VER
                                              hasAttr(attr::Visibility),
 #else
-                                               hasAttr(attr::DLLExport),
+                                             hasAttr(attr::DLLExport),
 #endif
                                              matchesName("^::Urho3D::"))
                                       .bind("class"),

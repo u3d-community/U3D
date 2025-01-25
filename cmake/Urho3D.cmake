@@ -123,16 +123,22 @@ if (EXISTS "${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake")
     include (${PROJECT_CMAKE_DIR}/UrhoDiscover.cmake)
 endif ()
 
-# Add UrhoPatcher and remove previously patched CMake files, restoring the originals.
+# Get UrhoPatcher
 if (EXISTS "${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake")
     set (URHO3D_PATCHER_EXISTS TRUE)
 else ()
     set (URHO3D_PATCHER_EXISTS FALSE)
 endif ()
-if (URHO3D_PATCHER_EXISTS AND URHO3D_PATCHER_ENABLE)
+
+# Apply Patcher method : remove previously patched CMake files, restoring the originals.
+if (URHO3D_PATCHER_EXISTS)
     set (URHO3D_PATCHER_RESTORE TRUE)
     include (${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake)
-endif()
+    if (NOT URHO3D_PATCHER_SUCCESS)
+        set (URHO3D_HOME "")
+        return ()
+    endif() 
+endif ()
 
 # Stop here if URHO3D_HOME is empty or undefined.
 # URHO3D_HOME should be set manually.
@@ -190,9 +196,13 @@ list (PREPEND CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
 
 if (origin)
     # Apply patches if enabled.
-    if (URHO3D_PATCHER_EXISTS AND URHO3D_PATCHER_ENABLE)
+    if (URHO3D_PATCHER_EXISTS)
         set (URHO3D_PATCHER_APPLY TRUE)
         include (${PROJECT_CMAKE_DIR}/UrhoPatcher.cmake)
+        if (NOT URHO3D_PATCHER_SUCCESS)
+            set (URHO3D_HOME "")
+            return ()
+        endif()        
     endif ()
 
     message (" -- from ${origin}")
@@ -203,10 +213,11 @@ if (origin)
     if (URHO3D_AS_SUBMODULE)
         # Add Urho3D sources and set the build directory to URHO3D_BUILD_DIR.
         add_subdirectory (${URHO3D_ROOT_DIR} ${URHO3D_BUILD_DIR})
-    else ()
-        # If using a pre-built Urho3D, add the dependency to Urho3D via UrhoCommon.
+    endif ()
+    
+    if (NOT URHOCOMMON_INUSE)
+        # Include UrhoCommon for the main user project if not already used
         include (${URHO3D_CMAKE_MODULE}/UrhoCommon.cmake)
-        urho_mark_as_advanced_options ()
     endif ()
 endif ()
 

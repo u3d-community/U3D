@@ -21,6 +21,8 @@
 # THE SOFTWARE.
 #
 
+set (URHOCOMMON_INUSE TRUE)
+
 # This ensures compatibility with older versions of Urho3D's CMake files.
 # Define new Urho3D variables with default values if they are not already set.
 # If you are using "Urho3D.cmake" in your user project, these variables should 
