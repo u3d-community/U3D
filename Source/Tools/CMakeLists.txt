@@ -56,25 +56,25 @@ if (CMAKE_CROSSCOMPILING)
     endif ()
     if (URHO3D_PACKAGING)
         ExternalProject_Add (PackageTool
-            SOURCE_DIR ${CMAKE_SOURCE_DIR}/Source/Tools/PackageTool
-            CMAKE_ARGS -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${CMAKE_BINARY_DIR}/bin/tool -D BAKED_CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -D BAKED_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+            SOURCE_DIR ${URHO3D_SOURCE_DIR}/Tools/PackageTool
+            CMAKE_ARGS -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${URHO3D_BUILD_DIR}/bin/tool -D BAKED_CMAKE_SOURCE_DIR=${URHO3D_ROOT_DIR} -D BAKED_CMAKE_BINARY_DIR=${URHO3D_BUILD_DIR} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM} -D URHO3D_CMAKE_MODULE=${URHO3D_CMAKE_MODULE}
             ${ALTERNATE_COMMAND})
-        add_make_clean_files (${CMAKE_BINARY_DIR}/bin/tool/PackageTool${FILE_EXTENSION})
+        add_make_clean_files (${URHO3D_BUILD_DIR}/bin/tool/PackageTool${FILE_EXTENSION})
         if (CMAKE_HOST_WIN32 AND NOT HAS_MKLINK)
             add_dependencies (PackageTool Urho3D)   # Ensure Urho3D headers are fresh when building PackageTool externally on Windows host system without MKLINK
         endif ()
-        install (PROGRAMS ${CMAKE_BINARY_DIR}/bin/tool/PackageTool${FILE_EXTENSION} DESTINATION ${DEST_RUNTIME_DIR}/tool)
+        install (PROGRAMS ${URHO3D_BUILD_DIR}/bin/tool/PackageTool${FILE_EXTENSION} DESTINATION ${DEST_RUNTIME_DIR}/tool)
     endif ()
     if (URHO3D_GENERATEBINDINGS)
         ExternalProject_Add (BindingGenerator
-            SOURCE_DIR ${CMAKE_SOURCE_DIR}/Source/Tools/BindingGenerator
-            CMAKE_ARGS -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${CMAKE_BINARY_DIR}/bin/tool -D BAKED_CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -D BAKED_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+            SOURCE_DIR ${URHO3D_SOURCE_DIR}/Tools/BindingGenerator
+            CMAKE_ARGS -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${URHO3D_BUILD_DIR}/bin/tool -D BAKED_CMAKE_SOURCE_DIR=${URHO3D_ROOT_DIR} -D BAKED_CMAKE_BINARY_DIR=${URHO3D_BUILD_DIR} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM} -D URHO3D_CMAKE_MODULE=${URHO3D_CMAKE_MODULE}
             ${ALTERNATE_COMMAND})
-        add_make_clean_files (${CMAKE_BINARY_DIR}/bin/tool/BindingGenerator${FILE_EXTENSION})
+        add_make_clean_files (${URHO3D_BUILD_DIR}/bin/tool/BindingGenerator${FILE_EXTENSION})
         if (CMAKE_HOST_WIN32 AND NOT HAS_MKLINK)
             add_dependencies (BindingGenerator Urho3D)
         endif ()
-        install (PROGRAMS ${CMAKE_BINARY_DIR}/bin/tool/BindingGenerator${FILE_EXTENSION} DESTINATION ${DEST_RUNTIME_DIR}/tool)
+        install (PROGRAMS ${URHO3D_BUILD_DIR}/bin/tool/BindingGenerator${FILE_EXTENSION} DESTINATION ${DEST_RUNTIME_DIR}/tool)
     endif ()
 endif ()
 

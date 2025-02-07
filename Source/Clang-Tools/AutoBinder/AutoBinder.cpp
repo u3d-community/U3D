@@ -36,23 +36,22 @@ using namespace clang::tooling;
 using namespace llvm;
 
 static cl::extrahelp commonHelp(CommonOptionsParser::HelpMessage);
-static cl::extrahelp moreHelp(
-    "\tFor example, to run AutoBinder on all files in a subtree of the\n"
-    "\tsource tree, use:\n"
-    "\n"
-    "\t  find path/in/substree -name '*.cpp'|xargs AutoBinder -p build/path \\\n"
-    "\t  -t template/path -o output/path -s script0 -s script1\n"
-    "\n"
-    "\tNote, that path/in/subtree and current directory should follow the\n"
-    "\trules described above.\n"
-    "\n"
-    "Most probably you want to invoke 'autobinder' built-in target instead of invoking this tool\n"
-    "directly. The 'autobinder' target invokes this tool in a right context prepared by build system.\n"
-    "\n"
-);
+static cl::extrahelp
+    moreHelp("\tFor example, to run AutoBinder on all files in a subtree of the\n"
+             "\tsource tree, use:\n"
+             "\n"
+             "\t  find path/in/substree -name '*.cpp'|xargs AutoBinder -p build/path \\\n"
+             "\t  -t template/path -o output/path -s script0 -s script1\n"
+             "\n"
+             "\tNote, that path/in/subtree and current directory should follow the\n"
+             "\trules described above.\n"
+             "\n"
+             "Most probably you want to invoke 'autobinder' built-in target instead of invoking this tool\n"
+             "directly. The 'autobinder' target invokes this tool in a right context prepared by build system.\n"
+             "\n");
 
 static cl::OptionCategory autobinderCategory("AutoBinder options");
-static std::unique_ptr<opt::OptTable> options(createDriverOptTable());
+static const llvm::opt::OptTable& option = getDriverOptTable();
 static cl::opt<std::string> templatePath("t", cl::desc("Template path"), cl::cat(autobinderCategory));
 static cl::opt<std::string> outputPath("o", cl::desc("Output path"), cl::cat(autobinderCategory));
 static cl::list<std::string> scripts("s", cl::desc("Script subsystems"), cl::cat(autobinderCategory));
@@ -67,21 +66,21 @@ static std::unordered_map<std::string, Data> categoryData_;
 
 class ExtractCallback : public MatchFinder::MatchCallback
 {
-public :
+public:
     virtual void run(const MatchFinder::MatchResult& result)
     {
-        for (auto& i: categories_)
+        for (auto& i : categories_)
         {
-            auto symbol = result.Nodes.getNodeAs<StringLiteral>(i);
+            auto symbol = result.Nodes.getNodeAs<clang::StringLiteral>(i);
             if (symbol)
-                categoryData_[i].symbols_.insert(symbol->getString());
+                categoryData_[i].symbols_.insert(symbol->getString().str());
         }
     }
 
     virtual void onStartOfTranslationUnit()
     {
         static unsigned count = sizeof("Extracting") / sizeof(char) - 1;
-        outs() << '.' << (++count % 100 ? "" : "\n");   // Sending a heart beat
+        outs() << '.' << (++count % 100 ? "" : "\n"); // Sending a heart beat
     }
 };
 
@@ -94,36 +93,35 @@ static int BindingGenerator()
 int main(int argc, const char** argv)
 {
     // Parse the arguments and pass them to the the internal sub-tools
-    CommonOptionsParser optionsParser(argc, argv, autobinderCategory);
-    ClangTool bindingExtractor(optionsParser.getCompilations(), optionsParser.getSourcePathList());
+    static llvm::Expected<CommonOptionsParser> optionsParser =
+        CommonOptionsParser::create(argc, argv, autobinderCategory);
+    ClangTool bindingExtractor(optionsParser.get().getCompilations(), optionsParser.get().getSourcePathList());
 
     // Setup finder to match against AST nodes from Urho3D library source files
     ExtractCallback extractCallback;
     MatchFinder bindingFinder;
     // Find exported class declarations with Urho3D namespace
-    bindingFinder.addMatcher(
-        recordDecl(
-            unless(hasAttr(attr::Annotate)),
+    bindingFinder.addMatcher(recordDecl(unless(hasAttr(attr::Annotate)),
 #ifndef _MSC_VER
-            hasAttr(attr::Visibility),
+                                        hasAttr(attr::Visibility),
 #else
-            hasAttr(attr::DLLExport),
+                                        hasAttr(attr::DLLExport),
 #endif
-            matchesName("^::Urho3D::")).bind("class"), &extractCallback);
+                                        matchesName("^::Urho3D::"))
+                                 .bind("class"),
+                             &extractCallback);
     // Find enum declarations with Urho3D namespace
-    bindingFinder.addMatcher(
-        enumDecl(
-            unless(hasAttr(attr::Annotate)),
-            matchesName("^::Urho3D::")).bind("enum"), &extractCallback);
+    bindingFinder.addMatcher(enumDecl(unless(hasAttr(attr::Annotate)), matchesName("^::Urho3D::")).bind("enum"),
+                             &extractCallback);
 
-    // Unbuffered stdout stream to keep the Travis-CI's log flowing and thus prevent it from killing a potentially long running job
+    // Unbuffered stdout stream to keep the Travis-CI's log flowing and thus prevent it from killing a potentially long
+    // running job
     outs().SetUnbuffered();
 
     // Success when both sub-tools are run successfully
     return (outs() << "Extracting", true) &&
-           bindingExtractor.run(newFrontendActionFactory(&bindingFinder).get()) == EXIT_SUCCESS &&
-           (outs() << "\nBinding", true) &&
-           BindingGenerator() == EXIT_SUCCESS &&
-           (outs() << "\n", true) ?
-        EXIT_SUCCESS : EXIT_FAILURE;
+                   bindingExtractor.run(newFrontendActionFactory(&bindingFinder).get()) == EXIT_SUCCESS &&
+                   (outs() << "\nBinding", true) && BindingGenerator() == EXIT_SUCCESS && (outs() << "\n", true)
+               ? EXIT_SUCCESS
+               : EXIT_FAILURE;
 }

@@ -23,7 +23,7 @@
 # Based on src/Makefile from http://luajit.org
 # The cross-compiling logic is ported to CMake as faithful as possible although currently Urho3D does not support all target archs supported by LuaJIT
 
-if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
+if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D AND NOT URHO3D_AS_SUBMODULE)
     # Set CMake minimum version
     cmake_minimum_required (VERSION 3.10.2)
 
@@ -31,7 +31,7 @@ if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
     project (Urho3D-ExternalProject-LuaJIT-${ARCH})
 
     # Set CMake modules search path
-    set (CMAKE_MODULE_PATH ${BAKED_CMAKE_SOURCE_DIR}/cmake/Modules)
+    set (CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
 
     # Include UrhoCommon.cmake module after setting project name
     include (UrhoCommon)
@@ -41,7 +41,7 @@ if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
     endif ()
 elseif (NOT BAKED_CMAKE_SOURCE_DIR)
-    set (BAKED_CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+    set (BAKED_CMAKE_SOURCE_DIR ${URHO3D_ROOT_DIR})
 endif ()
 
 # Makefile: Compiler options
@@ -379,7 +379,7 @@ if (CMAKE_CROSSCOMPILING)
     set (TOOL_PATH ${CMAKE_CURRENT_BINARY_DIR}/tool/)
     ExternalProject_Add (buildvm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/host
-        CMAKE_ARGS -D URHO3D_64BIT=${URHO3D_64BIT} -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${TOOL_PATH} -D BAKED_CMAKE_SOURCE_DIR=${BAKED_CMAKE_SOURCE_DIR} -D HOST_XCFLAGS=${HOST_XCFLAGS} -D TARGET_ARCH=${TARGET_ARCH} -D DASM_FLAGS=${DASM_FLAGS} -D DASM_ARCH=${DASM_ARCH} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+        CMAKE_ARGS -D URHO3D_64BIT=${URHO3D_64BIT} -D URHO3D_DEPLOYMENT_TARGET=generic -D DEST_RUNTIME_DIR=${TOOL_PATH} -D BAKED_CMAKE_SOURCE_DIR=${BAKED_CMAKE_SOURCE_DIR} -D HOST_XCFLAGS=${HOST_XCFLAGS} -D TARGET_ARCH=${TARGET_ARCH} -D DASM_FLAGS=${DASM_FLAGS} -D DASM_ARCH=${DASM_ARCH} -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM} -D URHO3D_CMAKE_MODULE=${URHO3D_CMAKE_MODULE}
         ${ALTERNATE_COMMAND})
 else ()
     # Otherwise, build it internally as per normal
@@ -496,27 +496,27 @@ if (XCODE AND NOT ARCH)    # These variables are used to control the recursion a
                     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     CMAKE_ARGS -D ARCH=x86_64 -D INSTALL_ARCHIVE_DIR=${CMAKE_CURRENT_BINARY_DIR} ${LUAJIT_PASSTHRU_OPTS} ${ALTERNATE_COMMAND} BUILD_COMMAND "" INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config $<CONFIG> -- -sdk iphonesimulator)
                 add_custom_target (${TARGET_NAME}_universal-iphonesimulator
-                    COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'x86_64' ]\; then rm -f ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a && arch=x86_64\; else arch=i386\; fi && xcodebuild -target ${TARGET_NAME}_$$arch -configuration $(CONFIGURATION) && cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.$$arch,}\; elif lipo -info ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'i386.*x86_64|x86_64.*i386'\; then echo Already a Mach-O universal binary library\; else for arch in _x86_64 _i386\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && lipo -create -output ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{,.x86_64,.i386}\; fi
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                    COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'x86_64' ]\; then rm -f ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a && arch=x86_64\; else arch=i386\; fi && xcodebuild -target ${TARGET_NAME}_$$arch -configuration $(CONFIGURATION) && cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.$$arch,}\; elif lipo -info ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'i386.*x86_64|x86_64.*i386'\; then echo Already a Mach-O universal binary library\; else for arch in _x86_64 _i386\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && lipo -create -output ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{,.x86_64,.i386}\; fi
+                    WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
                 ExternalProject_Add (${TARGET_NAME}_armv7
                     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     CMAKE_ARGS -D ARCH=armv7 -D INSTALL_ARCHIVE_DIR=${CMAKE_CURRENT_BINARY_DIR} -D URHO3D_64BIT=0 ${LUAJIT_PASSTHRU_OPTS} ${ALTERNATE_COMMAND} BUILD_COMMAND "" INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config $<CONFIG>)
                 add_custom_target (${TARGET_NAME}_universal-iphoneos
-                    COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'arm64' ]\; then rm -f ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a && arch=\; else arch=_armv7\; fi && xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION) && if [ $$arch ]\; then cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{.armv7,}\; fi\; elif lipo -info ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'armv7.*arm64|arm64.*armv7'\; then echo Already a Mach-O universal binary library\; else for arch in \"\" _armv7\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && mv ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{,.arm64} && lipo -create -output ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{,.arm64,.armv7}\; fi
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                    COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'arm64' ]\; then rm -f ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a && arch=\; else arch=_armv7\; fi && xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION) && if [ $$arch ]\; then cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{.armv7,}\; fi\; elif lipo -info ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'armv7.*arm64|arm64.*armv7'\; then echo Already a Mach-O universal binary library\; else for arch in \"\" _armv7\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && mv ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{,.arm64} && lipo -create -output ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphoneos/lib${TARGET_NAME}.a{,.arm64,.armv7}\; fi
+                    WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
             else ()
                 # 32-bit iOS universal binary contains both armv7 (iPhoneOS) and i386 (iPhoneSimulator) archs
                 add_custom_target (${TARGET_NAME}_universal-iphonesimulator
-                    COMMAND xcodebuild -target ${TARGET_NAME}_i386 -configuration $(CONFIGURATION) && cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.i386,}
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                    COMMAND xcodebuild -target ${TARGET_NAME}_i386 -configuration $(CONFIGURATION) && cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.i386,}
+                    WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
                 add_custom_target (${TARGET_NAME}_universal-iphoneos
                     COMMAND xcodebuild -target ${TARGET_NAME} -configuration $(CONFIGURATION)
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                    WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
             endif ()
             add_custom_target (${TARGET_NAME}_universal ALL
                 COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq arm\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-iphoneos -configuration $(CONFIGURATION)\; fi
                 COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq 86\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-iphonesimulator -configuration $(CONFIGURATION)\; fi
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                WORKING_DIRECTORY ${URHO3D_BUILD_DIR}
                 COMMENT "Creating Mach-O universal binary LuaJIT library")
         else ()
             # Since version 11.x iOS does not support 32-bit archs anymore
@@ -524,15 +524,15 @@ if (XCODE AND NOT ARCH)    # These variables are used to control the recursion a
                 SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                 CMAKE_ARGS -D ARCH=x86_64 -D INSTALL_ARCHIVE_DIR=${CMAKE_CURRENT_BINARY_DIR} ${LUAJIT_PASSTHRU_OPTS} ${ALTERNATE_COMMAND} BUILD_COMMAND "" INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config $<CONFIG> -- -sdk iphonesimulator)
             add_custom_target (${TARGET_NAME}_universal-iphonesimulator
-                COMMAND xcodebuild -target ${TARGET_NAME}_x86_64 -configuration $(CONFIGURATION) && cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.x86_64,}
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                COMMAND xcodebuild -target ${TARGET_NAME}_x86_64 -configuration $(CONFIGURATION) && cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-iphonesimulator/lib${TARGET_NAME}.a{.x86_64,}
+                WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
             add_custom_target (${TARGET_NAME}_universal-iphoneos
                 COMMAND xcodebuild -target ${TARGET_NAME} -configuration $(CONFIGURATION)
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
             add_custom_target (${TARGET_NAME}_universal ALL
                 COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq arm\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-iphoneos -configuration $(CONFIGURATION)\; fi
                 COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq 86\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-iphonesimulator -configuration $(CONFIGURATION)\; fi
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                WORKING_DIRECTORY ${URHO3D_BUILD_DIR}
                 COMMENT "Creating Mach-O universal binary LuaJIT library")
         endif ()
     elseif (TVOS)
@@ -541,15 +541,15 @@ if (XCODE AND NOT ARCH)    # These variables are used to control the recursion a
             SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
             CMAKE_ARGS -D ARCH=x86_64 -D INSTALL_ARCHIVE_DIR=${CMAKE_CURRENT_BINARY_DIR} ${LUAJIT_PASSTHRU_OPTS} ${ALTERNATE_COMMAND} BUILD_COMMAND "" INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install --config $<CONFIG> -- -sdk appletvsimulator)
         add_custom_target (${TARGET_NAME}_universal-appletvsimulator
-            COMMAND xcodebuild -target ${TARGET_NAME}_x86_64 -configuration $(CONFIGURATION) && cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-appletvsimulator/lib${TARGET_NAME}.a{.x86_64,}
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+            COMMAND xcodebuild -target ${TARGET_NAME}_x86_64 -configuration $(CONFIGURATION) && cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>-appletvsimulator/lib${TARGET_NAME}.a{.x86_64,}
+            WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
         add_custom_target (${TARGET_NAME}_universal-appletvos
             COMMAND xcodebuild -target ${TARGET_NAME} -configuration $(CONFIGURATION)
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+            WORKING_DIRECTORY ${URHO3D_BUILD_DIR})
         add_custom_target (${TARGET_NAME}_universal ALL
             COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq arm\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-appletvos -configuration $(CONFIGURATION)\; fi
             COMMAND if [ '$(CONFIGURATION)' != 'Debug' ] || echo '$(ARCHS)' |grep -cq 86\; then xcodebuild ARCHS="$(ARCHS)" -target ${TARGET_NAME}_universal-appletvsimulator -configuration $(CONFIGURATION)\; fi
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            WORKING_DIRECTORY ${URHO3D_BUILD_DIR}
             COMMENT "Creating Mach-O universal binary LuaJIT library")
     elseif (URHO3D_UNIVERSAL)
         # macOS universal binary contains both x86_86 and i386 archs
@@ -557,8 +557,8 @@ if (XCODE AND NOT ARCH)    # These variables are used to control the recursion a
             SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
             CMAKE_ARGS -D ARCH=i386 -D INSTALL_ARCHIVE_DIR=${CMAKE_CURRENT_BINARY_DIR} -D URHO3D_64BIT=0 ${LUAJIT_PASSTHRU_OPTS} ${ALTERNATE_COMMAND})
         add_custom_target (${TARGET_NAME}_universal ALL
-            COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'x86_64' ]\; then rm -f ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a && arch=\; else arch=_i386\; fi && xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION) && if [ $$arch ]\; then cp -p ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{.i386,}\; fi\; elif lipo -info ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'i386.*x86_64|x86_64.*i386'\; then echo Already a Mach-O universal binary library\; else for arch in \"\" _i386\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && mv ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{,.x86_64} && lipo -create -output ${CMAKE_BINARY_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{,.x86_64,.i386}\; fi
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND if [ '$(CONFIGURATION)' == 'Debug' ]\; then if [ '$(ARCHS)' == 'x86_64' ]\; then rm -f ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a && arch=\; else arch=_i386\; fi && xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION) && if [ $$arch ]\; then cp -p ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{.i386,}\; fi\; elif lipo -info ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a 2>/dev/null |egrep -cq 'i386.*x86_64|x86_64.*i386'\; then echo Already a Mach-O universal binary library\; else for arch in \"\" _i386\; do xcodebuild -target ${TARGET_NAME}$$arch -configuration $(CONFIGURATION)\; done && mv ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{,.x86_64} && lipo -create -output ${URHO3D_BUILD_DIR}/Source/ThirdParty/${TARGET_NAME}/$<CONFIG>/lib${TARGET_NAME}.a{,.x86_64,.i386}\; fi
+            WORKING_DIRECTORY ${URHO3D_BUILD_DIR}
             COMMENT "Creating Mach-O universal binary LuaJIT library")
     endif ()
 elseif (INSTALL_ARCHIVE_DIR)
@@ -590,11 +590,11 @@ if (NOT CMAKE_PROJECT_NAME MATCHES ^Urho3D-ExternalProject-LuaJIT AND NOT IOS AN
     adjust_target_name ()   # Adjust to intended target output name
     if (TARGET LuaJIT_universal)
         add_dependencies (${TARGET_NAME} LuaJIT_universal)
-        target_link_libraries (${TARGET_NAME} ${CMAKE_BINARY_DIR}/Source/ThirdParty/LuaJIT/$<CONFIG>/libLuaJIT.a)   # This is a hack as CMake does not allow custom target in generator-expression, like $<TARGET_FILE:LuaJIT_universal>
+        target_link_libraries (${TARGET_NAME} ${URHO3D_BUILD_DIR}/Source/ThirdParty/LuaJIT/$<CONFIG>/libLuaJIT.a)   # This is a hack as CMake does not allow custom target in generator-expression, like $<TARGET_FILE:LuaJIT_universal>
     endif ()
 
     # Define post build steps
-    set (LUAJIT_DEP_DIR ${CMAKE_BINARY_DIR}/bin/jit)
+    set (LUAJIT_DEP_DIR ${URHO3D_BUILD_DIR}/bin/jit)
     add_custom_command (TARGET ${TARGET_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/src/jit ${LUAJIT_DEP_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/generated/vmdef.lua ${LUAJIT_DEP_DIR}

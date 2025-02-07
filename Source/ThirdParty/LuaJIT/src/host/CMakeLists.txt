@@ -20,7 +20,7 @@
 # THE SOFTWARE.
 #
 
-if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
+if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D AND NOT URHO3D_AS_SUBMODULE)
     # Set CMake minimum version
     cmake_minimum_required (VERSION 3.10.2)
 
@@ -28,7 +28,7 @@ if (NOT CMAKE_PROJECT_NAME STREQUAL Urho3D)
     project (Urho3D-ExternalProject-buildvm)
 
     # Set CMake modules search path
-    set (CMAKE_MODULE_PATH ${BAKED_CMAKE_SOURCE_DIR}/cmake/Modules)
+    set (CMAKE_MODULE_PATH ${URHO3D_CMAKE_MODULE})
 
     # Include UrhoCommon.cmake module after setting project name
     include (UrhoCommon)
