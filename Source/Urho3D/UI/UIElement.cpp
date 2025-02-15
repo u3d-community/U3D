@@ -2014,6 +2014,48 @@ bool UIElement::FilterUIStyleAttributes(XMLElement& dest, const XMLElement& styl
         }
     }
 
+    // remove all data identical to style data
+    XMLElement destAttrChild = dest.GetChild("attribute");
+    static XPathQuery matchXPathQuery("./attribute[@name=$attributeName and @value=$attributeValue]",
+                                      "attributeName:String, attributeValue:String");
+
+    if (styleElem.HasChild("attribute"))
+    {
+        while (destAttrChild)
+        {
+            const String& attrName = destAttrChild.GetAttribute("name");
+            const String& attrValue = destAttrChild.GetAttribute("value");
+            if (!attrName.Empty() && !attrValue.Empty())
+            {
+                // find entry in style with same name
+                if (!matchXPathQuery.SetVariable("attributeName", attrName))
+                    return false;
+
+                if (!matchXPathQuery.SetVariable("attributeValue", attrValue))
+                    return false;
+
+                XMLElement styleAttrChild = styleElem.SelectSinglePrepared(matchXPathQuery);
+
+                if (styleAttrChild)
+                {
+                    XMLElement nextAttrChildDest = destAttrChild.GetNext("attribute");
+
+                    if (!destAttrChild.Remove())
+                    {
+                        return false;
+                    }
+
+                    destAttrChild = nextAttrChildDest;
+                    continue;
+                }
+            }
+
+            destAttrChild = destAttrChild.GetNext("attribute");
+        }
+
+    }
+    
+
     return true;
 }
 
