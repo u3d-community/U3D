@@ -152,6 +152,17 @@ macro (urho_find_sources_dirs)
             OUTPUT_STRIP_TRAILING_WHITESPACE
             OUTPUT_VARIABLE HEADERS
         )
+        if(DEFINED ENV{URHO3D_HOME})
+            execute_process (
+                COMMAND powershell -Command "Get-ChildItem -Path '$ENV{URHO3D_HOME}' -Recurse -Filter 'CMakeLists.txt' | 
+                                            Where-Object { $_.DirectoryName -like \"*Source\\Urho3D*\" } | 
+                                            Select-Object FullName"
+                RESULT_VARIABLE PS_RESULT
+                ERROR_VARIABLE FIND_ERRORS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                OUTPUT_VARIABLE ENV_HEADERS
+            )
+        endif()
     else ()
         execute_process (
             COMMAND find "${${PROJECTNAME}_URHO3D_SEARCH_PATH}" -name "CMakeLists.txt"
@@ -164,11 +175,27 @@ macro (urho_find_sources_dirs)
             OUTPUT_STRIP_TRAILING_WHITESPACE
             OUTPUT_VARIABLE HEADERS
         )
+        if(DEFINED ENV{URHO3D_HOME})
+            execute_process (
+                COMMAND find "$ENV{URHO3D_HOME}" -name "CMakeLists.txt"
+                    ! -path "*/.*" ! -path "*/android/*" ! -path "*/bin*/*" ! -path "*/build*/*" ! -path "*/cmake/*"
+                    ! -path "*/CMake/*" ! -path "*/Docs/*" ! -path "*/include/*" ! -path "*/gradle/*" ! -path "*/script/*"
+                    ! -path "*/source/*" ! -path "*/SourceAssets/*" ! -path "*/tools/*"
+                    ! -path "*/website/*" ! -path "*/CMakeFiles/*" ! -path "*/generated/*" ! -path "*/lib/*"
+                COMMAND grep "/Source/Urho3D/CMakeLists.txt$"
+                ERROR_VARIABLE FIND_ERRORS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                OUTPUT_VARIABLE ENV_HEADERS
+            )
+        endif()
     endif ()
     if (FIND_ERRORS)
         message ("urho_find_sources_dirs ERROR: ${FIND_ERRORS}")
         return ()
     endif ()
+    if(ENV_HEADERS)
+        string(JOIN "\n" HEADERS "${HEADERS}" "${ENV_HEADERS}")
+    endif()
     set (NUM_SOURCE_DIRS 0)
     if (HEADERS)
         string (REPLACE "\n" ";" HEADERS_LIST "${HEADERS}")
@@ -198,6 +225,17 @@ macro (urho_find_builds_dirs)
             OUTPUT_STRIP_TRAILING_WHITESPACE
             OUTPUT_VARIABLE HEADERS
         )
+        if(DEFINED ENV{URHO3D_HOME})
+            execute_process (
+                COMMAND powershell -Command "Get-ChildItem -Path '$ENV{URHO3D_HOME}' -Recurse -Filter 'Urho3D.h' | 
+                                                Where-Object { $_.DirectoryName -like \"*include\\Urho3D*\" } | 
+                                                Select-Object FullName"
+                RESULT_VARIABLE PS_RESULT
+                ERROR_VARIABLE FIND_ERRORS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                OUTPUT_VARIABLE ENV_HEADERS
+            )
+        endif()
     else ()
         execute_process (
             COMMAND find "${${PROJECTNAME}_URHO3D_SEARCH_PATH}" -name "Urho3D.h"
@@ -210,11 +248,27 @@ macro (urho_find_builds_dirs)
             OUTPUT_STRIP_TRAILING_WHITESPACE
             OUTPUT_VARIABLE HEADERS
         )
+        if(DEFINED ENV{URHO3D_HOME})
+            execute_process (
+                COMMAND find "$ENV{URHO3D_HOME}" -name "Urho3D.h"
+                    ! -path "*/.*" ! -path "*/android/*" ! -path "*/bin*/*" ! -path "*/cmake/*"
+                    ! -path "*/CMake/*" ! -path "*/Docs/*" ! -path "*/gradle/*" ! -path "*/script/*"                
+                    ! -path "*/Source*/*" ! -path "*/source/*" ! -path "*/SourceAssets/*" ! -path "*/tools/*"
+                    ! -path "*/website/*" ! -path "*/CMakeFiles/*" ! -path "*/generated/*" ! -path "*/lib/*"
+                COMMAND grep "/include/Urho3D/Urho3D.h$"
+                ERROR_VARIABLE FIND_ERRORS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                OUTPUT_VARIABLE ENV_HEADERS
+            )
+        endif()
     endif ()
     if (FIND_ERRORS)
         message ("urho_find_builds_dirs ERROR: ${FIND_ERRORS}")
-    return ()
+        return ()
     endif ()
+    if(ENV_HEADERS)
+        string(JOIN "\n" HEADERS "${HEADERS}" "${ENV_HEADERS}")
+    endif()
     set (NUM_BUILD_DIRS 0)
     if (HEADERS)
         string (REPLACE "\n" ";" HEADERS_LIST "${HEADERS}")
