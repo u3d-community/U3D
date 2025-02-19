@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2024 the U3D project.
+# Copyright (c) 2022-2025 the U3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,12 +42,27 @@
 # currently, cross-compiled SDK/builds are excluded.
 set (EXCLUDE_CROSSBUILD TRUE)
 
+# find the cmakefile cache in the current dir or parent dir (that's the case when building as submodule at a first time)
+function (get_cmakecachefile dir cachefile)
+    unset (${cachefile} PARENT_SCOPE)
+    if (EXISTS ${dir}/CMakeCache.txt)
+        set (${cachefile} "${dir}/CMakeCache.txt" PARENT_SCOPE)
+    else ()
+        get_filename_component (dir ${dir} DIRECTORY)
+        if (EXISTS ${dir}/CMakeCache.txt)
+            set (${cachefile} "${dir}/CMakeCache.txt" PARENT_SCOPE)
+        endif ()
+    endif ()
+endfunction ()
+
 function (get_build_target dir device)
     unset (${device} PARENT_SCOPE)
     # TODO: get compile option for a SDK?
+    # get the cmake cache file
+    get_cmakecachefile (${dir} CacheFile)
     # get the compile option for a build tree.
-    if (EXISTS ${dir}/CMakeCache.txt)
-        file (STRINGS ${dir}/CMakeCache.txt HeaderStrings)       
+    if (EXISTS ${CacheFile})
+        file (STRINGS ${CacheFile} HeaderStrings)
         foreach (VAR ${HeaderStrings})
             string (REPLACE ";" " " VAR ${VAR})
             unset (match)
@@ -73,14 +88,16 @@ function (get_build_target dir device)
     if (targetdevice)
         set (${device} ${targetdevice} PARENT_SCOPE)
     endif ()
-endfunction()
+endfunction ()
 
 function (get_build_arch dir archtype)
     unset (${archtype} PARENT_SCOPE)
     # TODO: get compile option for a SDK?
+    # get the cmake cache file
+    get_cmakecachefile (${dir} CacheFile)
     # get the compile option for a build tree.
-    if (EXISTS ${dir}/CMakeCache.txt)
-        file (STRINGS ${dir}/CMakeCache.txt HeaderStrings)       
+    if (EXISTS ${CacheFile})
+        file (STRINGS ${CacheFile} HeaderStrings)      
         foreach (VAR ${HeaderStrings})
             string (REPLACE ";" " " VAR ${VAR})
             if (${VAR} STREQUAL "URHO3D_64BIT:BOOL=ON")
@@ -90,16 +107,18 @@ function (get_build_arch dir archtype)
                 set (archtype "32BIT" PARENT_SCOPE)
                 break ()
             endif ()           
-        endforeach()
+        endforeach ()
     endif ()  
 endfunction ()
 
 function (get_build_libtype dir libtype)
     unset (${libtype} PARENT_SCOPE)
     # TODO: get compile option for a SDK?
+    # get the cmake cache file
+    get_cmakecachefile (${dir} CacheFile)
     # get the compile option for a build tree.
-    if (EXISTS ${dir}/CMakeCache.txt)
-        file (STRINGS ${dir}/CMakeCache.txt HeaderStrings)       
+    if (EXISTS ${CacheFile})
+        file (STRINGS ${CacheFile} HeaderStrings)       
         foreach (VAR ${HeaderStrings})
             string (REPLACE ";" " " VAR ${VAR})
             unset (match)
@@ -108,7 +127,7 @@ function (get_build_libtype dir libtype)
                 set (${libtype} "${CMAKE_MATCH_1}" PARENT_SCOPE)
                 break ()
             endif ()            
-        endforeach()
+        endforeach ()
     endif ()  
 endfunction ()
 
@@ -116,8 +135,8 @@ function (get_build_buildtype dir buildtype)
     unset (${buildtype} PARENT_SCOPE)
     # TODO: get compile option for a SDK?
     # get the compile option for a build tree.
-    if (EXISTS ${dir}/CMakeCache.txt)
-        file (STRINGS ${dir}/CMakeCache.txt HeaderStrings)       
+    if (EXISTS ${CacheFile})
+        file (STRINGS ${CacheFile} HeaderStrings)       
         foreach (VAR ${HeaderStrings})
             string (REPLACE ";" " " VAR ${VAR})
             unset (match)
@@ -126,10 +145,10 @@ function (get_build_buildtype dir buildtype)
                 set (${buildtype} "${CMAKE_MATCH_1}" PARENT_SCOPE)
                 break ()
             endif ()            
-        endforeach()
+        endforeach ()
     endif ()  
 endfunction ()
-
+    
 # retrieve Urho3D revision.
 # only works with Git (not applicable for manual installations from zip files).
 function (urho_get_revision urhoroot revision)
@@ -140,31 +159,46 @@ function (urho_get_revision urhoroot revision)
     set (${revision} ${LIB_REVISION} PARENT_SCOPE)
 endfunction ()
 
-# Search in ${PROJECTNAME}_URHO3D_SEARCH_PATH for all occurrences of Source/Urho3D/CMakeLists.txt
-macro (urho_find_sources_dirs)
+# Launches a search process starting at "search_path" to find the filename "filename" inside a sub-folder "dirname"
+#   (excluding all sub-folders listed in "excludepaths" from the search for Unix-like systems only)
+function (urho_find_process search_path filename dirname excludepaths results errors)
+    message (" .. Searching for Urho3D directories in path = ${search_path} (this may take some time)")
     if (MSVC)
+        string(REPLACE "/" "\\" dirname "${dirname}")
         execute_process (
-            COMMAND powershell -Command "Get-ChildItem -Path '${${PROJECTNAME}_URHO3D_SEARCH_PATH}' -Recurse -Filter 'CMakeLists.txt' | 
-                                            Where-Object { $_.DirectoryName -like \"*Source\\Urho3D*\" } | 
+            COMMAND powershell -Command "Get-ChildItem -Path '${search_path}' -Recurse -Filter '${filename}' | 
+                                            Where-Object { $_.DirectoryName -like \"*${dirname}*\" } | 
                                             Select-Object FullName"
-            RESULT_VARIABLE PS_RESULT
-            ERROR_VARIABLE FIND_ERRORS
+            ERROR_VARIABLE ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
-            OUTPUT_VARIABLE HEADERS
+            OUTPUT_VARIABLE RESULTS
         )
     else ()
+        set (excludedirs "")
+        foreach (dir ${excludepaths})
+            set (excludedirs "${excludedirs} *${dir}*")
+        endforeach ()
+        string(STRIP "${excludedirs}" excludedirs)
         execute_process (
-            COMMAND find "${${PROJECTNAME}_URHO3D_SEARCH_PATH}" -name "CMakeLists.txt"
-                ! -path "*/.*" ! -path "*/android/*" ! -path "*/bin*/*" ! -path "*/build*/*" ! -path "*/cmake/*"
-                ! -path "*/CMake/*" ! -path "*/Docs/*" ! -path "*/include/*" ! -path "*/gradle/*" ! -path "*/script/*"
-                ! -path "*/source/*" ! -path "*/SourceAssets/*" ! -path "*/tools/*"
-                ! -path "*/website/*" ! -path "*/CMakeFiles/*" ! -path "*/generated/*" ! -path "*/lib/*"
-            COMMAND grep "/Source/Urho3D/CMakeLists.txt$"
-            ERROR_VARIABLE FIND_ERRORS
+            COMMAND find ${search_path} -name ${filename} ! -path ${excludedirs}
+            COMMAND grep /${dirname}/${filename}$
+            ERROR_VARIABLE ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
-            OUTPUT_VARIABLE HEADERS
+            OUTPUT_VARIABLE RESULTS
         )
     endif ()
+    # add new results to previous results in parent_scope
+    set (${errors} ${${errors}} ${ERROR} PARENT_SCOPE)
+    set (${results} ${${results}} ${RESULTS} PARENT_SCOPE)
+endfunction ()
+
+# Search in ${PROJECTNAME}_URHO3D_SEARCH_PATH for all occurrences of Source/Urho3D/CMakeLists.txt
+macro (urho_find_sources_dirs)
+    set (excludepaths /. /android/ /bin*/ /build*/ /cmake/ /CMake/ /Docs/ /include/ /gradle/ /script/ /source/ /SourceAssets /tools/ /website/ /CMakeFiles/ /generated/ /lib/)
+    urho_find_process(${${PROJECTNAME}_URHO3D_SEARCH_PATH} CMakeLists.txt Source/Urho3D "${excludepaths}" HEADERS FIND_ERRORS)
+    if (DEFINED ENV{URHO3D_HOME})
+        urho_find_process($ENV{URHO3D_HOME} CMakeLists.txt Source/Urho3D "${excludepaths}" HEADERS FIND_ERRORS)
+    endif ()    
     if (FIND_ERRORS)
         message ("urho_find_sources_dirs ERROR: ${FIND_ERRORS}")
         return ()
@@ -188,32 +222,14 @@ endmacro ()
 
 # Search in ${PROJECTNAME}_URHO3D_SEARCH_PATH for all occurrences of include/Urho3D/Urho3D.h
 macro (urho_find_builds_dirs)
-    if (MSVC)
-        execute_process (
-            COMMAND powershell -Command "Get-ChildItem -Path '${${PROJECTNAME}_URHO3D_SEARCH_PATH}' -Recurse -Filter 'Urho3D.h' | 
-                                            Where-Object { $_.DirectoryName -like \"*include\\Urho3D*\" } | 
-                                            Select-Object FullName"
-            RESULT_VARIABLE PS_RESULT
-            ERROR_VARIABLE FIND_ERRORS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            OUTPUT_VARIABLE HEADERS
-        )
-    else ()
-        execute_process (
-            COMMAND find "${${PROJECTNAME}_URHO3D_SEARCH_PATH}" -name "Urho3D.h"
-                ! -path "*/.*" ! -path "*/android/*" ! -path "*/bin*/*" ! -path "*/cmake/*"
-                ! -path "*/CMake/*" ! -path "*/Docs/*" ! -path "*/gradle/*" ! -path "*/script/*"                
-                ! -path "*/Source*/*" ! -path "*/source/*" ! -path "*/SourceAssets/*" ! -path "*/tools/*"
-                ! -path "*/website/*" ! -path "*/CMakeFiles/*" ! -path "*/generated/*" ! -path "*/lib/*"
-            COMMAND grep "/include/Urho3D/Urho3D.h$"
-            ERROR_VARIABLE FIND_ERRORS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            OUTPUT_VARIABLE HEADERS
-        )
-    endif ()
+    set (excludepaths /. /android/ /bin*/ /build*/ /cmake/ /CMake/ /Docs/ /gradle/ /script/ /Source*/ /source/ /SourceAssets/ /tools/ /website/ /CMakeFiles/ /generated/ /lib/)              
+    urho_find_process(${${PROJECTNAME}_URHO3D_SEARCH_PATH} Urho3D.h include/Urho3D "${excludepaths}" HEADERS FIND_ERRORS)
+    if (DEFINED ENV{URHO3D_HOME})
+        urho_find_process($ENV{URHO3D_HOME} Urho3D.h include/Urho3D "${excludepaths}" HEADERS FIND_ERRORS)
+    endif ()    
     if (FIND_ERRORS)
         message ("urho_find_builds_dirs ERROR: ${FIND_ERRORS}")
-    return ()
+        return ()
     endif ()
     set (NUM_BUILD_DIRS 0)
     if (HEADERS)
@@ -252,7 +268,7 @@ function (urho_generate_tags_list taglist)
     unset (${taglist} PARENT_SCOPE)
     foreach (home ${${PROJECTNAME}_URHO3D_DIRS})
         if (home)
-            message ("urho_generate_tags_list home = ${home}")
+            #message ("urho_generate_tags_list home = ${home}")
             # Format = shortPathName(category_version_libType_archbuildType)
             unset (root)
             unset (src)
@@ -261,6 +277,7 @@ function (urho_generate_tags_list taglist)
 
             urho_find_origin ("${home}" root src origin)
             if (NOT origin)
+                message (WARNING ".... can't find an origin for the detected home=${home} !")
                 continue ()
             endif ()
             get_filename_component (shortpath ${root} NAME)
@@ -336,8 +353,6 @@ else ()
 endif ()
 
 if (SEARCH_URHO3D_ENABLE)
-    message (" .. Searching for Urho3D directories in path = ${${PROJECTNAME}_URHO3D_SEARCH_PATH} (this may take some time)")
-
     unset (${PROJECTNAME}_URHO3D_DIRS)
     unset (${PROJECTNAME}_URHO3D_DIRS CACHE)
     unset (${PROJECTNAME}_URHO3D_TAGS)

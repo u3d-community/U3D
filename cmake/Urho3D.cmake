@@ -109,11 +109,6 @@ else()
 endif ()
 
 # Check URHO3D_HOME
-if (NOT DEFINED URHO3D_HOME AND DEFINED ENV{URHO3D_HOME} AND
-        EXISTS $ENV{URHO3D_HOME}/cmake/Modules/UrhoCommon.cmake)
-    set (URHO3D_HOME $ENV{URHO3D_HOME})
-    message ("URHO3D_HOME defined from environment variable: ${URHO3D_HOME}")
-endif ()
 if (URHO3D_HOME AND NOT EXISTS ${URHO3D_HOME})
     unset (URHO3D_HOME)
 endif ()
