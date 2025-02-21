@@ -28,7 +28,6 @@
    andreas@angelcode.com
 */
 
-// Modified for Urho3D
 
 //
 // as_callfunc_x86.cpp
@@ -50,13 +49,6 @@
 #include "as_texts.h"
 #include "as_tokendef.h"
 #include "as_context.h"
-
-// Urho3D: work around Clang crash and assembler error on GCC
-// Because Urho3D's AngelScript API convention forbids C++ exceptions leaking to syscalls,
-// the lack of prologs / epilogs should not be critical
-#if defined(__clang__) || defined(__GNUC__)
-#undef __OPTIMIZE__
-#endif
 
 BEGIN_AS_NAMESPACE
 

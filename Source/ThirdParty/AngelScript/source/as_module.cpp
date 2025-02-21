@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2021 Andreas Jonsson
+   Copyright (c) 2003-2024 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -53,7 +53,6 @@ asCModule::asCModule(const char *name, asCScriptEngine *engine)
 	m_name     = name;
 	m_engine   = engine;
 
-	m_userData = 0;
 	m_builder = 0;
 	m_isGlobalVarInitialized = false;
 
@@ -271,8 +270,7 @@ int asCModule::AddScriptSection(const char *in_name, const char *in_code, size_t
 // internal
 void asCModule::JITCompile()
 {
-	asIJITCompiler *jit = m_engine->GetJITCompiler();
-	if( !jit )
+	if( !m_engine->jitCompiler )
 		return;
 
 	for (unsigned int i = 0; i < m_scriptFunctions.GetLength(); i++)
@@ -1420,22 +1418,18 @@ int asCModule::BindImportedFunction(asUINT index, asIScriptFunction *func)
 	if( func == 0 )
 		return asINVALID_ARG;
 
+	// Only script functions and registered functions can be bound
+	// Class methods, delegates, other imported functions are not allowed
+	if (func->GetFuncType() != asFUNC_SCRIPT && func->GetFuncType() != asFUNC_SYSTEM)
+		return asNOT_SUPPORTED;
+
 	asCScriptFunction *src = m_engine->GetScriptFunction(func->GetId());
 	if( src == 0 )
 		return asNO_FUNCTION;
 
-	// Verify return type
-	if( dst->returnType != src->returnType )
+	// Verify function signature
+	if (!dst->IsSignatureExceptNameEqual(src))
 		return asINVALID_INTERFACE;
-
-	if( dst->parameterTypes.GetLength() != src->parameterTypes.GetLength() )
-		return asINVALID_INTERFACE;
-
-	for( asUINT n = 0; n < dst->parameterTypes.GetLength(); ++n )
-	{
-		if( dst->parameterTypes[n] != src->parameterTypes[n] )
-			return asINVALID_INTERFACE;
-	}
 
 	m_bindInformations[index]->boundFunctionId = src->GetId();
 	src->AddRefInternal();
@@ -1803,11 +1797,8 @@ int asCModule::CompileFunction(const char* sectionName, const char* code, int li
 	if (r >= 0)
 	{
 		// Invoke the JIT compiler if it has been set
-		asIJITCompiler* jit = m_engine->GetJITCompiler();
-		if (jit)
-		{
+		if (m_engine->jitCompiler)
 			func->JITCompile();
-		}
 	}
 
 	m_engine->BuildCompleted();

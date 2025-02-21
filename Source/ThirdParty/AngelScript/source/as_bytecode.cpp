@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2022 Andreas Jonsson
+   Copyright (c) 2003-2024 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -2878,6 +2878,11 @@ int asCByteCode::InstrDOUBLE(asEBCInstr bc, double param)
 	last->stackInc = asBCInfo[bc].stackInc;
 
 	return last->stackInc;
+}
+
+asCByteInstruction* asCByteCode::GetFirstInstr()
+{
+	return first;
 }
 
 int asCByteCode::GetLastInstr()
