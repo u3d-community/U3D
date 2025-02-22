@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2022 Andreas Jonsson
+   Copyright (c) 2003-2025 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -49,10 +49,8 @@ BEGIN_AS_NAMESPACE
 #define LOAD_FROM_BIT(dst, val, bit) ((dst) = ((val) >> (bit)) & 1)
 
 asCReader::asCReader(asCModule* _module, asIBinaryStream* _stream, asCScriptEngine* _engine)
- : module(_module), stream(_stream), engine(_engine)
+	: module(_module), stream(_stream), engine(_engine), error(false), bytesRead(0), lastCompositeProp(0)
 {
-	error = false;
-	bytesRead = 0;
 }
 
 int asCReader::ReadData(void *data, asUINT size)
@@ -1096,18 +1094,27 @@ void asCReader::ReadFunctionSignature(asCScriptFunction *func, asCObjectType **p
 	}
 
 	func->objectType = CastToObjectType(ReadTypeInfo());
-	if( func->objectType )
+	if (func->objectType)
 	{
 		func->objectType->AddRefInternal();
+		func->nameSpace = func->objectType->nameSpace;
+	}
 
+	// Only read the function traits if it is a class method, or could potentially be a global virtual property
+	if (func->objectType || func->name.SubString(0, 4) == "get_" || func->name.SubString(0, 4) == "set_")
+	{
 		asBYTE b;
 		ReadData(&b, 1);
 		func->SetReadOnly((b & 1) ? true : false);
 		func->SetPrivate((b & 2) ? true : false);
 		func->SetProtected((b & 4) ? true : false);
-		func->nameSpace = func->objectType->nameSpace;
+		func->SetFinal((b & 8) ? true : false);
+		func->SetOverride((b & 16) ? true : false);
+		func->SetExplicit((b & 32) ? true : false);
+		func->SetProperty((b & 64) ? true : false);
 	}
-	else
+
+	if (!func->objectType)
 	{
 		if (func->funcType == asFUNC_FUNCDEF)
 		{
@@ -1528,7 +1535,7 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 
 		// Read the initial attributes
 		ReadString(&type->name);
-		ReadData(&type->flags, 4);
+		ReadData(&type->flags, 8);
 		type->size = SanityCheck(ReadEncodedUInt(), 1000000);
 		asCString ns;
 		ReadString(&ns);
@@ -2335,11 +2342,11 @@ asCTypeInfo* asCReader::ReadTypeInfo()
 
 		// Find the template subtype
 		ot = 0;
-		for( asUINT n = 0; n < engine->templateSubTypes.GetLength(); n++ )
+		for( asUINT n = 0; n < engine->registeredTemplateSubTypes.GetLength(); n++ )
 		{
-			if( engine->templateSubTypes[n] && engine->templateSubTypes[n]->name == typeName )
+			if( engine->registeredTemplateSubTypes[n] && engine->registeredTemplateSubTypes[n]->name == typeName )
 			{
-				ot = engine->templateSubTypes[n];
+				ot = engine->registeredTemplateSubTypes[n];
 				break;
 			}
 		}
@@ -2769,7 +2776,6 @@ void asCReader::ReadUsedObjectProps()
 
 short asCReader::FindObjectPropOffset(asWORD index)
 {
-	static asCObjectProperty *lastCompositeProp = 0;
 	if (lastCompositeProp)
 	{
 		if (index != 0)
@@ -3634,8 +3640,17 @@ void asCReader::CalculateAdjustmentByPos(asCScriptFunction *func)
 		int pos    = adjustments[n];
 		int adjust = adjustments[n+1];
 
-		for( asUINT i = pos; i < adjustByPos.GetLength(); i++ )
-			adjustByPos[i] += adjust;
+		// If multiple variables in different scope occupy the same position they must have the same size
+		asASSERT(adjustByPos[pos] == 0 || adjustByPos[pos] == adjust);
+
+		adjustByPos[pos] = adjust;
+	}
+	// Accumulate adjustments
+	int adjust = adjustByPos[0];
+	for (asUINT i = 1; i < adjustByPos.GetLength(); i++)
+	{
+		adjust += adjustByPos[i];
+		adjustByPos[i] = adjust;
 	}
 }
 
@@ -3671,7 +3686,7 @@ int asCReader::AdjustGetOffset(int offset, asCScriptFunction *func, asDWORD prog
 	// TODO: Can the asCScriptFunction::FindNextFunctionCalled be adapted so it can be reused here (support for asBC_ALLOC, asBC_REFCPY and asBC_COPY)?
 	asCScriptFunction *calledFunc = 0;
 	int stackDelta = 0;
-	for( asUINT n = programPos; func->scriptData->byteCode.GetLength(); )
+	for( asUINT n = programPos; n < func->scriptData->byteCode.GetLength(); )
 	{
 		asBYTE bc = *(asBYTE*)&func->scriptData->byteCode[n];
 		if( bc == asBC_CALL ||
@@ -3796,7 +3811,7 @@ asCTypeInfo *asCReader::FindType(int idx)
 #ifndef AS_NO_COMPILER
 
 asCWriter::asCWriter(asCModule* _module, asIBinaryStream* _stream, asCScriptEngine* _engine, bool _stripDebug)
-	: module(_module), stream(_stream), engine(_engine), stripDebugInfo(_stripDebug), error(false), bytesWritten(0)
+	: module(_module), stream(_stream), engine(_engine), stripDebugInfo(_stripDebug), error(false), bytesWritten(0), lastWasComposite(false)
 {
 }
 
@@ -4126,15 +4141,21 @@ void asCWriter::WriteFunctionSignature(asCScriptFunction *func)
 
 	WriteTypeInfo(func->objectType);
 
-	if( func->objectType )
+	// Only write function traits for methods and global functions that can potentially be virtual properties
+	if (func->objectType || func->name.SubString(0, 4) == "get_" || func->name.SubString(0, 4) == "set_")
 	{
 		asBYTE b = 0;
 		b += func->IsReadOnly() ? 1 : 0;
 		b += func->IsPrivate() ? 2 : 0;
 		b += func->IsProtected() ? 4 : 0;
+		b += func->IsFinal() ? 8 : 0;
+		b += func->IsOverride() ? 16 : 0;
+		b += func->IsExplicit() ? 32 : 0;
+		b += func->IsProperty() ? 64 : 0;
 		WriteData(&b, 1);
 	}
-	else
+
+	if (!func->objectType)
 	{
 		if (func->funcType == asFUNC_FUNCDEF)
 		{
@@ -4347,7 +4368,7 @@ void asCWriter::WriteTypeDeclaration(asCTypeInfo *type, int phase)
 		// name
 		WriteString(&type->name);
 		// flags
-		WriteData(&type->flags, 4);
+		WriteData(&type->flags, 8);
 
 		// size
 		// TODO: Do we really need to store this? The reader should be able to
@@ -4782,21 +4803,31 @@ void asCWriter::CalculateAdjustmentByPos(asCScriptFunction *func)
 		int pos    = adjustments[n];
 		int adjust = adjustments[n+1];
 
-		for( asUINT i = pos; i < adjustStackByPos.GetLength(); i++ )
-			adjustStackByPos[i] += adjust;
+		// If more than one variable in different scopes occupy the same position on the stack they must have the same size
+		asASSERT(adjustStackByPos[pos] == 0 || adjustStackByPos[pos] == adjust);
+
+		adjustStackByPos[pos] = adjust;
+	}
+	// Accumulate adjustments 
+	int adjust = adjustStackByPos[0];
+	for (asUINT i = 1; i < adjustStackByPos.GetLength(); i++)
+	{
+		adjust += adjustStackByPos[i];
+		adjustStackByPos[i] = adjust;
 	}
 
 	// Compute the sequence number of each bytecode instruction in order to update the jump offsets
-	asUINT length = func->scriptData->byteCode.GetLength();
+	asUINT length = func->scriptData->byteCode.GetLength() + 1; // accomodate one more for invisible instructions, e.g. scope end
 	asDWORD *bc = func->scriptData->byteCode.AddressOf();
-	bytecodeNbrByPos.SetLength(length);
+	bytecodeNbrByPos.SetLength(length); 
 	asUINT num;
-	for( offset = 0, num = 0; offset < length; )
+	for( offset = 0, num = 0; offset < length-1; )
 	{
 		bytecodeNbrByPos[offset] = num;
 		offset += asBCTypeSize[asBCInfo[*(asBYTE*)(bc+offset)].type];
 		num++;
 	}
+	bytecodeNbrByPos[offset] = num;
 
 	// Store the number of instructions in the last position of bytecodeNbrByPos, 
 	// so this can be easily queried in SaveBytecode. Normally this is already done
@@ -5651,7 +5682,6 @@ void asCWriter::WriteUsedObjectProps()
 int asCWriter::FindObjectPropIndex(short offset, int typeId, asDWORD *bc)
 {
 	// If the last property was a composite property, then just return 0, because it won't be translated
-	static bool lastWasComposite = false;
 	if (lastWasComposite)
 	{
 		lastWasComposite = false;
