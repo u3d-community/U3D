@@ -5976,6 +5976,12 @@ int asCContext::GetVar(asUINT varIndex, asUINT stackLevel, const char** name, in
 			else
 				*typeModifiers = asTM_INOUTREF;
 		}
+
+		if (func->scriptData &&
+			func->scriptData->variables[varIndex]->type.IsReadOnly())
+		{
+			*typeModifiers = (asETypeModifiers)(*typeModifiers | asTM_CONST);
+		}
 	}
 
 	return asSUCCESS;
