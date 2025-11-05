@@ -1,0 +1,83 @@
+# U3D Build Environment Configuration Template
+# Copy this file to .build-env and fill in your values
+# Then source it before building: source .build-env
+
+# ==============================================================================
+# iOS Code Signing Configuration
+# ==============================================================================
+# Required for building iOS applications (samples and Urho3DPlayer)
+# Not required for building library only
+
+# OPTION 1: Simulator-only build (NO Apple Developer account needed!)
+# Uncomment this to build for iOS Simulator without any code signing setup
+# export IOS_SIMULATOR_ONLY=1
+
+# OPTION 2: Full device + simulator build (requires Apple Developer account)
+# Your Apple Development Team ID (find it at https://developer.apple.com/account)
+# Example: export IOS_DEVELOPMENT_TEAM="ABCDEFGHIJ"
+export IOS_DEVELOPMENT_TEAM=""
+
+# Code signing identity (usually "Apple Development" for development builds)
+# For distribution builds, use "Apple Distribution"
+export IOS_CODE_SIGN_IDENTITY="Apple Development"
+
+# Provisioning profile specifier (optional - Xcode can auto-manage)
+# Leave empty to use automatic signing
+export IOS_PROVISIONING_PROFILE_SPECIFIER=""
+
+# Bundle identifier prefix for iOS apps
+# Example: export IOS_BUNDLE_ID_PREFIX="com.yourcompany.u3d"
+export IOS_BUNDLE_ID_PREFIX="com.u3d"
+
+# ==============================================================================
+# macOS Code Signing Configuration
+# ==============================================================================
+# Optional for macOS builds (can build without signing for development)
+
+# Your Apple Development Team ID for macOS
+export MACOS_DEVELOPMENT_TEAM=""
+
+# Code signing identity for macOS (leave empty to skip signing)
+export MACOS_CODE_SIGN_IDENTITY=""
+
+# ==============================================================================
+# Build Options
+# ==============================================================================
+
+# Build configuration: Debug or Release
+export CMAKE_BUILD_TYPE="Release"
+
+# Library type: static or shared
+export LIB_TYPE="static"
+
+# Build generator: xcode, ninja, or make
+export GENERATOR="xcode"
+
+# Platform: iOS, macOS, android, linux, win
+export PLATFORM="macOS"
+
+# Host platform (for cross-compilation)
+export HOST="macOS"
+
+# ==============================================================================
+# Advanced Options
+# ==============================================================================
+
+# iOS deployment target (minimum iOS version)
+export IPHONEOS_DEPLOYMENT_TARGET="12.0"
+
+# macOS deployment target (minimum macOS version)
+export CMAKE_OSX_DEPLOYMENT_TARGET="10.15"
+
+# tvOS deployment target
+export APPLETVOS_DEPLOYMENT_TARGET="12.0"
+
+# Build samples (ON or OFF)
+# Set to OFF to skip building samples (no code signing needed)
+export URHO3D_SAMPLES="ON"
+
+# Build player (ON or OFF)
+export URHO3D_PLAYER="ON"
+
+# Number of parallel build jobs
+export BUILD_JOBS="$(sysctl -n hw.ncpu)"

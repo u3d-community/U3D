@@ -17,6 +17,9 @@ build*/
 .cxx/
 /demo/
 
+# Build environment configuration (may contain credentials)
+.build-env
+
 # Output files
 /Source/**/*.a
 /Source/ThirdParty/Assimp/revision.h
