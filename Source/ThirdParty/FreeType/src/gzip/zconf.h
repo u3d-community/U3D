@@ -215,7 +215,13 @@
 #   define FAR
 #endif
 
-#if !defined(MACOS) && !defined(TARGET_OS_MAC)
+/* Define Byte type for zlib
+ * - Old Mac OS (MACOS): Byte is defined in system headers, skip typedef
+ * - Modern Apple platforms with MacTypes.h (__MACTYPES__): Byte already defined, skip typedef
+ * - Modern Apple platforms without MacTypes.h: Need to define Byte
+ * - All other platforms: Define Byte
+ */
+#if !defined(MACOS) && !defined(__MACTYPES__)
 typedef unsigned char  Byte;  /* 8 bits */
 #endif
 typedef unsigned int   uInt;  /* 16 bits or more */
