@@ -32,7 +32,7 @@
 #if defined(IOS) || defined(TVOS)
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
-#elif defined(__ANDROID__) || defined (__arm__) || defined(__aarch64__) || defined (__EMSCRIPTEN__)
+#elif defined(__ANDROID__) || (defined(__arm__) && !defined(__APPLE__)) || (defined(__aarch64__) && !defined(__APPLE__)) || defined(__EMSCRIPTEN__)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #else
