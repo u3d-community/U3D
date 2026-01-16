@@ -9466,6 +9466,12 @@ int asCCompiler::DoAssignment(asCExprContext *ctx, asCExprContext *lctx, asCExpr
 		lctx->type.isExplicitHandle = true;
 	}
 
+	// Urho3D: if there is a handle type, and it does not have an overloaded assignment operator, convert to an explicit handle
+	// for scripting convenience. (For the Urho3D handle types, value assignment is not supported)
+	if (lctx->type.dataType.IsObjectHandle() && !lctx->type.dataType.IsTemplate() && !lctx->type.isExplicitHandle &&
+		(!lctx->type.dataType.GetBehaviour() || !lctx->type.dataType.GetBehaviour()->copy))
+		lctx->type.isExplicitHandle = true;
+
 	// If the left hand expression is a property accessor, then that should be used
 	// to do the assignment instead of the ordinary operator. The exception is when
 	// the property accessor is for a handle property, and the operation is a value
