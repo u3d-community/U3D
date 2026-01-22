@@ -132,6 +132,8 @@ Script::Script(Context* context) :
     scriptEngine_->SetEngineProperty(asEP_ALLOW_IMPLICIT_HANDLE_TYPES, (asPWORD)true);
     scriptEngine_->SetEngineProperty(asEP_BUILD_WITHOUT_LINE_CUES, (asPWORD)true);
     scriptEngine_->SetEngineProperty(asEP_PROPERTY_ACCESSOR_MODE, 1);
+    // Urho3D: disable garbage collection from script classes
+    scriptEngine_->SetEngineProperty(asEP_DISABLE_SCRIPT_CLASS_GC, (asPWORD)true);
     scriptEngine_->SetMessageCallback(asMETHOD(Script, MessageCallback), this, asCALL_THISCALL);
 
     // Create the context for immediate execution

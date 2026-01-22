@@ -28,7 +28,6 @@
    andreas@angelcode.com
 */
 
-// Modified for Urho3D
 
 //
 // as_callfunc_x86.cpp
