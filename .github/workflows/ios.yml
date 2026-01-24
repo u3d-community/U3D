@@ -1,4 +1,4 @@
-name: iOS Build
+name: 🍎 iOS
 on: [push, pull_request]
 
 concurrency:
@@ -7,56 +7,37 @@ concurrency:
 
 jobs:
   ios:
-    name: 🍎
+    name: iOS
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - iOS
-          - tvOS
-        lib-type:
-          - static       
-    env:
-      HOST: macOS
-      PLATFORM: ${{ matrix.platform }}
-      LIB_TYPE: ${{ matrix.lib-type }}
+        platform: ${{ github.event_name == 'pull_request' && fromJSON('["iOS"]') || fromJSON('["iOS", "tvOS"]') }}
+        lib-type: [static]  # iOS/tvOS only supports static builds
+        build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-          key: |
-            ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ runner.os }}-${{ runner.arch }}     
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
+
       - name: CMake
-        run: rake cmake
+        run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=11 -DCMAKE_OSX_DEPLOYMENT_TARGET=11 ${{ matrix.platform == 'iOS' && '-DIOS=1' || '-DIOS=0' }} ${{ matrix.platform == 'tvOS' && '-DTVOS=1' || '-DTVOS=0' }}
+
       - name: Build
-        run: rake build
-      - name: Install
-        run: rake install
-      - name: Scaffolding - new
-        run: rake new
-      - name: Scaffolding - build
-        run: |
-          cd ~/projects/UrhoApp
-          rake
-      - name: Scaffolding - cleanup
-        run: rm -rf ~/{.urho3d,projects}
+        run: cmake --build build --config ${{ matrix.build-type }}
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build-type }}
+
       - name: Package
-        run: rake package
-        if: github.event_name == 'push'
-      - name: Upload
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cmake --build build --target package --config ${{ matrix.build-type }}
+
+      - name: Upload packages
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-all-rel
-          path: build/ci/*.tar.gz
-        if: github.event_name == 'push'
-      - name: Clean
-        run: |
-            rm -rf {build/ci/lib,build/ci/bin/*.app}
+          name: 'U3D-${{ github.job }}-${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}'
+          path: build/*.tar.gz

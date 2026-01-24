@@ -632,8 +632,9 @@ endif ()
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/Urho3D.pc DESTINATION ${DEST_PKGCONFIG_DIR} ${RENAME})
 
 # Define post build steps
-if (URHO3D_LIB_TYPE STREQUAL SHARED AND ARM)
+if (URHO3D_LIB_TYPE STREQUAL SHARED AND ARM AND NOT IOS AND NOT TVOS)
     # Strip the output shared library for embedded ARM platforms (we don't do this for Android anymore, assuming Android plugin will take care of it)
+    # Skip iOS/tvOS as strip fails on shared libraries that need to export symbols
     add_custom_command (TARGET ${TARGET_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>
         COMMENT "Stripping Urho3D shared library")
 endif ()

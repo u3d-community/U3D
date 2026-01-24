@@ -69,6 +69,11 @@
 #if !defined(_FILE_OFFSET_BITS)
 #define _FILE_OFFSET_BITS 64 /* Use 64-bit file offsets by default */
 #endif
+/* Android API < 24 doesn't have fseeko/ftello, use fseek/ftell instead */
+#if defined(__ANDROID__) && __ANDROID_API__ < 24
+#define fseeko fseek
+#define ftello ftell
+#endif
 #if !defined(__STDC_FORMAT_MACROS)
 #define __STDC_FORMAT_MACROS /* <inttypes.h> wants this for C++ */
 #endif
@@ -190,6 +195,7 @@ static void DEBUG_TRACE_FUNC(const char *func,
 
 #if !defined(DEBUG_ASSERT)
 #if defined(DEBUG)
+#include <stdlib.h> /* Required for exit() in DEBUG_ASSERT below */
 #define DEBUG_ASSERT(cond)                                                     \
     do {                                                                       \
         if (!(cond)) {                                                         \

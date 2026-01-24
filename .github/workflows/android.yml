@@ -1,4 +1,4 @@
-name: Android Build
+name: 📱 Android
 on: [push, pull_request]
 
 concurrency:
@@ -7,90 +7,48 @@ concurrency:
 
 jobs:
   android:
-    name: 📱
-    runs-on: ubuntu-22.04
+    name: Android
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
-        lib-type:
-          - static
-          - shared
+        lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
+        build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
     env:
-      HOST: linux
-      PLATFORM: android
-      BUILD_TYPE: both
-      LIB_TYPE: ${{ matrix.lib-type }}
-      ARCH: all
-      DBE_TAG: master
+      URHO3D_LIB_TYPE: ${{ matrix.lib-type == 'shared' && 'SHARED' || 'STATIC' }}
+      CMAKE_BUILD_TYPE: ${{ matrix.build-type }}
+      GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Free up space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android
-          sudo apt-get clean
-          df -h
-      - name: Source checksum
-        id: source_checksum
-        run: rake source_checksum
-      - name: Cache
-        uses: actions/cache@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          path: |
-            build/cache/.ccache
-            build/cache/.gradle/caches
-            build/cache/.gradle/wrapper
-          key: |
-            android-${{ matrix.lib-type }}-all-both-${{ env.DBE_TAG }}-${{ steps.source_checksum.outputs.hexdigest }}
-          restore-keys: |
-            android-${{ matrix.lib-type }}-all-both-${{ env.DBE_TAG }}
-            android-${{ matrix.lib-type }}-all-both
-      - name: DBE
-        run: rake update_dot_files && script/dockerized.sh ${PLATFORM/-*} env
-      - name: Build
-        run: script/dockerized.sh ${PLATFORM/-*} rake build
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Library
+        run: ./gradlew :android:urho3d-lib:externalNativeBuild${{ matrix.build-type }}
+
+      - name: Assemble Library
+        run: ./gradlew :android:urho3d-lib:assemble${{ matrix.build-type }}
+
+      - name: Build Launcher (shared only)
+        if: matrix.lib-type == 'shared'
+        run: ./gradlew :android:launcher-app:externalNativeBuild${{ matrix.build-type }} :android:launcher-app:assemble${{ matrix.build-type }}
+
       - name: Test
-        run: script/dockerized.sh ${PLATFORM/-*} rake test
-      - name: Install
-        run: |
-          script/dockerized.sh ${PLATFORM/-*} rake install
-          touch build/cache/.gradle/mark
-      - name: Scaffolding - new
-        run: script/dockerized.sh ${PLATFORM/-*} rake new
-      - name: Scaffolding - build
-        run: |
-          cd build/cache/projects/UrhoApp
-          script/dockerized.sh ${PLATFORM/-*}
-      - name: Scaffolding - test
-        run: |
-          cd build/cache/projects/UrhoApp
-          script/dockerized.sh ${PLATFORM/-*} rake test
-      - name: Scaffolding - cleanup
-        run: |
-          rm -rf build/cache/.m2
-          find build/cache/.gradle -newer build/cache/.gradle/mark -type d |xargs rm -rf
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-${{ matrix.lib-type }}-all-both
-          path: |
-            build/ci/*.tar.gz
-            build/*.out
-            android/urho3d-lib/build/outputs/aar/*.aar
-            android/urho3d-lib/build/libs/*.jar
-            android/launcher-app/build/outputs/apk/debug/*.apk
-            android/launcher-app/build/outputs/apk/release/*.apk                        
-        if: github.event_name == 'push'
-        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
-      - name: Publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISHER_NAME: ${{ secrets.PUBLISHER_NAME }}
-          PUBLISHER_EMAIL: ${{ secrets.PUBLISHER_EMAIL }}
-          PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
-        run: script/dockerized.sh ${PLATFORM/-*} rake publish
-        if: |
-          github.event_name == 'push' &&
-          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
-        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: ./gradlew :android:urho3d-lib:test
+
+      - name: Package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ./gradlew publish

@@ -123,8 +123,8 @@ struct URHO3D_API FocusParameters
     /// Construct undefined.
     FocusParameters() = default;
 
-    /// Construct with initial values.
-    FocusParameters(bool focus, bool nonUniform, bool autoSize, float quantize, float minView) :
+    /// Construct with initial values. Default quantize and minView match Light defaults.
+    FocusParameters(bool focus, bool nonUniform, bool autoSize, float quantize = 0.5f, float minView = 3.0f) :
         focus_(focus),
         nonUniform_(nonUniform),
         autoSize_(autoSize),
