@@ -93,14 +93,42 @@ if (APPLE)
         set (CMAKE_CROSSCOMPILING TRUE)
         set (CMAKE_XCODE_EFFECTIVE_PLATFORMS -iphoneos -iphonesimulator)
         set (CMAKE_OSX_SYSROOT iphoneos)    # Set Base SDK to "Latest iOS"
+
+        # Configure code signing
         if (DEFINED ENV{CI})
-            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED 0)
+            # Disable code signing for CI builds
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
             set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
+        elseif (DEFINED ENV{IOS_SIMULATOR_ONLY})
+            # Simulator-only build: Use ad-hoc signing (no Apple Developer account needed)
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-")
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "YES")
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+            # Limit SDK to simulator only
+            set (CMAKE_XCODE_EFFECTIVE_PLATFORMS -iphonesimulator)
+            set (CMAKE_OSX_SYSROOT iphonesimulator)
+            message (STATUS "iOS Simulator-only mode enabled (no code signing required)")
+        elseif (DEFINED ENV{IOS_DEVELOPMENT_TEAM})
+            # Enable code signing with development team from environment
+            set (CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM $ENV{IOS_DEVELOPMENT_TEAM})
+            if (DEFINED ENV{IOS_CODE_SIGN_IDENTITY})
+                set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "$ENV{IOS_CODE_SIGN_IDENTITY}")
+            else ()
+                set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Apple Development")
+            endif ()
+            if (DEFINED ENV{IOS_PROVISIONING_PROFILE_SPECIFIER})
+                set (CMAKE_XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{IOS_PROVISIONING_PROFILE_SPECIFIER}")
+            endif ()
+        else ()
+            # No code signing configuration provided - builds will require manual signing in Xcode
+            message (STATUS "iOS code signing not configured. Set IOS_SIMULATOR_ONLY=1 for simulator builds or IOS_DEVELOPMENT_TEAM for device builds.")
         endif ()
+
         # This is a CMake hack in order to make standard CMake check modules that use try_compile() internally work on iOS platform
         # The injected "flags" are not compiler flags, they are actually CMake variables meant for another CMake subprocess that builds the source file being passed in the try_compile() command
         # CAVEAT: these injected "flags" must always be kept at the end of the string variable, i.e. when adding more compiler flags later on then those new flags must be prepended in front of these flags instead
-        set (CMAKE_REQUIRED_FLAGS ";-DSmileyHack=byYaoWT;-DCMAKE_MACOSX_BUNDLE=1;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=0;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=")
+        set (CMAKE_REQUIRED_FLAGS ";-DSmileyHack=byYaoWT;-DCMAKE_MACOSX_BUNDLE=1;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=")
         if (NOT IOS_SYSROOT)
             execute_process (COMMAND xcodebuild -version -sdk ${CMAKE_OSX_SYSROOT} Path OUTPUT_VARIABLE IOS_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)   # Obtain iOS sysroot path
             set (IOS_SYSROOT ${IOS_SYSROOT} CACHE INTERNAL "Path to iOS system root")
@@ -124,10 +152,11 @@ if (APPLE)
         set (CMAKE_XCODE_EFFECTIVE_PLATFORMS -appletvos -appletvsimulator)
         set (CMAKE_OSX_SYSROOT appletvos)    # Set Base SDK to "Latest tvOS"
         if (DEFINED ENV{CI})
-            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED 0)
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+            set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
             set (CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
         endif ()
-        set (CMAKE_REQUIRED_FLAGS ";-DSmileyHack=byYaoWT;-DCMAKE_MACOSX_BUNDLE=1;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=0;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=")
+        set (CMAKE_REQUIRED_FLAGS ";-DSmileyHack=byYaoWT;-DCMAKE_MACOSX_BUNDLE=1;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO;-DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=")
         if (NOT TVOS_SYSROOT)
             execute_process (COMMAND xcodebuild -version -sdk ${CMAKE_OSX_SYSROOT} Path OUTPUT_VARIABLE TVOS_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)   # Obtain tvOS sysroot path
             set (TVOS_SYSROOT ${TVOS_SYSROOT} CACHE INTERNAL "Path to tvOS system root")
@@ -142,17 +171,17 @@ if (APPLE)
     elseif (XCODE)
         set (CMAKE_OSX_SYSROOT macosx)    # Set Base SDK to "Latest OS X"
         if (CMAKE_OSX_DEPLOYMENT_TARGET)
-            if (CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
-                message (FATAL_ERROR "The minimum supported CMAKE_OSX_DEPLOYMENT_TARGET is 10.9.")
+            if (CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.13)
+                message (FATAL_ERROR "The minimum supported CMAKE_OSX_DEPLOYMENT_TARGET is 10.13.")
             endif ()
         else ()
             # If not set, set to current running build system OS version by default
             execute_process (COMMAND sw_vers -productVersion OUTPUT_VARIABLE CURRENT_OSX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
             string (REGEX REPLACE ^\([^.]+\\.[^.]+\).* \\1 CMAKE_OSX_DEPLOYMENT_TARGET ${CURRENT_OSX_VERSION})
-                set (CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET} CACHE STRING "Specify macOS deployment target (macOS platform only), default to current running macOS if not specified, the minimum supported target is 10.9")
+                set (CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET} CACHE STRING "Specify macOS deployment target (macOS platform only), default to current running macOS if not specified, the minimum supported target is 10.13")
         endif ()
         if (DEPLOYMENT_TARGET_SAVED AND NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL DEPLOYMENT_TARGET_SAVED)
-                set (CMAKE_OSX_DEPLOYMENT_TARGET ${DEPLOYMENT_TARGET_SAVED} CACHE STRING "Specify macOS deployment target (macOS platform only), default to current running macOS if not specified, the minimum supported target is 10.9" FORCE)
+                set (CMAKE_OSX_DEPLOYMENT_TARGET ${DEPLOYMENT_TARGET_SAVED} CACHE STRING "Specify macOS deployment target (macOS platform only), default to current running macOS if not specified, the minimum supported target is 10.13" FORCE)
             message (FATAL_ERROR "CMAKE_OSX_DEPLOYMENT_TARGET cannot be changed after the initial configuration/generation. "
                 "Auto reverting to its initial value. If you wish to change it then the build tree would have to be regenerated from scratch.")
         endif ()
@@ -1929,7 +1958,8 @@ macro (setup_main_executable)
 
     # Define a custom command for stripping the main target executable for Release build configuration,
     # but only for platforms that support it and require it (for Android, let Android plugin handle it)
-    if (CMAKE_BUILD_TYPE STREQUAL Release AND NOT ANDROID AND NOT WEB AND NOT MSVC)
+    # Skip iOS/tvOS as strip fails on shared libraries that need to export symbols
+    if (CMAKE_BUILD_TYPE STREQUAL Release AND NOT ANDROID AND NOT WEB AND NOT MSVC AND NOT IOS AND NOT TVOS)
         add_custom_command (TARGET ${TARGET_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${TARGET_NAME}>)
     endif ()
 endmacro ()

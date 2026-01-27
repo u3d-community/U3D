@@ -1,103 +1,71 @@
-name: Linux Build
+name: 🐧 Linux
 on: [push, pull_request]
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
   cancel-in-progress: true
 
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+
 jobs:
   linux:
-    name: 🐧
-    runs-on: ubuntu-22.04
+    name: Linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux-gcc
-          - linux-clang
-          - mingw
-          - rpi
-          - arm
-        lib-type:
-          - static
-          - shared
-        architecture:
-          - 64
-          - 32
-        build-type:
-          - rel
-          - dbg
-    env:
-      HOST: ${{ github.job }}
-      PLATFORM: ${{ matrix.platform }}
-      BUILD_TYPE: ${{ matrix.build-type }}
-      LIB_TYPE: ${{ matrix.lib-type }}
-      ARCH: ${{ matrix.architecture }}
-      DBE_TAG: master
+        lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
+        build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
+        compiler: ${{ github.event_name == 'pull_request' && fromJSON('["gcc"]') || fromJSON('["gcc", "clang"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Source checksum
-        id: source_checksum
-        run: rake source_checksum
+
       - name: Cache
         uses: actions/cache@v4
         with:
-          path: |
-            build/cache/.ccache
-            build/cache/.gradle/caches
-            build/cache/.gradle/wrapper
-          key: |
-            ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.architecture }}-${{ matrix.build-type }}-${{ env.DBE_TAG }}-${{ steps.source_checksum.outputs.hexdigest }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-${{ matrix.compiler }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}
           restore-keys: |
-            ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.architecture }}-${{ matrix.build-type }}-${{ env.DBE_TAG }}
-            ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.architecture }}-${{ matrix.build-type }}
-      - name: DBE
-        run: rake update_dot_files && script/dockerized.sh ${PLATFORM/-*} env
+            ${{ github.job }}-${{ matrix.compiler }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ccache ninja-build pkg-config \
+            libgl1-mesa-dev libglew-dev \
+            libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev libxss-dev libxxf86vm-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols \
+            libasound2-dev libpulse-dev \
+            libibus-1.0-dev \
+            libdbus-1-dev libreadline6-dev libssl-dev libudev-dev uuid-dev
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y --no-install-recommends clang
+          fi
+
       - name: CMake
-        run: script/dockerized.sh ${PLATFORM/-*} rake cmake
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            export CC=clang
+            export CXX=clang++
+          fi
+          cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DURHO3D_DEPLOYMENT_TARGET=generic
+
       - name: Build
-        run: script/dockerized.sh ${PLATFORM/-*} rake build
+        run: cmake --build build --parallel 2 --target all --config ${{ matrix.build-type }} -- -j2
+
       - name: Test
-        run: script/dockerized.sh ${PLATFORM/-*} rake test
-        if: startsWith(matrix.platform, 'linux') || matrix.platform == 'android'
-      - name: Install
-        run: script/dockerized.sh ${PLATFORM/-*} rake install
-      - name: Scaffolding - new
-        run: script/dockerized.sh ${PLATFORM/-*} rake new
-      - name: Scaffolding - build
-        run: |
-          cd build/cache/projects/UrhoApp
-          script/dockerized.sh ${PLATFORM/-*}
-      - name: Scaffolding - test
-        run: |
-          cd build/cache/projects/UrhoApp
-          script/dockerized.sh ${PLATFORM/-*} rake test
-        if: startsWith(matrix.platform, 'linux')
-      - name: Scaffolding - cleanup
-        run: rm -rf build/cache/{.urho3d,projects}
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build-type }}
+
       - name: Package
-        run: script/dockerized.sh ${PLATFORM/-*} rake package
-        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.lib-type == 'static' && matrix.build-type == 'dbg')
-      - name: Upload
+        #if: startsWith(github.ref, 'refs/tags/')
+        run: cmake --build build --target package --config ${{ matrix.build-type }}
+
+      - name: Upload packages
+        #if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.architecture }}-${{ matrix.build-type }}
-          path: |
-            build/ci/*.tar.gz
-            build/*.out
-        if: github.event_name == 'push' && !(matrix.platform == 'mingw' && matrix.lib-type == 'static' && matrix.build-type == 'dbg')
-        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
-      - name: Publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISHER_NAME: ${{ secrets.PUBLISHER_NAME }}
-          PUBLISHER_EMAIL: ${{ secrets.PUBLISHER_EMAIL }}
-          PUBLISHER_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}
-        run: script/dockerized.sh ${PLATFORM/-*} rake publish
-        if: |
-          github.event_name == 'push' &&
-          (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
-          (matrix.platform == 'web' && matrix.build-type == 'rel')
-        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          name: 'U3D-${{ github.job }}-${{ matrix.compiler }}-${{ matrix.lib-type }}-${{ matrix.build-type }}'
+          path: build/*.tar.gz

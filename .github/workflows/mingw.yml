@@ -1,0 +1,54 @@
+name: 🪟 MinGW
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-mingw
+  cancel-in-progress: true
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  MINGW_PREFIX: /usr/bin/x86_64-w64-mingw32
+  MINGW_SYSROOT: /usr/x86_64-w64-mingw32
+
+jobs:
+  mingw:
+    name: MinGW
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
+        build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}
+          restore-keys: |
+            ${{ github.job }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache mingw-w64 ninja-build
+
+      - name: CMake
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMINGW_PREFIX=$MINGW_PREFIX -DMINGW_SYSROOT=$MINGW_SYSROOT -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchains/MinGW.cmake -DMINGW=1
+
+      - name: Build
+        run: cmake --build build --parallel 2
+
+      - name: Package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cmake --build build --target package
+
+      - name: Upload packages
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'U3D-${{ github.job }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}'
+          path: build/*.zip

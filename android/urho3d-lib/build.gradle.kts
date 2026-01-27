@@ -30,18 +30,22 @@ plugins {
     `maven-publish`
 }
 
-val kotlinVersion: String by ext
-val ndkSideBySideVersion: String by ext
-val cmakeVersion: String by ext
-val buildStagingDir: String by ext
+val kotlinVersion: String by rootProject.extra
+val ndkSideBySideVersion: String by rootProject.extra
+val cmakeVersion: String by rootProject.extra
+val buildStagingDir: String by rootProject.extra
+
+kotlin {
+    jvmToolchain(17)
+}
 
 android {
+    namespace = "io.urho3d"
     ndkVersion = ndkSideBySideVersion
-    compileSdkVersion(30)
+    compileSdk = 34
     defaultConfig {
-        minSdkVersion(19)
-        targetSdkVersion(30)
-        testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+        minSdk = 21
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
                 arguments.apply {
@@ -77,7 +81,7 @@ android {
         cmake {
             version = cmakeVersion
             path = project.file("../../CMakeLists.txt")
-            buildStagingDirectory("$buildStagingDir/${LibType()}")
+            buildStagingDirectory(file("$buildStagingDir/${libType()}"))
         }
     }
     sourceSets {
@@ -85,38 +89,49 @@ android {
             java.srcDir("../../Source/ThirdParty/SDL/android-project/app/src/main/java")
         }
     }
-    lintOptions {
-        isAbortOnError = false
+    lint {
+        abortOnError = false
     }
 }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("com.getkeepsafe.relinker:relinker:1.4.2")
-    testImplementation("junit:junit:4.13.1")
-    androidTestImplementation("androidx.test:runner:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    implementation("com.getkeepsafe.relinker:relinker:1.4.5")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
 
-android.libraryVariants.whenObjectAdded {
-    val config = name
-    packageLibraryProvider.get().apply {
-        // Customize bundle task to also zip the Urho3D headers and libraries
-        File(android.externalNativeBuild.cmake.buildStagingDirectory, "cmake/$config").list()?.forEach { abi ->
-            listOf("include", "lib").forEach {
-                from(File(android.externalNativeBuild.cmake.buildStagingDirectory, "cmake/$config/$abi/$it")) {
-                    into("urho3d/$config/$abi/$it")
+androidComponents {
+    onVariants { variant ->
+        val config = variant.name
+        val stagingDir = file("$buildStagingDir/${libType()}")
+        afterEvaluate {
+            tasks.named<Zip>("bundle${config.replaceFirstChar { it.uppercase() }}Aar").configure {
+                // Customize bundle task to also zip the Urho3D headers and libraries
+                // AGP 8.x uses <stagingDir>/<BuildType>/<hash>/<abi>/ structure
+                val buildTypeDir = stagingDir.resolve(config.replaceFirstChar { it.uppercase() })
+                buildTypeDir.listFiles()?.firstOrNull()?.listFiles()?.forEach { abiDir ->
+                    if (abiDir.isDirectory) {
+                        listOf("include", "lib").forEach { dir ->
+                            from(abiDir.resolve(dir)) {
+                                into("urho3d/$config/${abiDir.name}/$dir")
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+val stagingDir = file("$buildStagingDir/${libType()}")
+
 tasks {
     register<Delete>("cleanAll") {
         dependsOn("clean")
-        delete = setOf(android.externalNativeBuild.cmake.buildStagingDirectory)
+        delete = setOf(stagingDir)
     }
     register<Jar>("sourcesJar") {
         archiveClassifier.set("sources")
@@ -136,8 +151,11 @@ tasks {
     register<Task>("makeDocConfigurer") {
         dependsOn("generateJsonModelRelease")
         doLast {
-            val abi = File(android.externalNativeBuild.cmake.buildStagingDirectory, "cmake/release").list()!!.first()
-            val buildTree = File(android.externalNativeBuild.cmake.buildStagingDirectory, "cmake/release/$abi")
+            // AGP 8.x uses <stagingDir>/<BuildType>/<hash>/<abi>/ structure
+            val releaseDir = File(stagingDir, "Release")
+            val hashDir = releaseDir.listFiles()?.firstOrNull() ?: error("No Release build directory found")
+            val abiDir = hashDir.listFiles()?.firstOrNull { it.isDirectory } ?: error("No ABI directory found")
+            val buildTree = abiDir
             named<Exec>("makeDoc") {
                 // This is a hack - expect the first line to contain the path to the CMake executable
                 executable = File(buildTree, "build_command.txt").readLines().first().split(":").last().trim()
@@ -156,7 +174,7 @@ publishing {
     publications {
         android.buildTypes.forEach {
             val config = it.name
-            register<MavenPublication>("Urho${config.capitalize()}") {
+            register<MavenPublication>("Urho${config.replaceFirstChar { c -> c.uppercase() }}") {
                 configure(config)
             }
         }
@@ -173,13 +191,13 @@ publishing {
     }
 }
 
-fun LibType(): String {
-    return System.getenv("URHO3D_LIB_TYPE")?.toLowerCase() ?: "static"
+fun libType(): String {
+    return System.getenv("URHO3D_LIB_TYPE")?.lowercase() ?: "static"
 }
 
 fun MavenPublication.configure(config: String) {
     groupId = project.group.toString()
-    artifactId = "${project.name}-${LibType()}${if (config == "debug") "-debug" else "" }"
+    artifactId = "${project.name}-${libType()}${if (config == "debug") "-debug" else "" }"
     afterEvaluate {
         from(components[config])
     }
