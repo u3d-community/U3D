@@ -72,29 +72,37 @@ The NEON instruction set will be used by default whenever it is available. See t
 
 CMake (https://www.cmake.org) is required to configure and generate the Urho3D project build tree. The minimum required version is 3.10.2. However, it is recommended to use the latest CMake version available, especially when targeting Apple platforms using its latest Xcode version available. This is because Apple is known to change the internal working of Xcode with little regards to other third party build tools, such as CMake.
 
-\section Build_Scripts Build scripts
+\section Build_Scripts Building with CMake
 
-As this is a cross-platform project, we have provided a number of build scripts in the "script" directory for the most common use cases, with the exception for Android platform. The shell scripts end with extension *.sh are meant for building Urho3D project in a Unix-like host system (Linux, Mac, and even Raspberry Pi), while the batch files end with *.bat are meant for Windows host system only. They only provide a convenient way to invoke CMake to process our CMakeLists.txt files. Their usage is not a must as you can also invoke CMake to do the same via cmake-gui or via your IDE when your IDE supports that.
+The recommended way to build Urho3D is to invoke CMake directly from the command line. This provides full control over the build configuration and works consistently across all platforms. See \ref Native_Build_Examples for complete command-line examples for each platform.
 
-The basic usage is as follows:
-
-\verbatim
-<script-name> /path/to/build-tree [build-options]
-\endverbatim
-
-Where the <script-name> is one of the provided build script. The /path/to/build-tree is where CMake will be generating the build tree for the project. Both out-of-source build tree and non out-of-source build tree path are now supported. The build options are described in detail in the next section below.
-
-After the build tree has been generated, you can use the build script again to reconfigure it by passing different build options. You can do so as the basic usage above; or by first change the working directory to the already generated build tree and use the following syntax:
+The general pattern for building with CMake is:
 
 \verbatim
-<script-name> [build-options]
+# Configure (generate build files)
+cmake -S . -B build -G "<generator>" [build-options]
+
+# Build
+cmake --build build --config <Release|Debug>
+
+# Test (optional)
+ctest --test-dir build --output-on-failure
+
+# Package (optional)
+cmake --build build --target package
 \endverbatim
 
-Naturally you have to specify a fully qualified path to the build script for this to work. Alternatively, you can add the path to the Urho3D project root to the PATH environment variable in order to make the build scripts available everywhere.
+Common generators include:
+- "Unix Makefiles" - Linux and macOS command line
+- "Visual Studio 17 2022" - Windows with Visual Studio 2022
+- "Xcode" - macOS and iOS/tvOS with Xcode
+- "Ninja" - Fast builds on any platform (requires Ninja to be installed)
 
-Our CMakeLists.txt files are designed to work with most of the generators supported by CMake: Makefile, Xcode, VS, and even Ninja. Which build script to use is determined by which CMake generator (and toolchain) you intend to use in your build tree. For native build, you can just use cmake_generic.sh or cmake_generic.bat to let CMake to detect and decide which generator to use automatically. CMake should default to use "Unix Makefiles" generator on Linux and Mac host systems and it should default to use 32-bit "Visual Studio" generator on Windows host system when it is installed.
+Our CMakeLists.txt files are designed to work with most generators supported by CMake. For Android platform, use the Gradle build system instead. See \ref Building_Android for details.
 
-Since Urho3D version 1.8 we have integrated with Gradle build system for Android platform. We have provided Gradle wrapper script and batch file at the project root directory to interface with Gradle build system. Currently it is the only platform that does not allow user to interface with CMake build system directly. See \ref Building_Android for more detail.
+\subsection Build_Scripts_Legacy Legacy build scripts
+
+For convenience, build scripts are still provided in the "script" directory. These are thin wrappers around CMake commands. Shell scripts (*.sh) are for Unix-like systems, batch files (*.bat) are for Windows. However, invoking CMake directly as shown above is the preferred approach.
 
 \section Build_Options Build options
 
@@ -185,29 +193,67 @@ A number of build options can be defined when invoking the build scripts or when
 |EMSCRIPTEN_EMRUN_BROWSER|firefox|Specify the particular browser to be spawned by emrun during testing (Emscripten only), use 'emrun --list_browsers' command to get the list of possible values|
 |OPENSSL_ROOT_DIR|-|Root path to OpenSSL directory|
 
-Note that the specified build option values are cached by CMake after the initial configuration step. The cached values will be used by CMake in the subsequent configuration. The same build options are not required to be specified again and again. But once a non-default build option value is being cached, it can only be reverted back to its default value by explicitly resetting it. That is, simply by not passing the corresponding build option would not revert it back to its default. One way to revert all the build options to their default values is by clearing the CMake cache by executing cmake_clean.bat or cmake_clean.sh with the location of the build tree as the first argument or by executing it in the build tree itself.
+Note that the specified build option values are cached by CMake after the initial configuration step. The cached values will be used by CMake in subsequent configurations. The same build options are not required to be specified again. But once a non-default build option value is cached, it can only be reverted to its default value by explicitly resetting it. To clear the CMake cache and start fresh, simply delete the build directory and reconfigure:
+
+\verbatim
+rm -rf build
+cmake -S . -B build ...
+\endverbatim
+
+On Windows:
+\verbatim
+rmdir /s /q build
+cmake -S . -B build ...
+\endverbatim
 
 \section Building_Native Native build process
 
-A native build of Urho3D has two steps:
+Building Urho3D natively consists of two steps: configure and build.
 
--# Run CMake in the root directory (which is also CMake's source tree) with your preferred generator and toolchain specified to generate the build tree. You can use cmake-gui or the provided batch files or shell scripts on the respective host system. All the batch files and shell scripts expect the build tree location to be passed as the first argument, or to execute them in the build tree itself when reconfiguring the existing build tree.\n
-    - Windows: cmake_vs20xx.bat, cmake_mingw.bat, cmake_codeblock.bat, cmake_codelite.bat cmake_ninja.bat, or cmake_generic.bat\n
-    - macOS: cmake_xcode.sh, cmake_codeblocks.sh, cmake_codelite.sh, cmake_ninja.sh, or cmake_generic.sh\n
-    - Linux: cmake_eclipse.sh, cmake_codeblocks.sh, cmake_codelite.sh, cmake_ninja.sh, or cmake_generic.sh\n
-    - Raspberry Pi: cmake_rpi.sh, cmake_eclipse.sh, cmake_codeblocks.sh, cmake_codelite.sh, cmake_ninja.sh, or cmake_generic.sh\n
--# Use the IDE of your choice to open the CMake's generated project file or solution file in the build tree. Change the build configuration (Debug/Release) and change the built-in target to ALL_BUILD to build all the targets.\n
-    - Visual Studio: open Urho3D.sln\n
-    - Xcode: open Urho3D.xcodeproj\n
-    - CodeBlocks: open Urho3D.cbp\n
-    - Eclipse: import project using File|Import "Existing Projects into Workspace"\n
-    - Alternatively, on make-based toolchains like GCC / MinGW, execute make in the build tree
+\subsection Building_Native_Linux Linux
 
-Note that Eclipse requires CDT plugin to build a C/C++ project.
+\verbatim
+cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+\endverbatim
 
-On Windows platform Urho3D can use either Direct3D 9 (default), Direct3D 11 or OpenGL rendering. Other platforms always use OpenGL. Use the CMake options "-DURHO3D_D3D11=1" or "-DURHO3D_OPENGL=1" to choose the non-default APIs.
+\subsection Building_Native_Windows Windows
 
-If using MinGW to compile, DirectX headers may need to be acquired separately. They can be copied to the MinGW installation eg. from the following package: https://www.libsdl.org/extras/win32/common/directx-devel.tar.gz. These will be missing some of the headers related to shader compilation, so a MinGW build will use OpenGL by default. To build in Direct3D mode, the MinGW-w64 port is necessary: http://mingw-w64.sourceforge.net/. Using it, Direct3D can be enabled with the "-DURHO3D_OPENGL=0" build option.
+Using Visual Studio 2022 (Direct3D 11 by default):
+\verbatim
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+\endverbatim
+
+For OpenGL instead of Direct3D:
+\verbatim
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DURHO3D_OPENGL=1
+\endverbatim
+
+\subsection Building_Native_macOS macOS
+
+\verbatim
+cmake -S . -B build -G Xcode -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+cmake --build build --config Release
+\endverbatim
+
+\subsection Building_Native_IDE Using an IDE
+
+After running CMake, you can open the generated project files in your IDE:
+- Visual Studio: open build/Urho3D.sln
+- Xcode: open build/Urho3D.xcodeproj
+- CodeBlocks: open build/Urho3D.cbp
+- Eclipse: import the build directory using File|Import "Existing Projects into Workspace"
+
+Change the build configuration (Debug/Release) and select ALL_BUILD target to build everything.
+
+\subsection Building_Native_Graphics Graphics API selection
+
+On Windows, Urho3D supports Direct3D 9, Direct3D 11, or OpenGL rendering. Other platforms use OpenGL. Use these CMake options to choose:
+- "-DURHO3D_D3D11=1" for Direct3D 11 (default on Windows)
+- "-DURHO3D_OPENGL=1" for OpenGL
+
+If using MinGW to compile with Direct3D support, the MinGW-w64 port is necessary: http://mingw-w64.sourceforge.net/
 
 After the build is complete, the programs can be run from the bin subdirectory in the build tree. These include the Urho3D player application, which can run application scripts, the tools, and C++ sample applications if they have been enabled.
 
@@ -255,13 +301,33 @@ The Gradle build script has been setup to automatically pass the matching enviro
 
 The Gradle properties can be passed by using "-P" Gradle option, e.g.: "./gradlew -P ANDROID_ABI=x86 build".
 
-\section Building_iOS_tvOS iOS and tvOS build process (tvOS is still EXPERIMENTAL)
+\section Building_iOS_tvOS iOS and tvOS build process
 
-Run cmake_ios.sh or cmake_tvos.sh, respectively. This generates an Xcode project named Urho3D.xcodeproj.
+For iOS Simulator (64-bit):
+\verbatim
+cmake -S . -B build -G Xcode \
+    -DIOS=1 \
+    -DPLATFORM=SIMULATOR64 \
+    -DDEPLOYMENT_TARGET=11 \
+    -DURHO3D_LIB_TYPE=static
+cmake --build build --config Release
+\endverbatim
 
-Open the Xcode project and check the properties for the Urho3D project (topmost in the Project Navigator). In Code Signing, enter your developer identity as necessary. Also ensure you have changed the built-in target to ALL_BUILD to build all the targets. Edit its build scheme to choose debug or release mode. All the samples will be built as Application Bundle, i.e. with all the resources bundled. The library and samples will be built as Mach-O universal binary consisting of multiple archs depending on the chosen platforms.
+For tvOS Simulator:
+\verbatim
+cmake -S . -B build -G Xcode \
+    -DTVOS=1 \
+    -DPLATFORM=SIMULATOR64 \
+    -DDEPLOYMENT_TARGET=9 \
+    -DURHO3D_LIB_TYPE=static
+cmake --build build --config Release
+\endverbatim
 
-You can choose one of the provided simulator to run the samples directly from the Xcode.
+Note: iOS and tvOS only support static library builds.
+
+Alternatively, open the generated Urho3D.xcodeproj in Xcode. Check the project properties (topmost in the Project Navigator) and configure Code Signing with your developer identity as necessary. Ensure you have changed the built-in target to ALL_BUILD to build all targets. All samples will be built as Application Bundles with resources included.
+
+You can choose one of the provided simulators to run the samples directly from Xcode.
 
 \section Building_RaspberryPi Raspberry Pi build process
 
@@ -287,29 +353,53 @@ You can also build, deploy, run/debug (as C/C++ Remote %Application) using Eclip
 
 \section Building_MinGW MinGW cross-compile build process
 
-It is possible to cross-compile Urho3D for Windows using a Linux host system. The process is largely the same as the \ref Building_Native "Linux native build" process described above.
+It is possible to cross-compile Urho3D for Windows using a Linux host system.
 
-To cross-compile, the MinGW compiler toolchain development software package ("mingw-w64" for Debian-based distro; "mingw64-gcc-c++" and "mingw64-winpthreads-static.noarch" for Redhat-based distro) needs to be installed on the system. For activating the MinGW compiler toolchain, and to allow it to find the correct compiler, the MINGW_PREFIX environment variable needs to be set. This variable should be set to the prefix of the compiler name, e.g. /usr/bin/x86_64-w64-mingw32 where it would be used to find /usr/bin/x86_64-w64-mingw32-gcc and /usr/bin/x86_64-w64-mingw32-g++, etc. Optionally you can also set MINGW_SYSROOT environment variable or build option to point to your MinGW system root, if it is not installed in a normal expected location. Adjust the software package name and the path accordingly for mingw32. It is recommended to use mingw64, when it is available for your host system, because it is multilib capable (can target both 32-bit and 64-bit).
+To cross-compile, the MinGW compiler toolchain development software package ("mingw-w64" for Debian-based distro; "mingw64-gcc-c++" and "mingw64-winpthreads-static.noarch" for Redhat-based distro) needs to be installed on the system.
 
-Execute cmake_mingw.sh then go to the build tree to execute make command. After the build is complete, the Windows executables can be found in the build tree's "bin" subdirectory.
+Configure and build with the MinGW toolchain file:
+
+\verbatim
+cmake -S . -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMINGW=1 \
+    -DMINGW_PREFIX=/usr/bin/x86_64-w64-mingw32 \
+    -DMINGW_SYSROOT=/usr/x86_64-w64-mingw32 \
+    -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchains/MinGW.cmake
+cmake --build build --parallel
+\endverbatim
+
+The MINGW_PREFIX should be set to the prefix of the compiler name, e.g. /usr/bin/x86_64-w64-mingw32 where it would be used to find /usr/bin/x86_64-w64-mingw32-gcc and /usr/bin/x86_64-w64-mingw32-g++, etc. It is recommended to use mingw64 because it is multilib capable (can target both 32-bit and 64-bit).
+
+After the build is complete, the Windows executables can be found in the build tree's "bin" subdirectory.
 
 \section Building_Emscripten Emscripten build process
 
 > WHAT DOESN'T WORK:
 >    - Networking. Javascript can only use http and websockets protocols and at the moment it's not supported.
 
-This section assumes you have already updated, installed, and activated the latest Emscripten cross-compiler toolchain with upstream LLVM WASM backend on your host system as per described in https://emscripten.org/docs/getting_started/downloads.html.
+This section assumes you have already installed and activated the Emscripten SDK (version 3.1.60 or later recommended) with the upstream LLVM WASM backend on your host system as per described in https://emscripten.org/docs/getting_started/downloads.html.
 
-Use the emcmake or emcmake.bat wrapper to set the emscripten toolchain file for you. This will set the needed cmake build options for the Emscripten cross-compiler tools. This can be called from the installed emsdk as an absolute path within the emsdk or you can source the emsdk_env script (extension depending on your shell) to add the tools to the path.
+After activating the Emscripten environment, configure and build directly with CMake:
 
-On Windows host, execute "emcmake.bat cmake_emscripten.bat". On MacOS or Linux host, execute "emcmake cmake_emscripten.sh". Then go to the build tree and execute the 'make' command to start the build as usual. If you encounter "Too many open files" warning when archiving the Urho3D static library, follow by "Unresolved symbol" errors on MacOS then you have to increase the soft-limit in your host system before rebuilding the library and all the main targets.
+\verbatim
+cmake -S . -B build -G "Unix Makefiles" \
+    -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DWEB=1 \
+    -DURHO3D_LIB_TYPE=static
+cmake --build build --parallel
+\endverbatim
 
-For example, to double the limit (which normally defaults to 256 on MacOS):
+Note: Web builds only support static library type (URHO3D_LIB_TYPE=static).
+
+If you encounter "Too many open files" warning when archiving the Urho3D static library followed by "Unresolved symbol" errors on macOS, increase the soft-limit:
+
 \verbatim
 ulimit -Sn 512
 \endverbatim
 
-After the commands finish successfully, the HTMLs and its corresponding data files should have been generated in the build tree's "bin" subdirectory, from where it can be launched in a browser.
+After the commands finish successfully, the HTML files and corresponding data files are generated in the build tree's "bin" subdirectory, from where they can be launched in a browser.
 
 On Windows building with Emscripten requires a MinGW toolchain. The one that can be installed through emsdk may not work correctly, but for example https://sourceforge.net/projects/mingw-w64/ with the default install settings has been known to work.
 
@@ -685,47 +775,511 @@ export PKG_CONFIG_PATH=${MINGW_SYSROOT}/usr/local/lib/pkgconfig
 $CC -o Urho3DPlayer_d.exe Urho3DPlayer.cpp `pkg-config --variable CFLAGS_DEBUG Urho3D` `pkg-config --cflags --libs Urho3D`
 \endcode
 
-\section Using_Rake_Tasks Using rake tasks for project scaffolding and building
+\section Native_Build_Examples Native CMake build examples
 
-With [Rake](https://rubygems.org/gems/rake) ruby gem installed, you can quickly setup all the above by simply using the 'scaffolding' rake task.
+The preferred method for building Urho3D is to invoke CMake directly from the command line. This approach provides full control over the build process without requiring any additional tools beyond CMake and your platform's native build system.
+
+\subsection Native_Build_Linux Linux
+
+Install the required dependencies first (example for Debian/Ubuntu):
 
 \verbatim
-rake scaffolding dir=/path/to/new/project/root [project=Scaffolding] [target=Main]
+sudo apt-get install build-essential cmake libgl1-mesa-dev libglew-dev \
+    libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev \
+    libxrender-dev libxss-dev libxxf86vm-dev libasound2-dev libpulse-dev
 \endverbatim
 
-As its name implies, this task just creates a basic project structure for your new project. You may also pass optional "project" and "target" parameters besides the "dir" parameter. Otherwise, you will get the default project name (Scaffolding) and target name (Main) in the main CMakeLists.txt. This task copies the Urho3DPlayer.cpp and Urho3DPlayer.h as placeholders for the source files. Normally, you should replace these two files with your own project source files before invoking one of the build scripts.
+Then configure and build:
 
-On Windows host system, this task requires privilege to create symlinks by using mklink command. The task would fail when the Windows user account does not have that privilege. We strongly advise you not to use "Administrator" account just for this purpose. Instead, grant your "normal" user account to have the privilege correctly.
-
-WARNING: As of this writing, this rake scaffolding task does not yet create a complete new project suitable for Android platform. In future a custom Gradle scaffolding task will be added to perform this job. You need to supply the missing bits manually yourself for now.
-
-The Ruby and Rake are not prerequisite software components for building Urho3D and your projects. However, if you are reading this section this far and that your host system actually already has them installed then you can take advantage of them by utilising the 'rake cmake' and 'rake make' tasks. The former configures and generates the build tree (by invoking one of our build scripts under the hood) and the latter builds the project in the generated build tree (by invoking 'cmake --build' command which in turns calls the respective build tools, such as 'make' or 'xcodebuild', or 'MSBuild.exe') at the convenient of your finger tips in a command line interface.
-
-To configure and generate:
 \verbatim
-rake cmake [<generator>] [<platform>] [<option>=<value> [<option>=<value>]] [[<platform>_]build_tree=/path/to/build-tree] [fix_scm]
+cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 \endverbatim
 
-To build:
+\subsection Native_Build_Windows Windows
+
+Using Visual Studio 2022:
+
 \verbatim
-rake make [<platform>] [<option>=<value> [<option>=<value>]] [[<platform>_]build_tree=/path/to/build-tree] [numjobs=n] [clean_first] [unfilter]
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+ctest --test-dir build --output-on-failure -C Release
 \endverbatim
 
-The default <generator> when not specified is 'generic', which let CMake to detect and choose what generator is available in the host to use. The possible values are: 'codeblocks', 'eclipse', 'ninja', 'vs2015', 'vs2017', 'vs2019', 'xcode'.
+For Direct3D 11 (default on Windows):
+\verbatim
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DURHO3D_D3D11=1
+\endverbatim
 
-The default <platform> when not specified is the native platform of the build host, 'linux', 'macOS', 'win'. The other possible values are: 'android', 'web', 'ios', 'tvos', 'mingw', 'rpi'. Naturally this influences the compiler toolchain being used in the generated build tree.
+For OpenGL instead of Direct3D:
+\verbatim
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DURHO3D_OPENGL=1
+\endverbatim
 
-When using the 'rake cmake' task, the <option>=\<value> pairs are optional build options supported by our build scripts as usual. However, the format here does not expect a leading '-D' for each pair. When using the 'rake make' task, the <option>=\<value> pairs are optional build options supported by the respective build tools. For example on iOS/tvOS platform using 'xcodebuild' build tool, one could pass the '-sdk' option as follows: 'rake make ios sdk=iphonesimulator'. Note the absence of leading '-' character in the example. To build a specific built-in target in the project, use the 'target' option, e.g. 'rake make target=install'. In a multi-config project, such as Xcode project or VS solution, use the 'config' option to choose which build configuration to use, e.g. 'rake make config=Release'. For Xcode project building using 'rake make' task, you may optional install the 'xcpretty' filter to address the verbosity of the 'xcodebuild' tool from its standard output stream. On the other hand, pass the 'unfilter' option to get the output from 'xcodebuild' tool unfiltered regardless the 'xcpretty' is installed or not. You can pass the 'clean_first' option to perform a clean build. By default this task invokes the respective build tool to use all the logical CPU cores available, but you can use the 'numjobs' option to override this default.
+\subsection Native_Build_macOS macOS
 
-Use the 'build_tree' option to set the path to the desired build tree location. When not specified then the build tree location would be defaulted to '../<platform>-Build', relative to the project root. To avoid repeating the customized build tree locations for each platform, you can set and export them as environment variables. The '<platform_>build_tree' option takes precedence over normal 'build_tree' option. For example with these commands below, the native and RPI build tree will be generated in the ~/custom-native-Build and ~/custom-rpi-Build, respectively, and then build from there.
+\verbatim
+cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+cmake --build build --config Release
+ctest --test-dir build --output-on-failure -C Release
+\endverbatim
+
+\subsection Native_Build_iOS iOS and tvOS
+
+For iOS Simulator:
+\verbatim
+cmake -S . -B build -G Xcode -DIOS=1 -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=11
+cmake --build build --config Release
+\endverbatim
+
+For tvOS Simulator:
+\verbatim
+cmake -S . -B build -G Xcode -DTVOS=1 -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=9
+cmake --build build --config Release
+\endverbatim
+
+Note: iOS and tvOS only support static library builds.
+
+\subsection Native_Build_Android Android
+
+Android builds use the Gradle build system with CMake integration. Ensure you have Android Studio with NDK r21d+ and CMake 3.17.3+ installed.
+
+\verbatim
+./gradlew :android:urho3d-lib:externalNativeBuildRelease
+./gradlew :android:urho3d-lib:assembleRelease
+\endverbatim
+
+On Windows:
+\verbatim
+gradlew.bat :android:urho3d-lib:externalNativeBuildRelease
+gradlew.bat :android:urho3d-lib:assembleRelease
+\endverbatim
+
+Environment variables can be used to pass CMake options:
+\verbatim
+URHO3D_LIB_TYPE=SHARED ./gradlew build
+\endverbatim
+
+\subsection Native_Build_Web Web (Emscripten)
+
+First install and activate the Emscripten SDK (version 3.1.60 or later recommended):
+
+\verbatim
+cmake -S . -B build -G "Unix Makefiles" \
+    -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DCMAKE_BUILD_TYPE=Release -DWEB=1 -DURHO3D_LIB_TYPE=static
+cmake --build build --parallel
+\endverbatim
+
+Note: Web builds only support static library type and do not support networking.
+
+\subsection Native_Build_MinGW MinGW Cross-Compile
+
+Cross-compile for Windows from Linux using MinGW:
+
+\verbatim
+sudo apt-get install mingw-w64
+
+cmake -S . -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMINGW=1 \
+    -DMINGW_PREFIX=/usr/bin/x86_64-w64-mingw32 \
+    -DMINGW_SYSROOT=/usr/x86_64-w64-mingw32 \
+    -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchains/MinGW.cmake
+cmake --build build --parallel
+\endverbatim
+
+\subsection Native_Build_Packaging Packaging
+
+To create distributable packages after building:
+
+\verbatim
+cmake --build build --target package
+\endverbatim
+
+This generates platform-appropriate packages (.tar.gz on Linux/macOS, .zip on Windows).
+
+\subsection Native_Build_Docs Documentation
+
+To build the API documentation (requires Doxygen and optionally Graphviz):
+
+\verbatim
+cmake -S . -B build -G "Unix Makefiles" -DURHO3D_DOCS=1 -DURHO3D_SAMPLES=0
+cmake --build build --target doc
+\endverbatim
+
+\subsection Native_Build_ccache Using ccache
+
+For faster rebuilds, use ccache by adding the compiler launcher options:
+
+\verbatim
+cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+\endverbatim
+
+Set the following environment variables for optimal ccache performance with precompiled headers:
+\verbatim
+export USE_CCACHE=1
+export CCACHE_SLOPPINESS=pch_defines,time_macros
+\endverbatim
+
+
+\page ProjectSetup Creating a Project with Urho3D
+
+\tableofcontents
+
+This page explains how to create a new project that uses the Urho3D library. There are three ways to integrate Urho3D into your project:
+
+1. **As a submodule (from source)**: Urho3D source is included in your project and built alongside it
+2. **From a build tree**: Link against a pre-built Urho3D library in a build directory
+3. **From an SDK installation**: Link against an installed Urho3D SDK
+
+The new CMake modules (Urho3D.cmake and UrhoDiscover.cmake) simplify this process by automatically detecting and configuring Urho3D based on how it's available on your system.
+
+\section ProjectSetup_Structure Project Structure
+
+Structure your project similar to Urho3D for best compatibility with the CMake modules:
 
 \code
-export native_build_tree=~/custom-native-Build rpi_build_tree=~/custom-rpi-Build
-rake cmake URHO3D_LUAJIT=1 && rake make
-rake cmake rpi URHO3D_LUAJIT=1 && rake make rpi
+<PROJECT_ROOT>/
+ ├ bin/
+ │  ├ Data/              # Your game assets
+ │  └ CoreData/          # Symlink to Urho3D CoreData (or copy)
+ ├ cmake/
+ │  ├ Modules/           # Copy or symlink to Urho3D cmake/Modules
+ │  ├ Toolchains/        # Copy or symlink to Urho3D cmake/Toolchains
+ │  ├ Urho3D.cmake       # Copy from Urho3D cmake/Urho3D.cmake
+ │  └ UrhoDiscover.cmake # Copy from Urho3D cmake/UrhoDiscover.cmake (optional)
+ ├ Source/ or src/
+ │  └ YourApp.cpp
+ ├ CMakeLists.txt
+ └ ... (other project files)
 \endcode
 
-You can in fact set and export any other key/value pair build options as environment variables to avoid repeating yourself when invoking any of our Rake tasks.
+\section ProjectSetup_CMakeLists Basic CMakeLists.txt
+
+Here is a minimal CMakeLists.txt for your project:
+
+\code
+cmake_minimum_required(VERSION 3.10.2)
+project(MyUrhoApp)
+
+# Include the Urho3D CMake module
+include(${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+
+# Only proceed if URHO3D_HOME was found/configured
+if (URHO3D_HOME)
+    add_subdirectory(src)
+endif ()
+\endcode
+
+And in your src/CMakeLists.txt:
+
+\code
+# Define your source files
+set(SOURCE_FILES MyApp.cpp MyApp.h)
+
+# Or use the Urho3D macro to glob source files
+define_source_files()
+
+# Setup the executable with Urho3D integration
+setup_main_executable()
+\endcode
+
+\section ProjectSetup_Variables CMake Variables
+
+The Urho3D.cmake module uses and sets the following variables:
+
+\subsection ProjectSetup_InputVars Input Variables
+
+| Variable | Description |
+|----------|-------------|
+| URHO3D_HOME | Path to Urho3D source, build tree, or SDK installation |
+| URHO3D_SEARCH_PATH | Path to search for Urho3D distributions (used by UrhoDiscover) |
+| FORCEDISCOVER | Set to force re-scanning for Urho3D directories |
+| URHO3D_FETCH_CONDITION | Controls auto-fetching: "always", "never", or "if_not_found" |
+| GIT_U3D_REPO | Git repository URL for fetching Urho3D (default: u3d-community/U3D) |
+| GIT_U3D_TAG | Git tag/branch for fetching (default: master) |
+
+\subsection ProjectSetup_OutputVars Output Variables
+
+| Variable | Description |
+|----------|-------------|
+| URHO3D_AS_SUBMODULE | TRUE if building Urho3D from source as part of your project |
+| URHO3D_ROOT_DIR | Root directory of the Urho3D distribution |
+| URHO3D_SOURCE_DIR | Path to Urho3D source code |
+| URHO3D_BUILD_DIR | Path where Urho3D library is built/installed |
+| URHO3D_CMAKE_MODULE | Path to the Urho3D CMake modules directory |
+
+\section ProjectSetup_Submodule Using Urho3D as a Submodule
+
+This approach builds Urho3D from source as part of your project. It's useful when you want to:
+- Modify Urho3D source code
+- Ensure consistent builds across different machines
+- Avoid pre-building Urho3D separately
+
+\subsection ProjectSetup_Submodule_Git Adding as Git Submodule
+
+\verbatim
+cd your-project
+git submodule add https://github.com/u3d-community/U3D.git urho3d
+\endverbatim
+
+Then structure your project:
+\code
+<PROJECT_ROOT>/
+ ├ urho3d/               # Git submodule
+ │  └ ...                # Urho3D source tree
+ ├ cmake/
+ │  ├ Modules/           # Symlink to urho3d/cmake/Modules
+ │  ├ Toolchains/        # Symlink to urho3d/cmake/Toolchains
+ │  └ Urho3D.cmake       # Copy from urho3d/cmake/Urho3D.cmake
+ ├ src/
+ └ CMakeLists.txt
+\endverbatim
+
+Set URHO3D_HOME to point to the submodule:
+
+\verbatim
+cmake -S . -B build -DURHO3D_HOME=urho3d
+cmake --build build
+\endverbatim
+
+Or set it in your CMakeLists.txt before including Urho3D.cmake:
+\code
+set(URHO3D_HOME ${CMAKE_SOURCE_DIR}/urho3d)
+include(${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+\endcode
+
+\subsection ProjectSetup_Submodule_Fetch Auto-Fetching Urho3D
+
+If Urho3D is not found, it can be automatically fetched from a Git repository:
+
+\code
+cmake_minimum_required(VERSION 3.10.2)
+project(MyUrhoApp)
+
+# Configure auto-fetch (optional - defaults to "never")
+set(URHO3D_FETCH_CONDITION "if_not_found")
+# Or set custom repository:
+# set(GIT_U3D_REPO "https://github.com/u3d-community/U3D.git")
+# set(GIT_U3D_TAG "master")
+
+include(${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+
+if (URHO3D_HOME)
+    add_subdirectory(src)
+endif ()
+\endcode
+
+The fetched source will be placed in `${CMAKE_BINARY_DIR}/_deps/urho3d-src`.
+
+\section ProjectSetup_BuildTree Using a Pre-Built Urho3D (Build Tree)
+
+If you've already built Urho3D somewhere on your system, you can link against that build tree directly without installing it.
+
+First, build Urho3D:
+\verbatim
+cd /path/to/U3D
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+\endverbatim
+
+Then configure your project to use that build:
+\verbatim
+cmake -S . -B build -DURHO3D_HOME=/path/to/U3D/build
+cmake --build build
+\endverbatim
+
+The Urho3D.cmake module will detect that URHO3D_HOME points to a build tree (by finding include/Urho3D/Urho3DAll.h and CMakeCache.txt) and configure your project accordingly.
+
+\section ProjectSetup_SDK Using an Installed Urho3D SDK
+
+If Urho3D is installed system-wide or to a custom prefix:
+
+\verbatim
+# First, install Urho3D
+cd /path/to/U3D
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build --target install
+
+# Then configure your project
+cmake -S . -B build -DURHO3D_HOME=/usr/local
+cmake --build build
+\endverbatim
+
+The module detects SDK installations by finding lib/ and share/Urho3D/cmake/Modules/UrhoCommon.cmake.
+
+\section ProjectSetup_Discover Auto-Discovery with UrhoDiscover
+
+The optional UrhoDiscover.cmake module can automatically find Urho3D distributions on your system. This is particularly useful with cmake-gui.
+
+When included, it:
+1. Searches URHO3D_SEARCH_PATH (defaults to your project root) for Urho3D sources and builds
+2. Also checks the URHO3D_HOME environment variable
+3. Populates a dropdown list in cmake-gui for selecting which Urho3D to use
+
+To use auto-discovery, copy UrhoDiscover.cmake to your cmake/ directory. It will be automatically included by Urho3D.cmake if present.
+
+\subsection ProjectSetup_Discover_GUI Using cmake-gui
+
+1. Run cmake-gui and set the source and build directories
+2. Click "Configure"
+3. If multiple Urho3D distributions are found, select one from the {PROJECTNAME}_URHO3D_SELECT dropdown
+4. If none are found, set {PROJECTNAME}_URHO3D_SEARCH_PATH to the correct location
+5. Click "Configure" again
+6. Click "Generate"
+
+\subsection ProjectSetup_Discover_CLI Using Command Line
+
+\verbatim
+# Search in a specific path
+cmake -S . -B build -DURHO3D_SEARCH_PATH=/path/to/search
+
+# Force re-discovery
+cmake -S . -B build -DFORCEDISCOVER=ON
+\endverbatim
+
+\section ProjectSetup_BuildOptions Passing Build Options
+
+When using Urho3D as a submodule, you can pass Urho3D build options through your project's CMake configuration:
+
+\verbatim
+cmake -S . -B build \
+    -DURHO3D_HOME=urho3d \
+    -DURHO3D_LIB_TYPE=SHARED \
+    -DURHO3D_SAMPLES=0 \
+    -DURHO3D_ANGELSCRIPT=1 \
+    -DURHO3D_LUA=0
+\endverbatim
+
+When using a pre-built library (build tree or SDK), the build options are determined by how that library was originally built.
+
+\section ProjectSetup_Example Complete Example
+
+Here's a complete example for a simple Urho3D application:
+
+\subsection ProjectSetup_Example_Structure Directory Structure
+
+\code
+MyGame/
+ ├ bin/
+ │  ├ Data/
+ │  │  └ ... (your game assets)
+ │  └ CoreData -> ../urho3d/bin/CoreData
+ ├ cmake/
+ │  ├ Modules -> ../urho3d/cmake/Modules
+ │  ├ Toolchains -> ../urho3d/cmake/Toolchains
+ │  ├ Urho3D.cmake
+ │  └ UrhoDiscover.cmake
+ ├ urho3d/                 # Git submodule or extracted source
+ ├ src/
+ │  ├ CMakeLists.txt
+ │  └ MyGame.cpp
+ └ CMakeLists.txt
+\endcode
+
+\subsection ProjectSetup_Example_RootCMake Root CMakeLists.txt
+
+\code
+cmake_minimum_required(VERSION 3.10.2)
+project(MyGame)
+
+# Set Urho3D home to the submodule
+set(URHO3D_HOME ${CMAKE_SOURCE_DIR}/urho3d)
+
+# Include Urho3D CMake module
+include(${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+
+if (URHO3D_HOME)
+    add_subdirectory(src)
+endif ()
+\endcode
+
+\subsection ProjectSetup_Example_SrcCMake src/CMakeLists.txt
+
+\code
+# Set the target name
+set(TARGET_NAME MyGame)
+
+# Define source files
+define_source_files()
+
+# Setup executable with Urho3D
+setup_main_executable()
+\endcode
+
+\subsection ProjectSetup_Example_Source src/MyGame.cpp
+
+\code
+#include <Urho3D/Engine/Application.h>
+#include <Urho3D/Engine/Engine.h>
+#include <Urho3D/Input/InputEvents.h>
+
+using namespace Urho3D;
+
+class MyGame : public Application
+{
+public:
+    MyGame(Context* context) : Application(context) { }
+
+    void Setup() override
+    {
+        engineParameters_[EP_WINDOW_TITLE] = "My Game";
+        engineParameters_[EP_FULL_SCREEN] = false;
+        engineParameters_[EP_WINDOW_WIDTH] = 1280;
+        engineParameters_[EP_WINDOW_HEIGHT] = 720;
+    }
+
+    void Start() override
+    {
+        SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(MyGame, HandleKeyDown));
+    }
+
+    void HandleKeyDown(StringHash eventType, VariantMap& eventData)
+    {
+        if (eventData[KeyDown::P_KEY].GetInt() == KEY_ESCAPE)
+            engine_->Exit();
+    }
+};
+
+URHO3D_DEFINE_APPLICATION_MAIN(MyGame)
+\endcode
+
+\subsection ProjectSetup_Example_Build Building
+
+\verbatim
+# Configure
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+# Build
+cmake --build build --parallel
+
+# Run
+./build/bin/MyGame
+\endverbatim
+
+\section ProjectSetup_Limitations Current Limitations
+
+- The new modules (Urho3D.cmake and UrhoDiscover.cmake) currently support native builds only
+- Cross-compilation support is planned for future updates
+- Android projects should continue to use the Gradle build system
+
+\section ProjectSetup_Migration Migrating from UrhoCommon.cmake
+
+If your project previously used UrhoCommon.cmake directly, migration is straightforward:
+
+**Before (old approach):**
+\code
+include(${CMAKE_SOURCE_DIR}/cmake/Modules/UrhoCommon.cmake)
+\endcode
+
+**After (new approach):**
+\code
+include(${CMAKE_SOURCE_DIR}/cmake/Urho3D.cmake)
+\endcode
+
+UrhoCommon.cmake now internally includes Urho3D.cmake when used in a user project, so existing projects will continue to work. However, using Urho3D.cmake directly is recommended for new projects as it provides better separation between Urho3D and user project build options.
 
 
 \page Structure Overall structure
