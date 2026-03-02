@@ -1812,7 +1812,6 @@ void Graphics::SetDepthBias(float constantBias, float slopeScaledBias)
 {
     if (constantBias != constantDepthBias_ || slopeScaledBias != slopeScaledDepthBias_)
     {
-#ifndef GL_ES_VERSION_2_0
         if (slopeScaledBias != 0.0f)
         {
             // OpenGL constant bias is unreliable and dependent on depth buffer bitdepth, apply in the projection matrix instead
@@ -1821,7 +1820,6 @@ void Graphics::SetDepthBias(float constantBias, float slopeScaledBias)
         }
         else
             glDisable(GL_POLYGON_OFFSET_FILL);
-#endif
 
         constantDepthBias_ = constantBias;
         slopeScaledDepthBias_ = slopeScaledBias;
@@ -2817,8 +2815,8 @@ void Graphics::CheckFeatureSupport()
     else
     {
 #if defined(IOS) || defined(TVOS)
-        // iOS hack: depth renderbuffer seems to fail, so use depth textures for everything if supported
-        glesDepthStencilFormat = GL_DEPTH_COMPONENT;
+        // iOS: use depth textures instead of renderbuffers, request 24-bit explicitly
+        glesDepthStencilFormat = GL_DEPTH_COMPONENT24_OES;
 #endif
         shadowMapFormat_ = GL_DEPTH_COMPONENT;
         hiresShadowMapFormat_ = 0;
