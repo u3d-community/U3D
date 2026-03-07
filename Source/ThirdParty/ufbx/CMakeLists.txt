@@ -21,16 +21,13 @@
 #
 
 # Define target name
-set (TARGET_NAME AssetImporter)
+set (TARGET_NAME ufbx)
 
 # Define source files
-define_source_files ()
-
-# Define dependency libs
-add_subdirectory (../../ThirdParty/Assimp ../../ThirdParty/Assimp)
-add_subdirectory (../../ThirdParty/ufbx ../../ThirdParty/ufbx)
-set (LIBS assimp ufbx)
-set (INCLUDE_DIRS ../../ThirdParty/Assimp/include ${CMAKE_CURRENT_BINARY_DIR}/../../ThirdParty/Assimp/include ../../ThirdParty/ufbx)
+define_source_files (GLOB_CPP_PATTERNS *.c GLOB_H_PATTERNS *.h)
 
 # Setup target
-setup_executable (TOOL)
+setup_library ()
+
+# Install headers for building the Urho3D library
+install_header_files (DIRECTORY ./ DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/ufbx FILES_MATCHING PATTERN *.h BUILD_TREE_ONLY)

@@ -54,6 +54,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/DefaultLogger.hpp>
 
+#include "FbxImporter.h"
+
 #include <Urho3D/DebugNew.h>
 
 using namespace Urho3D;
@@ -497,10 +499,18 @@ void Run(const Vector<String>& arguments)
         if (command != "dump" && outFile.Empty())
             ErrorExit("No output file defined");
 
+        PrintLine("Reading file " + inFile);
+
+        // Use ufbx for FBX files
+        if (inFile.EndsWith(".fbx", false))
+        {
+            if (ImportFbx(inFile, outFile, command, rootNodeName))
+                return;
+            ErrorExit("FBX import failed for " + inFile);
+        }
+
         if (verboseLog_)
             Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
-
-        PrintLine("Reading file " + inFile);
 
         if (!inFile.EndsWith(".fbx", false))
             suppressFbxPivotNodes_ = false;
