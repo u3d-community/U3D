@@ -84,10 +84,11 @@ static asQWORD __attribute__((noinline))
 
 	// Backup stack pointer in R15 that is guaranteed to maintain its value over function calls
 		"  movq %%rsp, %%r15 \n"
-#if defined(__clang__) && defined(__OPTIMIZE__)
+#if defined(__clang__) && defined(__OPTIMIZE__) && !defined(__APPLE__)
 	// Make sure the stack unwind logic knows we've backed up the stack pointer in register r15
 	// This should only be done if any optimization is done. If no optimization (-O0) is used,
 	// then the compiler already backups the rsp before entering the inline assembler code
+	// Note: Disabled on Apple Clang due to stricter CFI validation in newer Xcode versions
 		" .cfi_def_cfa_register r15 \n"
 #endif
 
@@ -141,10 +142,11 @@ static asQWORD __attribute__((noinline))
 
 	// Restore stack pointer
 		"  mov %%r15, %%rsp \n"
-#if defined(__clang__) && defined(__OPTIMIZE__)
+#if defined(__clang__) && defined(__OPTIMIZE__) && !defined(__APPLE__)
 	// Inform the stack unwind logic that the stack pointer has been restored
 	// This should only be done if any optimization is done. If no optimization (-O0) is used,
 	// then the compiler already backups the rsp before entering the inline assembler code
+	// Note: Disabled on Apple Clang due to stricter CFI validation in newer Xcode versions
 		" .cfi_def_cfa_register rsp \n"
 #endif
 

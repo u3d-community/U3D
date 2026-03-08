@@ -90,8 +90,15 @@ else ()
         string (TOLOWER ${CMAKE_BUILD_TYPE} config)
         if (BUILD_STAGING_DIR)
             # Another special case where library location is already known to be in the build tree of Urho3D project
-            get_filename_component (BUILD_STAGING_DIR ${BUILD_STAGING_DIR}/cmake DIRECTORY)
-            set (URHO3D_HOME ${BUILD_STAGING_DIR}/cmake/${config}/${ANDROID_ABI})
+            # AGP 8.x uses <stagingDir>/<BuildType>/<hash>/<abi>/ structure
+            file (GLOB URHO3D_BUILD_DIRS "${BUILD_STAGING_DIR}/${CMAKE_BUILD_TYPE}/*/${ANDROID_ABI}")
+            if (URHO3D_BUILD_DIRS)
+                list (GET URHO3D_BUILD_DIRS 0 URHO3D_HOME)
+            else ()
+                # Fallback to old AGP structure: <stagingDir>/cmake/<config>/<abi>/
+                get_filename_component (BUILD_STAGING_DIR ${BUILD_STAGING_DIR}/cmake DIRECTORY)
+                set (URHO3D_HOME ${BUILD_STAGING_DIR}/cmake/${config}/${ANDROID_ABI})
+            endif ()
         elseif (JNI_DIR)
             # Using Urho3D AAR from Maven repository
             get_filename_component (JNI_DIR ${JNI_DIR}/urho3d DIRECTORY)

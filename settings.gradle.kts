@@ -21,6 +21,23 @@
 // THE SOFTWARE.
 //
 
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
 rootProject.name = "U3D"
 
 include(":android:urho3d-lib")

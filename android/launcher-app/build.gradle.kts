@@ -25,26 +25,31 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
-    
-val kotlinVersion: String by ext
-val ndkSideBySideVersion: String by ext
-val cmakeVersion: String by ext
-val buildStagingDir: String by ext
+
+val kotlinVersion: String by rootProject.extra
+val ndkSideBySideVersion: String by rootProject.extra
+val cmakeVersion: String by rootProject.extra
+val buildStagingDir: String by rootProject.extra
+
+kotlin {
+    jvmToolchain(17)
+}
 
 android {
+    namespace = "io.urho3d.launcher"
     ndkVersion = ndkSideBySideVersion
-    compileSdkVersion(30)
+    compileSdk = 34
 
     // android : the launcher-app has always an shared build
-    if (LibType() == "shared")
+    if (libType() == "shared")
     {
         defaultConfig {
-            minSdkVersion(19)
-            targetSdkVersion(30)
+            minSdk = 21
+            targetSdk = 34
             applicationId = "io.urho3d.launcher"
             versionCode = 1
             versionName = project.version.toString()
-            testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             externalNativeBuild {
                 cmake {
                     arguments.apply {
@@ -78,16 +83,16 @@ android {
                 isMinifyEnabled = false
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             }
-        }        
+        }
         externalNativeBuild {
             cmake {
                 version = cmakeVersion
                 path = project.file("CMakeLists.txt")
-                buildStagingDirectory(buildStagingDir)
+                buildStagingDirectory(file(buildStagingDir))
             }
         }
-        lintOptions {
-            isAbortOnError = false
+        lint {
+            abortOnError = false
         }
     }
 }
@@ -95,23 +100,23 @@ android {
 dependencies {
     implementation(project(":android:urho3d-lib"))
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("androidx.core:core-ktx:1.3.2")
-    implementation("androidx.appcompat:appcompat:1.2.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.0.2")
-    testImplementation("junit:junit:4.13.1")
-    androidTestImplementation("androidx.test:runner:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
 
-if (LibType() == "shared")
+if (libType() == "shared")
 {
     afterEvaluate {
         android.buildTypes.forEach {
-            val config = it.name.capitalize()
+            val config = it.name.replaceFirstChar { c -> c.uppercase() }
             tasks {
                 "externalNativeBuild$config" {
-                    mustRunAfter(":android:urho3d-lib:externalNativeBuild$config")
+                    dependsOn(":android:urho3d-lib:externalNativeBuild$config")
                 }
             }
         }
@@ -119,7 +124,7 @@ if (LibType() == "shared")
     tasks {
         register<Delete>("cleanAll") {
             dependsOn("clean")
-            delete = setOf(android.externalNativeBuild.cmake.buildStagingDirectory)
+            delete = setOf(file(buildStagingDir))
         }
     }
 }
@@ -134,6 +139,6 @@ else {
     }
 }
 
-fun LibType(): String {
-    return System.getenv("URHO3D_LIB_TYPE")?.toLowerCase() ?: "static"
+fun libType(): String {
+    return System.getenv("URHO3D_LIB_TYPE")?.lowercase() ?: "static"
 }

@@ -41,7 +41,7 @@ if (ARM)
     enable_language (ASM)
     if (XCODE)
         # It is safe to add this assembler code in universal binary build because it has sufficient preprocessor define guards to exclude unsupported archs
-        set (ASM_FILES source/as_callfunc_arm_xcode.S)
+        set (ASM_FILES source/as_callfunc_arm_xcode.S source/as_callfunc_arm64_xcode.S)
     else ()
 		if (URHO3D_64BIT)
 			set (ASM_FILES source/as_callfunc_arm64_gcc.S)

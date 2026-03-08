@@ -31,7 +31,7 @@ struct CascadeParameters
 struct FocusParameters
 {
     FocusParameters();
-    FocusParameters(bool focus, bool nonUniform, bool autoSize, float quantize, float minView);
+    FocusParameters(bool focus, bool nonUniform, bool autoSize, float quantize = 0.5f, float minView = 3.0f);
     ~FocusParameters();
 
     bool focus_ @ focus;

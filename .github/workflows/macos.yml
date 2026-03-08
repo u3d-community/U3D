@@ -1,4 +1,4 @@
-name: MacOS Build
+name: 💻 MacOS
 on: [push, pull_request]
 
 concurrency:
@@ -7,52 +7,36 @@ concurrency:
 
 jobs:
   macOS:
-    name: 🍎
+    name: MacOS
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - macOS
-        lib-type:
-          - static
-          - shared
-    env:
-      HOST: ${{ github.job }}
-      PLATFORM: ${{ matrix.platform }}
-      LIB_TYPE: ${{ matrix.lib-type }}
+        lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
+        build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
+
       - name: CMake
-        run: rake cmake
+        run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DURHO3D_DEPLOYMENT_TARGET=generic -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+
       - name: Build
-        run: rake build
+        run: cmake --build build --config ${{ matrix.build-type }}
+
       - name: Test
-        run: rake test
-      - name: Install
-        run: rake install
-      - name: Scaffolding - new
-        run: rake new
-      - name: Scaffolding - build
-        run: |
-          cd ~/projects/UrhoApp
-          rake
-      - name: Scaffolding - test
-        run: |
-          cd ~/projects/UrhoApp
-          rake test
-      - name: Scaffolding - cleanup
-        run: rm -rf ~/{.urho3d,projects}
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build-type }}
+
       - name: Package
-        run: rake package
-        if: github.event_name == 'push'
-      - name: Upload
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cmake --build build --target package --config ${{ matrix.build-type }}
+
+      - name: Upload packages
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.lib-type }}-all-rel
-          path: build/ci/*.tar.gz
-        if: github.event_name == 'push'
+          name: 'U3D-${{ github.job }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}'
+          path: build/*.tar.gz
