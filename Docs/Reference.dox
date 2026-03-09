@@ -3500,6 +3500,9 @@ The material list is a text file, one material per line, saved alongside the Urh
 
 In model or scene mode, the AssetImporter utility will also automatically save non-skeletal node animations into the output file directory.
 
+Note : the order of materials in the exported file (.mdl) it's different from the model file before exporting (.obj/.glb/...)
+It's better to use the Attribute Inspector from U3D Editor (after you import the .mdl file) to get the order of materials in the exported file when you need to implement materials of your model in your code.
+
 \section Tools_OgreImporter OgreImporter
 
 Loads OGRE .mesh.xml and .skeleton.xml files and saves them as Urho3D .mdl (model) and .ani (animation) files. For other 3D formats and whole scene importing, see AssetImporter instead. However that tool does not handle the OGRE formats as completely as this.
