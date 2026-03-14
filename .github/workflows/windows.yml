@@ -8,7 +8,7 @@ concurrency:
 jobs:
   windows:
     name: Windows
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +30,7 @@ jobs:
           } elseif ("${{ matrix.graphics-api }}" -eq "OpenGL") {
             $graphicsFlags = "-DURHO3D_OPENGL=1"
           }
-          cmake -S . -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A ${{ matrix.architecture }} $graphicsFlags
+          cmake -S . -B build -G "Visual Studio 18 2026" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A ${{ matrix.architecture }} $graphicsFlags
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build-type }}
