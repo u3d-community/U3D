@@ -21,16 +21,11 @@
 #
 
 # Define target name
-set (TARGET_NAME AssetImporter)
+set (TARGET_NAME ModelViewer)
 
 # Define source files
 define_source_files ()
+define_resource_dirs ()
 
-# Define dependency libs
-add_subdirectory (../../ThirdParty/Assimp ../../ThirdParty/Assimp)
-add_subdirectory (../../ThirdParty/ufbx ../../ThirdParty/ufbx)
-set (LIBS assimp ufbx)
-set (INCLUDE_DIRS ../../ThirdParty/Assimp/include ${CMAKE_CURRENT_BINARY_DIR}/../../ThirdParty/Assimp/include ../../ThirdParty/ufbx)
-
-# Setup target
-setup_executable (TOOL)
+# Setup target with resource copying
+setup_main_executable (NOBUNDLE)

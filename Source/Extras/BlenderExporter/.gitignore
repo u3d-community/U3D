@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+*.blender_manifest.toml.hash
