@@ -45,18 +45,18 @@
 
 URHO3D_DEFINE_APPLICATION_MAIN(ModelViewer);
 
-ModelViewer::ModelViewer(Context* context)
-    : Application(context)
-    , cameraDistance_(5.0f)
-    , cameraYaw_(0.0f)
-    , cameraPitch_(20.0f)
-    , cameraTarget_(Vector3::ZERO)
-    , currentAnimState_(nullptr)
-    , animPlaying_(false)
-    , animSpeed_(1.0f)
-    , showWireframe_(false)
-    , showSkeleton_(false)
-    , showBounds_(false)
+ModelViewer::ModelViewer(Context* context) :
+    Application(context),
+    cameraDistance_(5.0f),
+    cameraYaw_(0.0f),
+    cameraPitch_(20.0f),
+    cameraTarget_(Vector3::ZERO),
+    currentAnimState_(nullptr),
+    animPlaying_(false),
+    animSpeed_(1.0f),
+    showWireframe_(false),
+    showSkeleton_(false),
+    showBounds_(false)
 {
 }
 

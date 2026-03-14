@@ -1171,7 +1171,7 @@ static void FbxBuildAndSaveModel(FbxModel& model, ufbx_scene* scene)
         {
             if (model.bones_[i]->parent)
             {
-                String parentName(model.bones_[i]->parent->name.data);
+                const char* parentName = model.bones_[i]->parent->name.data;
                 for (unsigned j = 0; j < bones.Size(); ++j)
                 {
                     if (bones[j].name_ == parentName)
@@ -1821,24 +1821,13 @@ static void FbxBuildAndSaveScene(FbxScene& fbxScene, ufbx_scene* scene, bool asP
     if (!file.Open(fbxScene.outName_, FILE_WRITE))
         ErrorExit("Could not open output file " + fbxScene.outName_);
 
-    if (!asPrefab)
-    {
-        if (saveBinary_)
-            outScene->Save(file);
-        else if (saveJson_)
-            outScene->SaveJSON(file);
-        else
-            outScene->SaveXML(file);
-    }
+    Node* output = asPrefab ? outRootNode : outScene;
+    if (saveBinary_)
+        output->Save(file);
+    else if (saveJson_)
+        output->SaveJSON(file);
     else
-    {
-        if (saveBinary_)
-            outRootNode->Save(file);
-        else if (saveJson_)
-            outRootNode->SaveJSON(file);
-        else
-            outRootNode->SaveXML(file);
-    }
+        output->SaveXML(file);
 }
 
 static void FbxExportScene(ufbx_scene* scene, const String& outName, ufbx_node* rootNode, bool asPrefab)
@@ -2023,24 +2012,26 @@ static void FbxCopyTextures(ufbx_scene* scene, const HashSet<String>& usedTextur
 
     for (HashSet<String>::ConstIterator i = usedTextures.Begin(); i != usedTextures.End(); ++i)
     {
+        const String& fileName = *i;
+
         // Check for embedded textures in ufbx
         bool foundEmbedded = false;
         for (size_t ti = 0; ti < scene->textures.count; ++ti)
         {
             ufbx_texture* tex = scene->textures.data[ti];
             String texFileName = FbxGetTextureFileName(tex);
-            if (texFileName == *i && tex->content.size > 0)
+            if (texFileName == fileName && tex->content.size > 0)
             {
-                String fullDestName = resourcePath_ + (useSubdirs_ ? "Textures/" : "") + *i;
+                String fullDestName = resourcePath_ + (useSubdirs_ ? "Textures/" : "") + fileName;
                 bool destExists = fileSystem->FileExists(fullDestName);
                 if (destExists && noOverwriteTexture_)
                 {
-                    PrintLine("Skipping copy of existing embedded texture " + *i);
+                    PrintLine("Skipping copy of existing embedded texture " + fileName);
                     foundEmbedded = true;
                     break;
                 }
 
-                PrintLine("Saving embedded texture " + *i);
+                PrintLine("Saving embedded texture " + fileName);
                 File dest(context_, fullDestName, FILE_WRITE);
                 dest.Write(tex->content.data, (unsigned)tex->content.size);
                 foundEmbedded = true;
@@ -2051,19 +2042,19 @@ static void FbxCopyTextures(ufbx_scene* scene, const HashSet<String>& usedTextur
         if (foundEmbedded)
             continue;
 
-        String fullSourceName = sourcePath + *i;
-        String fullDestName = resourcePath_ + (useSubdirs_ ? "Textures/" : "") + *i;
+        String fullSourceName = sourcePath + fileName;
+        String fullDestName = resourcePath_ + (useSubdirs_ ? "Textures/" : "") + fileName;
 
         if (!fileSystem->FileExists(fullSourceName))
         {
-            PrintLine("Skipping copy of nonexisting material texture " + *i);
+            PrintLine("Skipping copy of nonexisting material texture " + fileName);
             continue;
         }
         {
             File test(context_, fullSourceName);
             if (!test.GetSize())
             {
-                PrintLine("Skipping copy of zero-size material texture " + *i);
+                PrintLine("Skipping copy of zero-size material texture " + fileName);
                 continue;
             }
         }
@@ -2071,17 +2062,17 @@ static void FbxCopyTextures(ufbx_scene* scene, const HashSet<String>& usedTextur
         bool destExists = fileSystem->FileExists(fullDestName);
         if (destExists && noOverwriteTexture_)
         {
-            PrintLine("Skipping copy of existing texture " + *i);
+            PrintLine("Skipping copy of existing texture " + fileName);
             continue;
         }
         if (destExists && noOverwriteNewerTexture_ && fileSystem->GetLastModifiedTime(fullDestName) >
             fileSystem->GetLastModifiedTime(fullSourceName))
         {
-            PrintLine("Skipping copying of material texture " + *i + ", destination is newer");
+            PrintLine("Skipping copying of material texture " + fileName + ", destination is newer");
             continue;
         }
 
-        PrintLine("Copying material texture " + *i);
+        PrintLine("Copying material texture " + fileName);
         fileSystem->Copy(fullSourceName, fullDestName);
     }
 }

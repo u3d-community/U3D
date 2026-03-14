@@ -1,0 +1,12 @@
+schema_version = "1.0.0"
+id = "io_mesh_u3d"
+version = "1.0.0"
+name = "U3D Importer & Exporter"
+tagline = "Import and export U3D model, animation and material"
+maintainer = "U3D Community"
+type = "add-on"
+blender_version_min = "4.2.0"
+license = [
+  "SPDX:MIT",
+]
+tags = ["Import-Export"]
