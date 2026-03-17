@@ -174,7 +174,7 @@ void ScanResourceDirectories()
     browserFiles.Clear();
     browserFilesToScan.Clear();
 
-    rootDir = BrowserDir("");
+    @rootDir = BrowserDir("");
     browserDirs.Set("", @rootDir);
 
     // collect all of the items and sort them afterwards
@@ -486,7 +486,7 @@ BrowserDir@ InitBrowserDir(String path)
             String currentPath = Join(finishedParts, "/");
             if (!browserDirs.Get(currentPath, @browserDir))
             {
-                browserDir = BrowserDir(currentPath);
+                @browserDir = BrowserDir(currentPath);
                 browserDirs.Set(currentPath, @browserDir);
                 parent.children.Push(browserDir);
             }
@@ -1035,7 +1035,7 @@ void HandleBrowserFileDragEnd(StringHash eventType, VariantMap& eventData)
         AdjustNodePositionByAABB(createdNode);
     }
 
-    browserDragFile = null;
+    @browserDragFile = null;
     browserDragComponent = null;
     browserDragNode = null;
 }
