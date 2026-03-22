@@ -33,12 +33,14 @@ private:
     void HandleWireframeToggled(StringHash eventType, VariantMap& eventData);
     void HandleSkeletonToggled(StringHash eventType, VariantMap& eventData);
     void HandleBoundsToggled(StringHash eventType, VariantMap& eventData);
+    void HandleLightYawChanged(StringHash eventType, VariantMap& eventData);
     void HandleScreenMode(StringHash eventType, VariantMap& eventData);
 
     // Scene
     SharedPtr<Scene> scene_;
     SharedPtr<Node> cameraNode_;
     SharedPtr<Node> modelNode_;
+    SharedPtr<Node> lightNode_;
 
     // Orbit camera
     float cameraDistance_;
@@ -56,6 +58,7 @@ private:
     bool showWireframe_;
     bool showSkeleton_;
     bool showBounds_;
+    float lightYaw_;
 
     // UI elements
     SharedPtr<UIElement> panel_;

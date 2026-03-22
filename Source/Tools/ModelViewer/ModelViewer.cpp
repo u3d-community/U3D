@@ -56,7 +56,8 @@ ModelViewer::ModelViewer(Context* context) :
     animSpeed_(1.0f),
     showWireframe_(false),
     showSkeleton_(false),
-    showBounds_(false)
+    showBounds_(false),
+    lightYaw_(0.0f)
 {
 }
 
@@ -133,9 +134,9 @@ void ModelViewer::CreateScene()
     zone->SetAmbientColor(Color(0.4f, 0.4f, 0.4f));
     zone->SetBoundingBox(BoundingBox(-1000.0f, 1000.0f));
 
-    Node* lightNode = scene_->CreateChild("DirectionalLight");
-    lightNode->SetDirection(Vector3(0.6f, -1.0f, 0.8f));
-    auto* light = lightNode->CreateComponent<Light>();
+    lightNode_ = scene_->CreateChild("DirectionalLight");
+    lightNode_->SetDirection(Vector3(0.6f, -1.0f, 0.8f));
+    auto* light = lightNode_->CreateComponent<Light>();
     light->SetLightType(LIGHT_DIRECTIONAL);
     light->SetCastShadows(true);
 
@@ -296,6 +297,21 @@ void ModelViewer::CreateUI()
     boundsText->SetText("Bounding Box");
     boundsText->SetStyleAuto();
     SubscribeToEvent(boundsCheck, E_TOGGLED, URHO3D_HANDLER(ModelViewer, HandleBoundsToggled));
+
+    // Light rotation
+    auto* lightRow = panel->CreateChild<UIElement>();
+    lightRow->SetLayout(LM_HORIZONTAL, 6);
+    lightRow->SetFixedHeight(20);
+    auto* lightLabel = lightRow->CreateChild<Text>();
+    lightLabel->SetFont(font, 11);
+    lightLabel->SetText("Light:");
+    lightLabel->SetStyleAuto();
+    auto* lightSlider = lightRow->CreateChild<Slider>();
+    lightSlider->SetStyleAuto();
+    lightSlider->SetRange(360.0f);
+    lightSlider->SetValue(0.0f);
+    lightSlider->SetFixedHeight(16);
+    SubscribeToEvent(lightSlider, E_SLIDERCHANGED, URHO3D_HANDLER(ModelViewer, HandleLightYawChanged));
 }
 
 void ModelViewer::LoadModel(const String& resourcePath)
@@ -505,7 +521,7 @@ void ModelViewer::HandlePostRenderUpdate(StringHash eventType, VariantMap& event
         return;
 
     if (showSkeleton_)
-        animModel->DrawDebugGeometry(debug, false);
+        debug->AddSkeleton(animModel->GetSkeleton(), Color::GREEN, false);
 
     if (showBounds_)
         debug->AddBoundingBox(animModel->GetWorldBoundingBox(), Color::GREEN, false);
@@ -605,6 +621,14 @@ void ModelViewer::HandleBoundsToggled(StringHash eventType, VariantMap& eventDat
 {
     using namespace Toggled;
     showBounds_ = eventData[P_STATE].GetBool();
+}
+
+void ModelViewer::HandleLightYawChanged(StringHash eventType, VariantMap& eventData)
+{
+    using namespace SliderChanged;
+    lightYaw_ = eventData[P_VALUE].GetFloat();
+    Quaternion rot(lightYaw_, Vector3::UP);
+    lightNode_->SetDirection(rot * Vector3(0.6f, -1.0f, 0.8f));
 }
 
 void ModelViewer::HandleScreenMode(StringHash eventType, VariantMap& eventData)
