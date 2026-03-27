@@ -1375,6 +1375,11 @@ bool Node::IsReplicated() const
     return Scene::IsReplicatedID(id_);
 }
 
+bool Node::HasTag() const
+{
+    return !impl_->tags_.Empty();
+}
+
 bool Node::HasTag(const String& tag) const
 {
     return impl_->tags_.Contains(tag);
