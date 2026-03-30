@@ -4270,6 +4270,7 @@ Methods:
 - bool LoadJSON(const JSONValue& source, SceneResolver& resolver, bool loadChildren = true, bool rewriteIDs = false, CreateMode mode = REPLICATED)
 - Node* CreateChild(unsigned id, CreateMode mode, bool temporary = false)
 - void AddComponent(Component* component, unsigned id, CreateMode mode)
+- bool HasTag() const;
 - bool HasTag(const String tag) const
 - const StringVector& GetTags() const
 - const PODVector<Node*>& GetChildrenWithTag(const String tag, bool recursive = false) const
@@ -7390,6 +7391,7 @@ Methods:
 - const Color& GetDerivedColor() const
 - const Variant& GetVar(StringHash key) const
 - const VariantMap& GetVars() const
+- bool HasTag() const;
 - bool HasTag(const String tag) const
 - const StringVector& GetTags() const
 - const PODVector<UIElement*>& GetChildrenWithTag(const String tag, bool recursive = false) const
