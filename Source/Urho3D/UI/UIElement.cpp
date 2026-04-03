@@ -1698,6 +1698,11 @@ const Variant& UIElement::GetVar(const StringHash& key) const
     return i != vars_.End() ? i->second_ : Variant::EMPTY;
 }
 
+bool UIElement::HasTag() const
+{
+    return !tags_.Empty();
+}
+
 bool UIElement::HasTag(const String& tag) const
 {
     return tags_.Contains(tag);

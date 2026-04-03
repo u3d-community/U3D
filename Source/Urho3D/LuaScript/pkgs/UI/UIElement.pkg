@@ -228,6 +228,7 @@ class UIElement : public Animatable
     const Variant& GetVar(StringHash key) const;
     const VariantMap& GetVars() const;
 
+    bool HasTag() const;
     bool HasTag(const String tag) const;
     const StringVector& GetTags() const;
     // void GetChildrenWithTag(PODVector<UIElement*>& dest, const String& tag, bool recursive = false) const;

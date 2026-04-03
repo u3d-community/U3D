@@ -375,6 +375,9 @@ public:
     /// @property
     const StringVector& GetTags() const { return impl_->tags_; }
 
+    /// Return whether is tagged by any tag.
+    bool HasTag() const;
+
     /// Return whether has a specific tag.
     bool HasTag(const String& tag) const;
 
