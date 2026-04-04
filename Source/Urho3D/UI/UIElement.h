@@ -689,6 +689,9 @@ public:
     /// Return all user variables.
     const VariantMap& GetVars() const { return vars_; }
 
+    /// Return whether element is tagged by any tag.
+    bool HasTag() const;
+
     /// Return whether element is tagged by a specific tag.
     bool HasTag(const String& tag) const;
 

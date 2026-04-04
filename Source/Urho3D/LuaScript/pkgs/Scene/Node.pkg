@@ -202,6 +202,7 @@ class Node : public Animatable
     Node* CreateChild(unsigned id, CreateMode mode, bool temporary = false);
     void AddComponent(Component* component, unsigned id, CreateMode mode);
 
+    bool HasTag() const;
     bool HasTag(const String tag) const;
     const StringVector& GetTags() const;
 

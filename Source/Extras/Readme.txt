@@ -1,6 +1,7 @@
 BlenderExporter
 
-- Has moved to https://github.com/reattiva/Urho3D-Blender
+- Contributed by Klaus Silveira. Imports and Exports .mdl and .ani
+  files from Blender 4.2+.
 
 OgreBatchConverter
 
