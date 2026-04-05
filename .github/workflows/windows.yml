@@ -8,10 +8,11 @@ concurrency:
 jobs:
   windows:
     name: Windows
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
+        runner: [windows-latest, windows-2025-vs2026]
         lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
         build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
         architecture: ${{ github.event_name == 'pull_request' && fromJSON('["x64"]') || fromJSON('["x64", "Win32"]') }}
@@ -30,7 +31,11 @@ jobs:
           } elseif ("${{ matrix.graphics-api }}" -eq "OpenGL") {
             $graphicsFlags = "-DURHO3D_OPENGL=1"
           }
-          cmake -S . -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A ${{ matrix.architecture }} $graphicsFlags
+          $vsGenerator = "Visual Studio 17 2022"
+          if ("${{ matrix.runner }}" -eq "windows-2025-vs2026") {
+            $vsGenerator = "Visual Studio 18 2026"
+          }
+          cmake -S . -B build -G "$vsGenerator" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A ${{ matrix.architecture }} $graphicsFlags
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build-type }}
@@ -46,5 +51,5 @@ jobs:
         #if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: 'U3D-${{ github.job }}-${{ matrix.architecture }}-${{ matrix.graphics-api }}-${{ matrix.lib-type }}-${{ matrix.build-type }}'
+          name: "U3D-${{ github.job }}${{ matrix.runner == 'windows-2025-vs2026' && '-vs2026' || '' }}-${{ matrix.architecture }}-${{ matrix.graphics-api }}-${{ matrix.lib-type }}-${{ matrix.build-type }}"
           path: build/*.zip
