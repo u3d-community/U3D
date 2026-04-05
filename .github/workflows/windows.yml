@@ -51,5 +51,5 @@ jobs:
         #if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: 'U3D-${{ github.job }}-${{ matrix.architecture }}-${{ matrix.graphics-api }}-${{ matrix.lib-type }}-${{ matrix.build-type }}'
+          name: 'U3D-${{ github.job }}${{ matrix.runner == "windows-2025-vs2026" && "-vs2026" || "" }}-${{ matrix.architecture }}-${{ matrix.graphics-api }}-${{ matrix.lib-type }}-${{ matrix.build-type }}'
           path: build/*.zip
