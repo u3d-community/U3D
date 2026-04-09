@@ -464,14 +464,14 @@ UIElement@ CreateAttributeEditor(ListView@ list, Array<Serializable@>@ serializa
         if (info.name.Contains('>'))
         {
             @vector = @nestedVector;
-            vectorStruct = GetNestedVectorStruct(serializables, info.name);
+            @vectorStruct = GetNestedVectorStruct(serializables, info.name);
             repeat = vector[subIndex].GetUInt();    // Nested VariantVector must have a predefined repeat count at the start of the vector
             emptyNestedVector = repeat == 0;
         }
         else
         {
             @vector = serializables[0].attributes[index].GetVariantVector();
-            vectorStruct = GetVectorStruct(serializables, index);
+            @vectorStruct = GetVectorStruct(serializables, index);
             subIndex = 0;
         }
         if (vectorStruct is null)
