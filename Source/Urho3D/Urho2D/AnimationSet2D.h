@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../Container/ArrayPtr.h"
+#include "../Container/Vector.h"
 #include "../Resource/Resource.h"
 
 #ifdef URHO3D_SPINE
@@ -69,8 +70,10 @@ public:
     /// Check has animation.
     bool HasAnimation(const String& animationName) const;
 
-    /// Return sprite.
+    /// Return first sprite of spritesheet sprites, or nullptr.
     Sprite2D* GetSprite() const;
+    /// Return sprites.
+    const Vector<SharedPtr<Sprite2D>>& GetSprites() const;
 
 #ifdef URHO3D_SPINE
     /// Return spine skeleton data.
@@ -82,11 +85,13 @@ public:
     /// Return spriter file sprite.
     Sprite2D* GetSpriterFileSprite(int folderId, int fileId) const;
     /// True if a spritesheet xml file was found during the loading of this animationSet
-    bool HasSpriteSheet() const { return hasSpriteSheet_; }
+    bool HasSpriteSheet() const { return spriteSheets_.Size() > 0; }
 
 private:
     /// Return sprite by hash.
     Sprite2D* GetSpriterFileSprite(const StringHash& hash) const;
+    /// Return sprite by name.
+    Sprite2D* GetSpriteFromSpriteSheets(const String& name) const;
 #ifdef URHO3D_SPINE
     /// Begin load spine.
     bool BeginLoadSpine(Deserializer& source);
@@ -102,8 +107,8 @@ private:
     /// Dispose all data.
     void Dispose();
 
-    /// Spine sprite.
-    SharedPtr<Sprite2D> sprite_;
+    /// Spine sprites, or spriter container spritesheet sprites.
+    Vector<SharedPtr<Sprite2D>> sprites_;
 
 #ifdef URHO3D_SPINE
     /// Spine json data.
@@ -116,12 +121,10 @@ private:
 
     /// Spriter data.
     UniquePtr<Spriter::SpriterData> spriterData_;
-    /// Has sprite sheet.
-    bool hasSpriteSheet_;
-    /// Sprite sheet file path.
-    String spriteSheetFilePath_;
-    /// Sprite sheet.
-    SharedPtr<SpriteSheet2D> spriteSheet_;
+    /// Sprite sheet file paths.
+    Vector<String> spriteSheetFilePaths_;
+    /// Sprite sheets.
+    Vector<SharedPtr<SpriteSheet2D>> spriteSheets_;
     /// Spriter sprites.
     HashMap<unsigned, SharedPtr<Sprite2D> > spriterFileSprites_;
 };
