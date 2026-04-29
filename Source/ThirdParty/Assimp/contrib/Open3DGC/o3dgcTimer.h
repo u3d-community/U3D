@@ -47,7 +47,7 @@ namespace o3dgc
 #ifdef _WIN32
     class Timer
     {
-    public: 
+    public:
         Timer(void)
         {
             m_start.QuadPart = 0;
@@ -55,11 +55,11 @@ namespace o3dgc
             QueryPerformanceFrequency( &m_freq ) ;
         };
         ~Timer(void){};
-        void Tic() 
+        void Tic()
         {
             QueryPerformanceCounter(&m_start) ;
         }
-        void Toc() 
+        void Toc()
         {
             QueryPerformanceCounter(&m_stop);
         }
@@ -78,7 +78,7 @@ namespace o3dgc
 #elif __APPLE__
     class Timer
     {
-    public: 
+    public:
         Timer(void)
         {
             memset(this, 0, sizeof(Timer));
@@ -88,11 +88,11 @@ namespace o3dgc
         {
             mach_port_deallocate(mach_task_self(),  m_cclock);
         };
-        void Tic() 
+        void Tic()
         {
             clock_get_time( m_cclock, &m_start);
         }
-        void Toc() 
+        void Toc()
         {
             clock_get_time( m_cclock, &m_stop);
         }
@@ -108,17 +108,17 @@ namespace o3dgc
 #else
     class Timer
     {
-    public: 
+    public:
         Timer(void)
         {
-            memset(this, 0, sizeof(Timer));
+            memset((void*)this, 0, sizeof(Timer));
         };
         ~Timer(void){};
-        void Tic() 
+        void Tic()
         {
             clock_gettime(CLOCK_REALTIME, &m_start);
         }
-        void Toc() 
+        void Toc()
         {
             clock_gettime(CLOCK_REALTIME, &m_stop);
         }
