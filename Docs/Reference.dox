@@ -2670,7 +2670,7 @@ Urho2D provides a handful of classes for loading/drawing the kind of sprite requ
 
 \section Urho2D_Animated Animated sprites
 
-Workflow for creating animated sprites in Urho2D relies on Spriter (c). Spriter is a crossplatform tool for creating 2D animations. It comes both as an almost fully featured free version and a more advanced 'pro' version. Free version is available at https://brashmonkey.com/spriter-pro/. To get started, scml files from bin/Data/Urho2D folder can be loaded in Spriter. Note that although currently Spriter doesn't support spritesheets/texture atlases, Urho2D does: you just have to use the same name for your scml file and your spritesheet's xml file (see \ref Urho2D_Static_Sprites "Static sprites" below for details on how to generate this file). Example 33_Urho2DSpriterAnimation is a good demonstration of this feature (scml file and xml spritesheet are both named 'imp' to instruct Urho2D to use the atlas instead of the individual files). You could remove every image files in the 'imp' folder and just keep 'imp_all.png' to test it out. However, keep your individual image files as they are still required if you want to later edit your scml project in Spriter.
+Workflow for creating animated sprites in Urho2D relies on Spriter (c). Spriter is a crossplatform tool for creating 2D animations. It comes both as an almost fully featured free version and a more advanced 'pro' version. Free version is available at https://brashmonkey.com/spriter-pro/. To get started, scml files from bin/Data/Urho2D folder can be loaded in Spriter. Note that although currently Spriter doesn't support spritesheets/texture atlases, Urho2D does: you just have to use the same name for your scml file and your spritesheet's xml file (see \ref Urho2D_Static_Sprites "Static sprites" below for details on how to generate this file). Example 33_Urho2DSpriterAnimation is a good demonstration of this feature (scml file and xml spritesheet are both named 'imp' to instruct Urho2D to use the atlas instead of the individual files). You could remove every image files in the 'imp' folder and just keep 'imp_all.png' to test it out. However, keep your individual image files as they are still required if you want to later edit your scml project in Spriter. If more than one spritesheet is needed for a single scml file, add the suffix _0, _1 and so on to the spritesheets, like this: 'imp_0.xml'.
 
 A *.scml file is loaded using AnimationSet2D class (Resource) and rendered using AnimatedSprite2D class (Drawable component):
 
@@ -2686,7 +2686,7 @@ For a demonstration, check examples 33_Urho2DSpriterAnimation and 24_Urho2DSprit
 
 Tip for naming your files:
 - if an xml file has the same name as an image file in the same repository, it is assumed that it is a texture parameter file
-- if an xml file has the same name as a Spriter scml file in the same repository, it is assumed that it is a spritesheet file
+- if an xml file has the same name as a Spriter scml file in the same repository, it is assumed that it is a spritesheet file. Use suffixes _0, _1 and so on if you need multiple spritesheet files for the same Spriter scml file.
 So to prevent conflicts, scml and image files shouldn't have the exact same name.
 
 \section Urho2D_Particle Particle emitters

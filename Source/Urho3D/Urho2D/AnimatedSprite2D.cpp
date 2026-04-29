@@ -471,6 +471,8 @@ void AnimatedSprite2D::UpdateSourceBatchesSpriter()
         if (!sprite)
             return;
 
+        SetSprite(sprite);
+
         if (timelineKey->useDefaultPivot_)
             sprite->GetDrawRectangle(drawRect, flipX_, flipY_);
         else
