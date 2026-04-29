@@ -207,7 +207,7 @@ bool AnimationSet2D::HasAnimation(const String& animationName) const
 
 Sprite2D* AnimationSet2D::GetSprite() const
 {
-    if(!sprites_.Empty())
+    if (!sprites_.Empty())
     {
         return sprites_[0];
     }
@@ -234,11 +234,11 @@ Sprite2D* AnimationSet2D::GetSpriteFromSpriteSheets (const String& name) const
 {
     Sprite2D* foundSprite = nullptr;
 
-    for(const SharedPtr<SpriteSheet2D>& spritesheet : spriteSheets_)
+    for (const SharedPtr<SpriteSheet2D>& spritesheet : spriteSheets_)
     {
         foundSprite = spritesheet->GetSprite(name);
 
-        if(foundSprite)
+        if (foundSprite)
         {
             break;
         }
@@ -335,7 +335,8 @@ bool AnimationSet2D::BeginLoadSpriter(Deserializer& source)
     String spriteSheetFilePath;
 
     spriteSheetFilePath = parentPath + GetFileName(GetName()) + ".xml";
-    if(cache->Exists(spriteSheetFilePath))
+
+    if (cache->Exists(spriteSheetFilePath))
     {
         spriteSheetFilePaths_.Push(spriteSheetFilePath);
     }
@@ -343,7 +344,8 @@ bool AnimationSet2D::BeginLoadSpriter(Deserializer& source)
     // add other spritesheets with suffix _0, _1 and so on, if they exist
     unsigned suffix = 0;
     spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".xml";
-    while(cache->Exists(spriteSheetFilePath))
+
+    while (cache->Exists(spriteSheetFilePath))
     {
         spriteSheetFilePaths_.Push(spriteSheetFilePath);
 
@@ -354,7 +356,8 @@ bool AnimationSet2D::BeginLoadSpriter(Deserializer& source)
     if (spriteSheetFilePaths_.Empty())
     {
         spriteSheetFilePath = parentPath + GetFileName(GetName()) + ".plist";
-        if(cache->Exists(spriteSheetFilePath))
+
+        if (cache->Exists(spriteSheetFilePath))
         {
             spriteSheetFilePaths_.Push(spriteSheetFilePath);
         }
@@ -362,7 +365,8 @@ bool AnimationSet2D::BeginLoadSpriter(Deserializer& source)
         // add other spritesheets with suffix _0, _1 and so on, if they exist
         suffix = 0;
         spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".plist";
-        while(cache->Exists(spriteSheetFilePath))
+
+        while (cache->Exists(spriteSheetFilePath))
         {
             spriteSheetFilePaths_.Push(spriteSheetFilePath);
 
@@ -421,7 +425,7 @@ bool AnimationSet2D::EndLoadSpriter()
         {
             SpriteSheet2D* sheet = cache->GetResource<SpriteSheet2D>(spriteSheetFilePath);
 
-            if(sheet)
+            if (sheet)
             {
                 spriteSheets_.Push(SharedPtr<SpriteSheet2D>(sheet));
             }
@@ -463,7 +467,7 @@ bool AnimationSet2D::EndLoadSpriter()
                 unsigned key = folder->id_ << 16u | file->id_;
                 spriterFileSprites_[key] = sprite;
 
-                if(!sprites_.Contains(sprite))
+                if (!sprites_.Contains(sprite))
                 {
                     sprites_.Push(sprite);
                 }
@@ -524,7 +528,7 @@ bool AnimationSet2D::EndLoadSpriter()
                 Image* image = info.image_;
                 if (!allocator.Allocate(image->GetWidth() + 1, image->GetHeight() + 1, info.x, info.y))
                 {
-                    if(image->GetHeight() >= 2048 || image->GetWidth() >= 2048)
+                    if (image->GetHeight() >= 2048 || image->GetWidth() >= 2048)
                     {
                         URHO3D_LOGERROR("AnimationSet2D: Could not allocate area");
                         return false;
@@ -542,7 +546,7 @@ bool AnimationSet2D::EndLoadSpriter()
 
             // create a sprite for each allocator used
             Vector<SharedArrayPtr<unsigned char>> textureDatas;
-            for(AreaAllocator& filledAlloc : filledAllocators )
+            for (AreaAllocator& filledAlloc : filledAllocators)
             {
                 SharedPtr<Texture2D> texture(new Texture2D(context_));
                 texture->SetMipsToSkip(QUALITY_LOW, 0);
