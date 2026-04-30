@@ -32,11 +32,11 @@ namespace o3dgc
     template<class T>
     class IndexedFaceSet
     {
-    public:    
+    public:
         //! Constructor.
                                          IndexedFaceSet(void)
                                          {
-                                             memset(this, 0, sizeof(IndexedFaceSet));
+                                             memset((void*)this, 0, sizeof(IndexedFaceSet));
                                              m_ccw              = true;
                                              m_solid            = true;
                                              m_convex           = true;
@@ -45,18 +45,18 @@ namespace o3dgc
                                          };
         //! Destructor.
                                          ~IndexedFaceSet(void) {};
-        
+
         unsigned long                    GetNCoordIndex() const { return m_nCoordIndex     ;}
         // only coordIndex is supported
         unsigned long                    GetNCoord()           const { return m_nCoord         ;}
         unsigned long                    GetNNormal()          const { return m_nNormal        ;}
-        unsigned long                    GetNFloatAttribute(unsigned long a)  const 
-                                         { 
+        unsigned long                    GetNFloatAttribute(unsigned long a)  const
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              return m_nFloatAttribute[a];
                                          }
-        unsigned long                    GetNIntAttribute(unsigned long a)  const 
-                                         { 
+        unsigned long                    GetNIntAttribute(unsigned long a)  const
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              return m_nIntAttribute[a];
                                          }
@@ -72,43 +72,43 @@ namespace o3dgc
         Real                             GetNormalMax  (int j)  const { return m_normalMax[j]      ;}
 
         O3DGCIFSFloatAttributeType       GetFloatAttributeType(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              return m_typeFloatAttribute[a];
                                          }
         O3DGCIFSIntAttributeType         GetIntAttributeType(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              return m_typeIntAttribute[a];
                                          }
         unsigned long                    GetFloatAttributeDim(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              return m_dimFloatAttribute[a];
                                          }
         unsigned long                    GetIntAttributeDim(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              return m_dimIntAttribute[a];
                                          }
         const Real *                     GetFloatAttributeMin(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              return &(m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES]);
                                          }
         const Real *                     GetFloatAttributeMax(unsigned long a) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              return &(m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES]);
                                          }
         Real                             GetFloatAttributeMin(unsigned long a, unsigned long dim) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
                                              return m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim];
                                          }
         Real                             GetFloatAttributeMax(unsigned long a, unsigned long dim) const
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
                                              return m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim];
@@ -139,20 +139,20 @@ namespace o3dgc
         void                             SetNFloatAttributeIndex(int, unsigned long) {}
         void                             SetNIntAttributeIndex (int, unsigned long) {}
         // per triangle attributes not supported
-        void                             SetNormalPerVertex(bool)   {} 
+        void                             SetNormalPerVertex(bool)   {}
         void                             SetColorPerVertex(bool)    {}
         void                             SetFloatAttributePerVertex(int, bool){}
         void                             SetIntAttributePerVertex  (int, bool){}
         void                             SetNCoordIndex     (unsigned long nCoordIndex)     { m_nCoordIndex = nCoordIndex;}
         void                             SetNCoord          (unsigned long nCoord)          { m_nCoord      = nCoord     ;}
         void                             SetNNormal         (unsigned long nNormal)         { m_nNormal     = nNormal    ;}
-        void                             SetNumFloatAttributes(unsigned long numFloatAttributes) 
-                                         { 
+        void                             SetNumFloatAttributes(unsigned long numFloatAttributes)
+                                         {
                                              assert(numFloatAttributes < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              m_numFloatAttributes = numFloatAttributes;
                                          }
         void                             SetNumIntAttributes  (unsigned long numIntAttributes)
-                                         { 
+                                         {
                                              assert(numIntAttributes < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              m_numIntAttributes = numIntAttributes;
                                          }
@@ -165,44 +165,44 @@ namespace o3dgc
         void                             SetCoordMax        (int j, Real max) { m_coordMax[j]    = max;}
         void                             SetNormalMin       (int j, Real min) { m_normalMin[j]   = min;}
         void                             SetNormalMax       (int j, Real max) { m_normalMax[j]   = max;}
-        void                             SetNFloatAttribute(unsigned long a, unsigned long nFloatAttribute) 
-                                         { 
+        void                             SetNFloatAttribute(unsigned long a, unsigned long nFloatAttribute)
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              m_nFloatAttribute[a] = nFloatAttribute;
                                          }
-        void                             SetNIntAttribute(unsigned long a, unsigned long nIntAttribute) 
-                                         { 
+        void                             SetNIntAttribute(unsigned long a, unsigned long nIntAttribute)
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              m_nIntAttribute[a] = nIntAttribute;
                                          }
         void                             SetFloatAttributeDim(unsigned long a, unsigned long d)
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              m_dimFloatAttribute[a] = d;
                                          }
         void                             SetIntAttributeDim(unsigned long a, unsigned long d)
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              m_dimIntAttribute[a] = d;
                                          }
         void                             SetFloatAttributeType(unsigned long a, O3DGCIFSFloatAttributeType t)
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              m_typeFloatAttribute[a] = t;
                                          }
         void                             SetIntAttributeType(unsigned long a, O3DGCIFSIntAttributeType t)
-                                         { 
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                              m_typeIntAttribute[a] = t;
                                          }
-        void                             SetFloatAttributeMin(unsigned long a, unsigned long dim, Real min) 
-                                         { 
+        void                             SetFloatAttributeMin(unsigned long a, unsigned long dim, Real min)
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
                                              m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = min;
                                          }
-        void                             SetFloatAttributeMax(unsigned long a, unsigned long dim, Real max) 
-                                         { 
+        void                             SetFloatAttributeMax(unsigned long a, unsigned long dim, Real max)
+                                         {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
                                              m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = max;
@@ -211,7 +211,7 @@ namespace o3dgc
         void                             SetCoordIndex     (T * const coordIndex)    { m_coordIndex = coordIndex;}
         void                             SetCoord          (Real * const coord     ) { m_coord      = coord    ;}
         void                             SetNormal         (Real * const normal    ) { m_normal     = normal   ;}
-        void                             SetFloatAttribute (unsigned long a, Real * const floatAttribute) 
+        void                             SetFloatAttribute (unsigned long a, Real * const floatAttribute)
                                          {
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                              m_floatAttribute[a] = floatAttribute;
@@ -250,7 +250,7 @@ namespace o3dgc
         Real                             m_maxFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
         Real *                           m_floatAttribute     [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         long *                           m_intAttribute       [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
-        // mesh info                     
+        // mesh info
         Real                             m_creaseAngle;
         bool                             m_ccw;
         bool                             m_solid;

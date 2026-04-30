@@ -117,7 +117,7 @@ namespace o3dgc
         O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_COLOR    = 3,
         O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_TEXCOORD = 4,
         O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_WEIGHT   = 5
-        
+
     };
     enum O3DGCIFSIntAttributeType
     {
@@ -127,31 +127,31 @@ namespace o3dgc
         O3DGC_IFS_INT_ATTRIBUTE_TYPE_INDEX_BUFFER_ID = 3
     };
 
-    template<class T> 
+    template<class T>
     inline const T absolute(const T& a)
     {
         return (a < (T)(0)) ? -a : a;
     }
-    template<class T> 
+    template<class T>
     inline const T min(const T& a, const T& b)
     {
         return (b < a) ? b : a;
     }
-    template<class T> 
+    template<class T>
     inline const T max(const T& a, const T& b)
     {
         return (b > a) ? b : a;
     }
-    template<class T> 
+    template<class T>
     inline void swap(T& a, T& b)
     {
         T tmp = a;
         a = b;
         b = tmp;
     }
-    inline double log2( double n )  
-    {  
-        return log(n) / log(2.0);  
+    inline double log2( double n )
+    {
+        return log(n) / log(2.0);
     }
 
     inline O3DGCEndianness SystemEndianness()
@@ -161,13 +161,13 @@ namespace o3dgc
     }
     class SC3DMCStats
     {
-    public: 
+    public:
                                     SC3DMCStats(void)
                                     {
-                                        memset(this, 0, sizeof(SC3DMCStats));
+                                        memset((void*)this, 0, sizeof(SC3DMCStats));
                                     };
                                     ~SC3DMCStats(void){};
-        
+
         double                      m_timeCoord;
         double                      m_timeNormal;
         double                      m_timeCoordIndex;
@@ -182,14 +182,14 @@ namespace o3dgc
         unsigned long               m_streamSizeIntAttribute  [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES  ];
 
     };
-    typedef struct 
+    typedef struct
     {
         long          m_a;
         long          m_b;
         long          m_c;
     } SC3DMCTriplet;
 
-    typedef struct 
+    typedef struct
     {
         SC3DMCTriplet m_id;
         long          m_pred[O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
@@ -248,8 +248,8 @@ namespace o3dgc
         }
         return pos;
     }
-    template <class T> 
-    inline void SphereToCube(const T x, const T y, const T z, 
+    template <class T>
+    inline void SphereToCube(const T x, const T y, const T z,
                              T & a, T & b, char & index)
     {
         T ax = absolute(x);
@@ -346,8 +346,8 @@ namespace o3dgc
     {
         return (uiValue & 1)?-((long) ((uiValue+1) >> 1)):((long) (uiValue >> 1));
     }
-    inline void ComputeVectorMinMax(const Real * const tab, 
-                                    unsigned long size, 
+    inline void ComputeVectorMinMax(const Real * const tab,
+                                    unsigned long size,
                                     unsigned long dim,
                                     unsigned long stride,
                                     Real * minTab,
@@ -382,15 +382,15 @@ namespace o3dgc
             {
                 r     = (maxTab[d] - minTab[d]);
                 diag += r*r;
-            } 
+            }
             diag = static_cast<Real>(sqrt(diag));
             for(unsigned long d = 0; d < dim; ++d)
             {
                  maxTab[d] = minTab[d] + diag;
-            } 
+            }
         }
         else if (quantMode == O3DGC_SC3DMC_MAX_ALL_DIMS)
-        {            
+        {
             Real maxr = (maxTab[0] - minTab[0]);
             Real r;
             for(unsigned long d = 1; d < dim; ++d)
@@ -400,11 +400,11 @@ namespace o3dgc
                 {
                     maxr = r;
                 }
-            } 
+            }
             for(unsigned long d = 0; d < dim; ++d)
             {
                  maxTab[d] = minTab[d] + maxr;
-            } 
+            }
         }
     }
 }

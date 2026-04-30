@@ -35,7 +35,7 @@ namespace o3dgc
         //! Constructor.
                                     SC3DMCEncodeParams(void)
                                     {
-                                        memset(this, 0, sizeof(SC3DMCEncodeParams));
+                                        memset((void*)this, 0, sizeof(SC3DMCEncodeParams));
                                         m_encodeMode        = O3DGC_SC3DMC_ENCODE_MODE_TFAN;
                                         m_streamTypeMode    = O3DGC_STREAM_TYPE_ASCII;
                                         m_coordQuantBits    = 14;
@@ -74,7 +74,7 @@ namespace o3dgc
                                        return m_floatAttributePredMode[a];
                                     }
         O3DGCSC3DMCPredictionMode   GetIntAttributePredMode(unsigned long a) const
-                                    { 
+                                    {
                                         assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                         return m_intAttributePredMode[a];
                                     }
@@ -92,32 +92,32 @@ namespace o3dgc
                                     }
         void                        SetStreamType(O3DGCStreamType streamTypeMode)  { m_streamTypeMode = streamTypeMode;}
         void                        SetEncodeMode(O3DGCSC3DMCEncodingMode encodeMode)  { m_encodeMode = encodeMode;}
-        void                        SetNumFloatAttributes(unsigned long numFloatAttributes) 
-                                    { 
+        void                        SetNumFloatAttributes(unsigned long numFloatAttributes)
+                                    {
                                         assert(numFloatAttributes < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                         m_numFloatAttributes = numFloatAttributes;
                                     }
         void                        SetNumIntAttributes  (unsigned long numIntAttributes)
-                                    { 
+                                    {
                                         assert(numIntAttributes < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                         m_numIntAttributes   = numIntAttributes;
                                     }
         void                        SetCoordQuantBits   (unsigned int coordQuantBits   ) { m_coordQuantBits    = coordQuantBits   ; }
         void                        SetNormalQuantBits  (unsigned int normalQuantBits  ) { m_normalQuantBits   = normalQuantBits  ; }
-        void                        SetFloatAttributeQuantBits(unsigned long a, unsigned long q) 
-                                    { 
+        void                        SetFloatAttributeQuantBits(unsigned long a, unsigned long q)
+                                    {
                                        assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                        m_floatAttributeQuantBits[a] = q;
                                     }
         void                        SetCoordPredMode   (O3DGCSC3DMCPredictionMode coordPredMode   ) { m_coordPredMode    = coordPredMode   ; }
         void                        SetNormalPredMode  (O3DGCSC3DMCPredictionMode normalPredMode  ) { m_normalPredMode   = normalPredMode  ; }
-        void                        SetFloatAttributePredMode(unsigned long a, O3DGCSC3DMCPredictionMode p) 
+        void                        SetFloatAttributePredMode(unsigned long a, O3DGCSC3DMCPredictionMode p)
                                     {
                                        assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
                                        m_floatAttributePredMode[a] = p;
-                                    }                       
-        void                        SetIntAttributePredMode(unsigned long a, O3DGCSC3DMCPredictionMode p) 
-                                    { 
+                                    }
+        void                        SetIntAttributePredMode(unsigned long a, O3DGCSC3DMCPredictionMode p)
+                                    {
                                         assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                         m_intAttributePredMode[a] = p;
                                     }
@@ -127,9 +127,9 @@ namespace o3dgc
         unsigned long               m_coordQuantBits;
         unsigned long               m_normalQuantBits;
         unsigned long               m_floatAttributeQuantBits[O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
-        
+
         O3DGCSC3DMCPredictionMode   m_coordPredMode;
-        O3DGCSC3DMCPredictionMode   m_normalPredMode; 
+        O3DGCSC3DMCPredictionMode   m_normalPredMode;
         O3DGCSC3DMCPredictionMode   m_floatAttributePredMode[O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         O3DGCSC3DMCPredictionMode   m_intAttributePredMode  [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES];
         O3DGCStreamType             m_streamTypeMode;
