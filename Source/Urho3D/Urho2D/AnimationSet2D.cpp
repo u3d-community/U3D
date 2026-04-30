@@ -103,12 +103,12 @@ namespace Urho3D
 {
 
 AnimationSet2D::AnimationSet2D(Context* context) :
-    Resource(context),
+    Resource(context)
 #ifdef URHO3D_SPINE
+    ,
     skeletonData_(0),
     atlas_(0),
 #endif
-    hasSpriteSheet_(false)
 {
 }
 
@@ -207,7 +207,17 @@ bool AnimationSet2D::HasAnimation(const String& animationName) const
 
 Sprite2D* AnimationSet2D::GetSprite() const
 {
-    return sprite_;
+    if (!sprites_.Empty())
+    {
+        return sprites_[0];
+    }
+
+    return nullptr;
+}
+
+const Vector<SharedPtr<Sprite2D>>& AnimationSet2D::GetSprites() const
+{
+    return sprites_;
 }
 
 Sprite2D* AnimationSet2D::GetSpriterFileSprite(int folderId, int fileId) const
@@ -218,6 +228,23 @@ Sprite2D* AnimationSet2D::GetSpriterFileSprite(int folderId, int fileId) const
         return i->second_;
 
     return nullptr;
+}
+
+Sprite2D* AnimationSet2D::GetSpriteFromSpriteSheets (const String& name) const
+{
+    Sprite2D* foundSprite = nullptr;
+
+    for (const SharedPtr<SpriteSheet2D>& spritesheet : spriteSheets_)
+    {
+        foundSprite = spritesheet->GetSprite(name);
+
+        if (foundSprite)
+        {
+            break;
+        }
+    }
+
+    return foundSprite;
 }
 
 #ifdef URHO3D_SPINE
@@ -305,18 +332,58 @@ bool AnimationSet2D::BeginLoadSpriter(Deserializer& source)
     String parentPath = GetParentPath(GetName());
     auto* cache = GetSubsystem<ResourceCache>();
 
-    spriteSheetFilePath_ = parentPath + GetFileName(GetName()) + ".xml";
-    hasSpriteSheet_ = cache->Exists(spriteSheetFilePath_);
-    if (!hasSpriteSheet_)
+    String spriteSheetFilePath;
+
+    spriteSheetFilePath = parentPath + GetFileName(GetName()) + ".xml";
+
+    if (cache->Exists(spriteSheetFilePath))
     {
-        spriteSheetFilePath_ = parentPath + GetFileName(GetName()) + ".plist";
-        hasSpriteSheet_ = cache->Exists(spriteSheetFilePath_);
+        spriteSheetFilePaths_.Push(spriteSheetFilePath);
+    }
+
+    // add other spritesheets with suffix _0, _1 and so on, if they exist
+    unsigned suffix = 0;
+    spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".xml";
+
+    while (cache->Exists(spriteSheetFilePath))
+    {
+        spriteSheetFilePaths_.Push(spriteSheetFilePath);
+
+        ++suffix;
+        spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".xml";
+    }
+
+    if (spriteSheetFilePaths_.Empty())
+    {
+        spriteSheetFilePath = parentPath + GetFileName(GetName()) + ".plist";
+
+        if (cache->Exists(spriteSheetFilePath))
+        {
+            spriteSheetFilePaths_.Push(spriteSheetFilePath);
+        }
+
+        // add other spritesheets with suffix _0, _1 and so on, if they exist
+        suffix = 0;
+        spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".plist";
+
+        while (cache->Exists(spriteSheetFilePath))
+        {
+            spriteSheetFilePaths_.Push(spriteSheetFilePath);
+
+            ++suffix;
+            spriteSheetFilePath = parentPath + GetFileName(GetName()) + "_" + String(suffix) + ".plist";
+        }
     }
 
     if (GetAsyncLoadState() == ASYNC_LOADING)
     {
-        if (hasSpriteSheet_)
-            cache->BackgroundLoadResource<SpriteSheet2D>(spriteSheetFilePath_, true, this);
+        if (!spriteSheetFilePaths_.Empty())
+        {
+            for (const String& spriteSheetFilePath : spriteSheetFilePaths_)
+            {
+                cache->BackgroundLoadResource<SpriteSheet2D>(spriteSheetFilePath, true, this);
+            }
+        }
         else
         {
             for (unsigned i = 0; i < spriterData_->folders_.Size(); ++i)
@@ -352,11 +419,21 @@ bool AnimationSet2D::EndLoadSpriter()
         return false;
 
     auto* cache = GetSubsystem<ResourceCache>();
-    if (hasSpriteSheet_)
+    if (!spriteSheetFilePaths_.Empty())
     {
-        spriteSheet_ = cache->GetResource<SpriteSheet2D>(spriteSheetFilePath_);
-        if (!spriteSheet_)
-            return false;
+        for (const String& spriteSheetFilePath : spriteSheetFilePaths_)
+        {
+            SpriteSheet2D* sheet = cache->GetResource<SpriteSheet2D>(spriteSheetFilePath);
+
+            if (sheet)
+            {
+                spriteSheets_.Push(SharedPtr<SpriteSheet2D>(sheet));
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         for (unsigned i = 0; i < spriterData_->folders_.Size(); ++i)
         {
@@ -364,7 +441,7 @@ bool AnimationSet2D::EndLoadSpriter()
             for (unsigned j = 0; j < folder->files_.Size(); ++j)
             {
                 Spriter::File* file = folder->files_[j];
-                SharedPtr<Sprite2D> sprite(spriteSheet_->GetSprite(GetFileName(file->name_)));
+                SharedPtr<Sprite2D> sprite(GetSpriteFromSpriteSheets(GetFileName(file->name_)));
                 if (!sprite)
                 {
                     URHO3D_LOGERROR("Could not load sprite " + file->name_);
@@ -387,12 +464,13 @@ bool AnimationSet2D::EndLoadSpriter()
 
                 sprite->SetHotSpot(hotSpot);
 
-                if (!sprite_)
-                    sprite_ = sprite;
-
                 unsigned key = folder->id_ << 16u | file->id_;
                 spriterFileSprites_[key] = sprite;
 
+                if (!sprites_.Contains(sprite))
+                {
+                    sprites_.Push(sprite);
+                }
             }
         }
 
@@ -441,6 +519,8 @@ bool AnimationSet2D::EndLoadSpriter()
 
         if (spriteInfos.Size() > 1)
         {
+            Vector<AreaAllocator> filledAllocators;
+            PODVector<unsigned> allocatorIndexBySpriteInfo;
             AreaAllocator allocator(128, 128, 2048, 2048);
             for (unsigned i = 0; i < spriteInfos.Size(); ++i)
             {
@@ -448,36 +528,57 @@ bool AnimationSet2D::EndLoadSpriter()
                 Image* image = info.image_;
                 if (!allocator.Allocate(image->GetWidth() + 1, image->GetHeight() + 1, info.x, info.y))
                 {
-                    URHO3D_LOGERROR("Could not allocate area");
-                    return false;
+                    if (image->GetHeight() >= 2048 || image->GetWidth() >= 2048)
+                    {
+                        URHO3D_LOGERROR("AnimationSet2D: Could not allocate area");
+                        return false;
+                    }
+
+                    // allocator full! set up a new one
+                    filledAllocators.Push(allocator);
+                    allocator = AreaAllocator(128, 128, 2048, 2048);
+                    allocator.Allocate(image->GetWidth() + 1, image->GetHeight() + 1, info.x, info.y);
                 }
+
+                allocatorIndexBySpriteInfo.Push(filledAllocators.Size());
             }
+            filledAllocators.Push(allocator);
 
-            SharedPtr<Texture2D> texture(new Texture2D(context_));
-            texture->SetMipsToSkip(QUALITY_LOW, 0);
-            texture->SetNumLevels(1);
-            texture->SetSize(allocator.GetWidth(), allocator.GetHeight(), Graphics::GetRGBAFormat());
+            // create a sprite for each allocator used
+            Vector<SharedArrayPtr<unsigned char>> textureDatas;
+            for (AreaAllocator& filledAlloc : filledAllocators)
+            {
+                SharedPtr<Texture2D> texture(new Texture2D(context_));
+                texture->SetMipsToSkip(QUALITY_LOW, 0);
+                texture->SetNumLevels(1);
+                texture->SetSize(filledAlloc.GetWidth(), filledAlloc.GetHeight(), Graphics::GetRGBAFormat());
 
-            auto textureDataSize = (unsigned)allocator.GetWidth() * allocator.GetHeight() * 4;
-            SharedArrayPtr<unsigned char> textureData(new unsigned char[textureDataSize]);
-            memset(textureData.Get(), 0, textureDataSize);
+                auto textureDataSize = (unsigned)filledAlloc.GetWidth() * filledAlloc.GetHeight() * 4;
+                SharedArrayPtr<unsigned char> textureData(new unsigned char[textureDataSize]);
+                memset(textureData.Get(), 0, textureDataSize);
+                textureDatas.Push(textureData);
 
-            sprite_ = new Sprite2D(context_);
-            sprite_->SetTexture(texture);
+                auto sprite = SharedPtr<Sprite2D>(new Sprite2D(context_));
+                sprite->SetTexture(texture);
+                sprites_.Push(sprite);
+            }
 
             for (unsigned i = 0; i < spriteInfos.Size(); ++i)
             {
                 SpriteInfo& info = spriteInfos[i];
                 Image* image = info.image_;
+                unsigned allocatorIndex = allocatorIndexBySpriteInfo[i];
+                AreaAllocator& spriteAllocator = filledAllocators[allocatorIndex];
+                Sprite2D* allocatorSprite = sprites_[allocatorIndex];
 
                 for (int y = 0; y < image->GetHeight(); ++y)
                 {
-                    memcpy(textureData.Get() + ((info.y + y) * allocator.GetWidth() + info.x) * 4,
+                    memcpy(textureDatas[allocatorIndex].Get() + ((info.y + y) * spriteAllocator.GetWidth() + info.x) * 4,
                         image->GetData() + y * image->GetWidth() * 4, (size_t)image->GetWidth() * 4);
                 }
 
                 SharedPtr<Sprite2D> sprite(new Sprite2D(context_));
-                sprite->SetTexture(texture);
+                sprite->SetTexture(allocatorSprite->GetTexture());
                 sprite->SetRectangle(IntRect(info.x, info.y, info.x + image->GetWidth(), info.y + image->GetHeight()));
                 sprite->SetHotSpot(Vector2(info.file_->pivotX_, info.file_->pivotY_));
 
@@ -485,7 +586,11 @@ bool AnimationSet2D::EndLoadSpriter()
                 spriterFileSprites_[key] = sprite;
             }
 
-            texture->SetData(0, 0, 0, allocator.GetWidth(), allocator.GetHeight(), textureData.Get());
+            for (unsigned i = 0; i < filledAllocators.Size(); ++i)
+            {
+                AreaAllocator& filledAlloc = filledAllocators[i];
+                sprites_[i]->GetTexture()->SetData(0, 0, 0, filledAlloc.GetWidth(), filledAlloc.GetHeight(), textureDatas[i].Get());
+            }
         }
         else
         {
@@ -496,13 +601,14 @@ bool AnimationSet2D::EndLoadSpriter()
             SpriteInfo& info = spriteInfos[0];
             texture->SetData(info.image_, true);
 
-            sprite_ = new Sprite2D(context_);
-            sprite_->SetTexture(texture);
-            sprite_->SetRectangle(IntRect(info.x, info.y, info.x + info.image_->GetWidth(), info.y + info.image_->GetHeight()));
-            sprite_->SetHotSpot(Vector2(info.file_->pivotX_, info.file_->pivotY_));
+            auto singleSprite = SharedPtr<Sprite2D>(new Sprite2D(context_));
+            singleSprite->SetTexture(texture);
+            singleSprite->SetRectangle(IntRect(info.x, info.y, info.x + info.image_->GetWidth(), info.y + info.image_->GetHeight()));
+            singleSprite->SetHotSpot(Vector2(info.file_->pivotX_, info.file_->pivotY_));
 
             unsigned key = info.file_->folder_->id_ << 16u | info.file_->id_;
-            spriterFileSprites_[key] = sprite_;
+            spriterFileSprites_[key] = singleSprite;
+            sprites_.Push(singleSprite);
         }
 
         SubscribeToEvent(E_DEVICERESET, URHO3D_HANDLER(AnimationSet2D, HandleDeviceReset));
@@ -544,8 +650,9 @@ void AnimationSet2D::Dispose()
 
     spriterData_.Reset();
 
-    sprite_.Reset();
-    spriteSheet_.Reset();
+    sprites_.Clear();
+    spriteSheetFilePaths_.Clear();
+    spriteSheets_.Clear();
     spriterFileSprites_.Clear();
 }
 

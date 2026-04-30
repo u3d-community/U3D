@@ -14560,6 +14560,13 @@ template <class T> void RegisterMembers_XMLFile(asIScriptEngine* engine, const c
 
 #ifdef URHO3D_URHO2D
 
+// const Vector<SharedPtr<Sprite2D>>& AnimationSet2D::GetSprites() const
+template <class T> CScriptArray* AnimationSet2D_constspVectorlesSharedPtrlesSprite2Dgregreamp_GetSprites_void_template(T* _ptr)
+{
+    const Vector<SharedPtr<Sprite2D>>& result = _ptr->GetSprites();
+    return VectorToHandleArray(result, "Array<Sprite2D@>");
+}
+
 // class AnimationSet2D | File: ../Urho2D/AnimationSet2D.h
 template <class T> void RegisterMembers_AnimationSet2D(asIScriptEngine* engine, const char* className)
 {
@@ -14580,6 +14587,9 @@ template <class T> void RegisterMembers_AnimationSet2D(asIScriptEngine* engine, 
 
     // Sprite2D* AnimationSet2D::GetSpriterFileSprite(int folderId, int fileId) const
     engine->RegisterObjectMethod(className, "Sprite2D@+ GetSpriterFileSprite(int, int) const", AS_METHODPR(T, GetSpriterFileSprite, (int, int) const, Sprite2D*), AS_CALL_THISCALL);
+
+    // const Vector<SharedPtr<Sprite2D>>& AnimationSet2D::GetSprites() const
+    engine->RegisterObjectMethod(className, "Array<Sprite2D@>@ GetSprites() const", AS_FUNCTION_OBJFIRST(AnimationSet2D_constspVectorlesSharedPtrlesSprite2Dgregreamp_GetSprites_void_template<AnimationSet2D>), AS_CALL_CDECL_OBJFIRST);
 
     // bool AnimationSet2D::HasAnimation(const String& animationName) const
     engine->RegisterObjectMethod(className, "bool HasAnimation(const String&in) const", AS_METHODPR(T, HasAnimation, (const String&) const, bool), AS_CALL_THISCALL);
