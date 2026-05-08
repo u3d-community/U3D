@@ -132,7 +132,7 @@ U3D uses the following third-party libraries:
 - MojoShader (https://icculus.org/mojoshader)
 - Mustache 1.0 (https://mustache.github.io, https://github.com/kainjow/Mustache)
 - nanodbc 2.12.4+ (https://lexicalunit.github.io/nanodbc)
-- Open Asset Import Library 5.4.3 (http://assimp.sourceforge.net)
+- Open Asset Import Library 6.0.5 (http://assimp.sourceforge.net , https://github.com/assimp/assimp)
 - pugixml 1.13 (http://pugixml.org)
 - rapidjson 1.1.0 commit 2024/12/10 (https://github.com/Tencent/rapidjson/commit/58c6938b73c8685d82905ed55ec5b59e8f163687)
 - Recast/Detour (https://github.com/recastnavigation/recastnavigation)
