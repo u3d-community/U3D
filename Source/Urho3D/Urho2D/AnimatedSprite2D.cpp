@@ -23,6 +23,7 @@
 #include "../Precompiled.h"
 
 #include "../Core/Context.h"
+#include "../Graphics/Material.h"
 #include "../IO/Log.h"
 #include "../Resource/ResourceCache.h"
 #include "../Graphics/GraphicsEvents.h"
@@ -30,6 +31,7 @@
 #include "../Scene/SceneEvents.h"
 #include "../Urho2D/AnimatedSprite2D.h"
 #include "../Urho2D/AnimationSet2D.h"
+#include "../Urho2D/Renderer2D.h"
 #include "../Urho2D/Sprite2D.h"
 #include "../Urho2D/SpriterInstance2D.h"
 
@@ -429,6 +431,9 @@ void AnimatedSprite2D::UpdateSpriterAnimation(float timeStep)
 
 void AnimatedSprite2D::UpdateSourceBatchesSpriter()
 {
+    if (!animationSet_ || !spriterInstance_ || !spriterInstance_->GetAnimation())
+        return;
+
     const Matrix3x4& nodeWorldTransform = GetNode()->GetWorldTransform();
 
     Vector<Vertex2D>& vertices = sourceBatches_[0].vertices_;
@@ -471,7 +476,10 @@ void AnimatedSprite2D::UpdateSourceBatchesSpriter()
         if (!sprite)
             return;
 
-        SetSprite(sprite);
+        // Per-frame material without SetSprite(): visibility checks may rebuild batches
+        // on a worker thread; SetSprite mutates sprite_ (SharedPtr) and is not thread-safe.
+        if (renderer_ && sprite->GetTexture())
+            sourceBatches_[0].material_ = renderer_->GetMaterial(sprite->GetTexture(), blendMode_);
 
         if (timelineKey->useDefaultPivot_)
             sprite->GetDrawRectangle(drawRect, flipX_, flipY_);
