@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [windows-latest, windows-2025-vs2026]
+        runner: [windows-2022, windows-2025-vs2026]
         lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
         build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
         architecture: ${{ github.event_name == 'pull_request' && fromJSON('["x64"]') || fromJSON('["x64", "Win32"]') }}
