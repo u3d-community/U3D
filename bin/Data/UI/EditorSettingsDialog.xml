@@ -81,6 +81,15 @@
                 <element style="ListRow">
                     <attribute name="Layout Spacing" value="8" />
                     <element type="CheckBox">
+                        <attribute name="Name" value="KeepShowingCameraPreviewToggle" />
+                    </element>
+                    <element type="Text">
+                        <attribute name="Text" value="Keep camera preview after deselect" />
+                    </element>
+                </element>
+                <element style="ListRow">
+                    <attribute name="Layout Spacing" value="8" />
+                    <element type="CheckBox">
                         <attribute name="Name" value="MiddleMousePanToggle" />
                     </element>
                     <element type="Text">
