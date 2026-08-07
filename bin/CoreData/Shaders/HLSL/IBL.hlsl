@@ -55,7 +55,8 @@
         // // Get corrected reflection
         // reflectVec = intersectionPos - ((cZoneMin + cZoneMax )/ 2);
 
-        const float mipSelect = GetMipFromRoughness(roughness);
+        // The mip curve expects perceptual roughness, but the pipeline passes alpha (perceptual squared)
+        const float mipSelect = GetMipFromRoughness(sqrt(roughness));
         const float cubeMapSize = 1024.0; // TODO This only works with textures of a given size
         float3 cube = SampleCubeLOD(ZoneCubeMap, float4(FixCubeLookup(reflectVec, cubeMapSize), mipSelect)).rgb;
         float3 cubeD = SampleCubeLOD(ZoneCubeMap, float4(FixCubeLookup(wsNormal, cubeMapSize), 9.0)).rgb;
@@ -72,7 +73,7 @@
         hdrCubeD += max(0.0, hdrCubeD - 1.0) * hdrMaxBrightness;
 
         const float3 environmentSpecular = EnvBRDFApprox(specColor, roughness, ndv);
-        const float3 environmentDiffuse = EnvBRDFApprox(diffColor, 1.0, ndv);
+        const float3 environmentDiffuse = diffColor;
 
         return (hdrCube * environmentSpecular + hdrCubeD * environmentDiffuse) * brightness;
     }
