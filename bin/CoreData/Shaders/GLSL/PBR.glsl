@@ -53,12 +53,10 @@
         float ndv = clamp(dot(normal, toCamera),0.0, 1.0);
         float hdl = clamp(dot(h, lightVec), 0.0, 1.0);
 
-        vec3 diffuseFactor = Diffuse(diffColor, roughness, ndv, ndl, hdv)  * ndl;
         vec3 fresnelTerm = Fresnel(specColor, hdv, hdl) ;
         float distTerm = Distribution(hdn, roughness);
         float visTerm = Visibility(ndl, ndv, roughness);
-        vec3 specularFactor = distTerm * visTerm * fresnelTerm * ndl/ M_PI;
-        return diffuseFactor + specularFactor;
+        return specEnergy * distTerm * visTerm * fresnelTerm / M_PI;
     }
 
     vec3 TubeLight(vec3 worldPos, vec3 lightVec, vec3 normal, vec3 toCamera, float roughness, vec3 specColor, vec3 diffColor, out float ndl)
@@ -102,12 +100,10 @@
         float alpha      = max(roughness, 0.08) * max(roughness, 0.08);
         float alphaPrime = clamp(radius / (distL * 2.0) + alpha, 0.0, 1.0);
 
-        vec3 diffuseFactor = Diffuse(diffColor, roughness, ndv, ndl, hdv)  * ndl;
         vec3 fresnelTerm = Fresnel(specColor, hdv, hdl) ;
         float distTerm = Distribution(hdn, roughness);
         float visTerm = Visibility(ndl, ndv, roughness);
-        vec3 specularFactor = distTerm * visTerm * fresnelTerm * ndl/ M_PI;
-        return diffuseFactor + specularFactor;
+        return distTerm * visTerm * fresnelTerm / M_PI;
     }
 
 	//Return the PBR BRDF value
@@ -125,7 +121,7 @@
         float ndh = clamp(dot(normal, Hn), M_EPSILON, 1.0);
         float ndl = clamp(dot(normal, lightVec), M_EPSILON, 1.0);
         float ldh = clamp(dot(lightVec, Hn), M_EPSILON, 1.0);
-        float ndv = abs(dot(normal, toCamera)) + 1e-5;
+        float ndv = clamp(abs(dot(normal, toCamera)) + 1e-5, 0.0, 1.0);
 
         vec3 diffuseFactor = Diffuse(diffColor, roughness, ndv, ndl, vdh);
         vec3 specularFactor = vec3(0.0, 0.0, 0.0);
@@ -134,15 +130,9 @@
             if(cLightRad > 0.0)
             {
                 if(cLightLength > 0.0)
-                {
                     specularFactor = TubeLight(worldPos, lightVec, normal, toCamera, roughness, specColor, diffColor, ndl);
-                    specularFactor *= ndl;
-                }
                 else
-                {
                     specularFactor = SphereLight(worldPos, lightVec, normal, toCamera, roughness, specColor, diffColor, ndl);
-                    specularFactor *= ndl;
-                }
             }
             else
             {

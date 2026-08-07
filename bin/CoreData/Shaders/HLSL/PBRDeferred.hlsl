@@ -124,5 +124,5 @@ void PS(
     float3 BRDF = GetBRDF(worldPos, lightDir, lightVec, toCamera, normal, roughness, albedoInput.rgb, specColor);
 
     oColor.a = 1;
-    oColor.rgb  = BRDF * lightColor * shadow * atten / M_PI;
+    oColor.rgb  = BRDF * lightColor * shadow * atten;
 }

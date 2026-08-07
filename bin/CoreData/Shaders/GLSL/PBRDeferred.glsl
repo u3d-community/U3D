@@ -118,6 +118,6 @@ void PS()
     vec3 BRDF = GetBRDF(worldPos, lightDir, lightVec, toCamera, normal, roughness, albedoInput.rgb, specColor);
 
     gl_FragColor.a = 1.0;
-    gl_FragColor.rgb = BRDF * lightColor * (atten * shadow) / M_PI;
+    gl_FragColor.rgb = BRDF * lightColor * (atten * shadow);
 
 }
