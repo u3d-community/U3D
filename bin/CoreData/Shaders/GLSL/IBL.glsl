@@ -45,7 +45,8 @@
         // PMREM Mipmapmode https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
         //float GlossScale = 16.0;
         //float GlossBias = 5.0;
-        float mipSelect = GetMipFromRoughness(roughness); //exp2(GlossScale * roughness * roughness + GlossBias) - exp2(GlossBias);
+        // The mip curve expects perceptual roughness, but the pipeline passes alpha (perceptual squared)
+        float mipSelect = GetMipFromRoughness(sqrt(roughness)); //exp2(GlossScale * roughness * roughness + GlossBias) - exp2(GlossBias);
 
         // OpenGL ES does not support textureLod without extensions and does not have the sZoneCubeMap sampler,
         // so for now, sample without explicit LOD, and from the environment sampler, where the zone texture will be put
@@ -71,7 +72,7 @@
         hdrCubeD += max(vec3(0.0), hdrCubeD - vec3(1.0)) * hdrMaxBrightness;
 
         vec3 environmentSpecular = EnvBRDFApprox(specColor, roughness, ndv);
-        vec3 environmentDiffuse = EnvBRDFApprox(diffColor, 1.0, ndv);
+        vec3 environmentDiffuse = diffColor;
 
         return (hdrCube * environmentSpecular + hdrCubeD * environmentDiffuse) * brightness;
     }

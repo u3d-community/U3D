@@ -51,7 +51,8 @@ PBRMaterials::PBRMaterials(Context* context) :
     dynamicMaterial_(nullptr),
     roughnessLabel_(nullptr),
     metallicLabel_(nullptr),
-    ambientLabel_(nullptr)
+    ambientLabel_(nullptr),
+    taaLabel_(nullptr)
 {
 }
 
@@ -158,6 +159,11 @@ void PBRMaterials::CreateUI()
     ambientLabel_->SetPosition(370, 150);
     ambientLabel_->SetTextEffect(TE_SHADOW);
 
+    taaLabel_ = ui->GetRoot()->CreateChild<Text>();
+    taaLabel_->SetFont(cache->GetResource<Font>("Fonts/Anonymous Pro.ttf"), 15);
+    taaLabel_->SetPosition(370, 200);
+    taaLabel_->SetTextEffect(TE_SHADOW);
+
     auto* roughnessSlider = ui->GetRoot()->CreateChild<Slider>();
     roughnessSlider->SetStyleAuto();
     roughnessSlider->SetPosition(50, 50);
@@ -181,6 +187,14 @@ void PBRMaterials::CreateUI()
     ambientSlider->SetRange(10.0f); // 0 - 10 range
     SubscribeToEvent(ambientSlider, E_SLIDERCHANGED, URHO3D_HANDLER(PBRMaterials, HandleAmbientSliderChanged));
     ambientSlider->SetValue(zone_->GetAmbientColor().a_);
+
+    auto* taaSlider = ui->GetRoot()->CreateChild<Slider>();
+    taaSlider->SetStyleAuto();
+    taaSlider->SetPosition(50, 200);
+    taaSlider->SetSize(300, 20);
+    taaSlider->SetRange(0.95f); // Avoid a fully frozen history buffer
+    SubscribeToEvent(taaSlider, E_SLIDERCHANGED, URHO3D_HANDLER(PBRMaterials, HandleTAASliderChanged));
+    taaSlider->SetValue(taaStrength_);
 }
 
 void PBRMaterials::HandleRoughnessSliderChanged(StringHash eventType, VariantMap& eventData)
@@ -205,6 +219,12 @@ void PBRMaterials::HandleAmbientSliderChanged(StringHash eventType, VariantMap& 
     ambientLabel_->SetText("Ambient HDR Scale: " + String(zone_->GetAmbientColor().a_));
 }
 
+void PBRMaterials::HandleTAASliderChanged(StringHash eventType, VariantMap& eventData)
+{
+    taaStrength_ = eventData[SliderChanged::P_VALUE].GetFloat();
+    taaLabel_->SetText("TAA Strength: " + String(taaStrength_));
+}
+
 void PBRMaterials::SetupViewport()
 {
     auto* cache = GetSubsystem<ResourceCache>();
@@ -214,16 +234,60 @@ void PBRMaterials::SetupViewport()
 
     // Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
     SharedPtr<Viewport> viewport(new Viewport(context_, scene_, cameraNode_->GetComponent<Camera>()));
+    viewport->SetRenderPath(cache->GetResource<XMLFile>("RenderPaths/ForwardDepth.xml"));
+    cullCameraNode_ = scene_->CreateChild("TAACullCamera");
+    cullCameraNode_->SetWorldPosition(cameraNode_->GetWorldPosition());
+    cullCameraNode_->SetWorldRotation(cameraNode_->GetWorldRotation());
+    auto* cullCamera = cullCameraNode_->CreateComponent<Camera>();
+    viewport->SetCullCamera(cullCamera);
     renderer->SetViewport(0, viewport);
 
     // Add post-processing effects appropriate with the example scene
-    SharedPtr<RenderPath> effectRenderPath = viewport->GetRenderPath()->Clone();
-    effectRenderPath->Append(cache->GetResource<XMLFile>("PostProcess/AutoExposure.xml"));
-    effectRenderPath->Append(cache->GetResource<XMLFile>("PostProcess/Tonemap.xml"));
-    effectRenderPath->Append(cache->GetResource<XMLFile>("PostProcess/GammaCorrection.xml"));
-    effectRenderPath->Append(cache->GetResource<XMLFile>("PostProcess/FXAA2.xml"));
+    effectRenderPath_ = viewport->GetRenderPath()->Clone();
+    effectRenderPath_->Append(cache->GetResource<XMLFile>("PostProcess/AutoExposure.xml"));
+    effectRenderPath_->Append(cache->GetResource<XMLFile>("PostProcess/TAA.xml"));
+    effectRenderPath_->Append(cache->GetResource<XMLFile>("PostProcess/Tonemap.xml"));
+    effectRenderPath_->Append(cache->GetResource<XMLFile>("PostProcess/GammaCorrection.xml"));
 
-    viewport->SetRenderPath(effectRenderPath);
+    viewport->SetRenderPath(effectRenderPath_);
+}
+
+void PBRMaterials::UpdateTAA()
+{
+    // An eight-sample Halton(2, 3) pattern, centered around the pixel.
+    static const Vector2 jitterPattern[] = {
+        Vector2(0.0f, -0.166667f), Vector2(-0.25f, 0.166667f), Vector2(0.25f, -0.388889f),
+        Vector2(-0.375f, -0.055556f), Vector2(0.125f, 0.277778f), Vector2(-0.125f, -0.277778f),
+        Vector2(0.375f, 0.055556f), Vector2(-0.4375f, 0.388889f)
+    };
+
+    auto* graphics = GetSubsystem<Graphics>();
+    const Vector3 cameraPosition = cameraNode_->GetWorldPosition();
+    const Quaternion cameraRotation = cameraNode_->GetWorldRotation();
+    const IntVector2 viewSize(Max(graphics->GetWidth(), 1), Max(graphics->GetHeight(), 1));
+    const bool viewResized = viewSize != previousViewSize_;
+    const Vector2 jitter = jitterPattern[taaFrame_ % 8];
+    currentJitter_ = Vector2(jitter.x_ / viewSize.x_, jitter.y_ / viewSize.y_);
+
+    auto* camera = cameraNode_->GetComponent<Camera>();
+    camera->SetProjectionOffset(currentJitter_);
+    const Matrix4 currentViewProj = camera->GetProjection() * camera->GetView();
+    const Vector3 currentCameraDirection = cameraNode_->GetWorldDirection();
+    effectRenderPath_->SetShaderParameter("TAAParams",
+        Vector4(taaFrame_ && !viewResized ? taaStrength_ : 0.0f, 0.02f, 0.0f, 0.0f));
+    effectRenderPath_->SetShaderParameter("PrevViewProj", taaFrame_ ? previousViewProj_ : currentViewProj);
+    effectRenderPath_->SetShaderParameter("PrevCameraPos", Vector4(previousCameraPosition_,
+        previousFarClip_ > 0.0f ? previousFarClip_ : camera->GetFarClip()));
+    effectRenderPath_->SetShaderParameter("PrevCameraDir", Vector4(
+        taaFrame_ ? previousCameraDirection_ : currentCameraDirection, 0.0f));
+    previousCameraPosition_ = cameraPosition;
+    previousViewSize_ = viewSize;
+    cullCameraNode_->SetWorldPosition(cameraPosition);
+    cullCameraNode_->SetWorldRotation(cameraRotation);
+    previousViewProj_ = currentViewProj;
+    previousCameraDirection_ = currentCameraDirection;
+    previousFarClip_ = camera->GetFarClip();
+    ++taaFrame_;
 }
 
 void PBRMaterials::SubscribeToEvents()
@@ -281,4 +345,6 @@ void PBRMaterials::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
     // Move the camera, scale movement with time step
     MoveCamera(timeStep);
+
+    UpdateTAA();
 }

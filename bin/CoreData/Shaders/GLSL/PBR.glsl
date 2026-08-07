@@ -99,11 +99,13 @@
         float distL      = length(closestPoint);
         float alpha      = max(roughness, 0.08) * max(roughness, 0.08);
         float alphaPrime = clamp(radius / (distL * 2.0) + alpha, 0.0, 1.0);
+        float specEnergy = alpha / alphaPrime;
+        specEnergy *= specEnergy;
 
         vec3 fresnelTerm = Fresnel(specColor, hdv, hdl) ;
         float distTerm = Distribution(hdn, roughness);
         float visTerm = Visibility(ndl, ndv, roughness);
-        return distTerm * visTerm * fresnelTerm / M_PI;
+        return specEnergy * distTerm * visTerm * fresnelTerm / M_PI;
     }
 
 	//Return the PBR BRDF value

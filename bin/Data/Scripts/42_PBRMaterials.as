@@ -11,7 +11,18 @@ Material@ dynamicMaterial;
 Text@ roughnessLabel;
 Text@ metallicLabel;
 Text@ ambientLabel;
+Text@ taaLabel;
 Zone@ zone;
+RenderPath@ effectRenderPath;
+Vector2 currentJitter;
+Vector3 previousCameraPosition;
+IntVector2 previousViewSize;
+Matrix4 previousViewProj;
+Vector3 previousCameraDirection;
+float previousFarClip;
+uint taaFrame;
+float taaStrength = 0.5f;
+Node@ cullCameraNode;
 
 void Start()
 {
@@ -101,6 +112,11 @@ void CreateUI()
     ambientLabel.SetPosition(370, 150);
     ambientLabel.textEffect = TE_SHADOW;
 
+    @taaLabel = ui.root.CreateChild("Text");
+    taaLabel.SetFont(cache.GetResource("Font", "Fonts/Anonymous Pro.ttf"), 15);
+    taaLabel.SetPosition(370, 200);
+    taaLabel.textEffect = TE_SHADOW;
+
     Slider@ roughnessSlider = ui.root.CreateChild("Slider");
     roughnessSlider.SetStyleAuto();
     roughnessSlider.SetPosition(50, 50);
@@ -124,6 +140,14 @@ void CreateUI()
     ambientSlider.range = 10.0f; // 0 - 10 range
     SubscribeToEvent(ambientSlider, "SliderChanged", "HandleAmbientSliderChanged");
     ambientSlider.value = zone.ambientColor.a;
+
+    Slider@ taaSlider = ui.root.CreateChild("Slider");
+    taaSlider.SetStyleAuto();
+    taaSlider.SetPosition(50, 200);
+    taaSlider.SetSize(300, 20);
+    taaSlider.range = 0.95f;
+    SubscribeToEvent(taaSlider, "SliderChanged", "HandleTAASliderChanged");
+    taaSlider.value = taaStrength;
 }
 
 void HandleRoughnessSliderChanged(StringHash eventType, VariantMap& eventData)
@@ -148,22 +172,67 @@ void HandleAmbientSliderChanged(StringHash eventType, VariantMap& eventData)
     ambientLabel.text = "Ambient HDR Scale: " + zone.ambientColor.a;
 }
 
+void HandleTAASliderChanged(StringHash eventType, VariantMap& eventData)
+{
+    taaStrength = eventData["Value"].GetFloat();
+    taaLabel.text = "TAA Strength: " + taaStrength;
+}
+
 void SetupViewport()
 {
     renderer.hdrRendering = true;
 
     // Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
     Viewport@ viewport = Viewport(scene_, cameraNode.GetComponent("Camera"));
+    viewport.SetRenderPath(cache.GetResource("XMLFile", "RenderPaths/ForwardDepth.xml"));
+    @cullCameraNode = scene_.CreateChild("TAACullCamera");
+    cullCameraNode.worldPosition = cameraNode.worldPosition;
+    cullCameraNode.worldRotation = cameraNode.worldRotation;
+    viewport.cullCamera = cullCameraNode.CreateComponent("Camera");
     renderer.viewports[0] = viewport;
 
     // Add post-processing effects appropriate with the example scene
-    RenderPath@ effectRenderPath = viewport.renderPath.Clone();
-    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/FXAA2.xml"));
-    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/GammaCorrection.xml"));
-    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/Tonemap.xml"));
+    @effectRenderPath = viewport.renderPath.Clone();
     effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/AutoExposure.xml"));
+    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/TAA.xml"));
+    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/Tonemap.xml"));
+    effectRenderPath.Append(cache.GetResource("XMLFile", "PostProcess/GammaCorrection.xml"));
 
     viewport.renderPath = effectRenderPath;
+}
+
+void UpdateTAA()
+{
+    Array<Vector2> pattern = {
+        Vector2(0.0f, -0.166667f), Vector2(-0.25f, 0.166667f), Vector2(0.25f, -0.388889f),
+        Vector2(-0.375f, -0.055556f), Vector2(0.125f, 0.277778f), Vector2(-0.125f, -0.277778f),
+        Vector2(0.375f, 0.055556f), Vector2(-0.4375f, 0.388889f)
+    };
+    Vector2 sample = pattern[taaFrame % pattern.length];
+    Vector3 cameraPosition = cameraNode.worldPosition;
+    Quaternion cameraRotation = cameraNode.worldRotation;
+    IntVector2 viewSize(Max(graphics.width, 1), Max(graphics.height, 1));
+    bool viewResized = viewSize != previousViewSize;
+    currentJitter = Vector2(sample.x / viewSize.x, sample.y / viewSize.y);
+    Camera@ camera = cameraNode.GetComponent("Camera");
+    camera.projectionOffset = currentJitter;
+    Matrix4 currentViewProj = camera.projection * camera.view;
+    Vector3 currentCameraDirection = cameraNode.worldDirection;
+    effectRenderPath.SetShaderParameter("TAAParams", Vector4(
+        taaFrame != 0 && !viewResized ? taaStrength : 0.0f, 0.02f, 0.0f, 0.0f));
+    effectRenderPath.SetShaderParameter("PrevViewProj", taaFrame != 0 ? previousViewProj : currentViewProj);
+    effectRenderPath.SetShaderParameter("PrevCameraPos", Vector4(previousCameraPosition,
+        previousFarClip > 0.0f ? previousFarClip : camera.farClip));
+    effectRenderPath.SetShaderParameter("PrevCameraDir", Vector4(
+        taaFrame != 0 ? previousCameraDirection : currentCameraDirection, 0.0f));
+    previousCameraPosition = cameraPosition;
+    previousViewSize = viewSize;
+    cullCameraNode.worldPosition = cameraPosition;
+    cullCameraNode.worldRotation = cameraRotation;
+    previousViewProj = currentViewProj;
+    previousCameraDirection = currentCameraDirection;
+    previousFarClip = camera.farClip;
+    ++taaFrame;
 }
 
 void SubscribeToEvents()
@@ -179,6 +248,8 @@ void HandleUpdate(StringHash eventType, VariantMap& eventData)
 
     // Move the camera, scale movement with time step
     MoveCamera(timeStep);
+
+    UpdateTAA();
 }
 
 void MoveCamera(float timeStep)

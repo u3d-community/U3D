@@ -72,6 +72,10 @@ private:
     void HandleMetallicSliderChanged(StringHash eventType, VariantMap& eventData);
     /// Handle the ambient HDR scale slider drag event.
     void HandleAmbientSliderChanged(StringHash eventType, VariantMap& eventData);
+    /// Handle the TAA strength slider drag event.
+    void HandleTAASliderChanged(StringHash eventType, VariantMap& eventData);
+    /// Apply the next temporal anti-aliasing projection jitter.
+    void UpdateTAA();
 
     /// Dynamic material.
     Material* dynamicMaterial_;
@@ -81,6 +85,26 @@ private:
     Text* metallicLabel_;
     /// Ambient HDR scale label.
     Text* ambientLabel_;
+    /// TAA strength label.
+    Text* taaLabel_;
     /// Zone component in scene.
     WeakPtr<Zone> zone_;
+    /// Unjittered camera used for culling and shadow-map preparation.
+    WeakPtr<Node> cullCameraNode_;
+    /// Render path containing the temporal resolve.
+    SharedPtr<RenderPath> effectRenderPath_;
+    /// Projection jitter for the frame currently being rendered.
+    Vector2 currentJitter_;
+    /// Previous camera position used for history reprojection.
+    Vector3 previousCameraPosition_;
+    /// View size associated with the current history texture.
+    IntVector2 previousViewSize_;
+    /// Previous jittered camera state used for history reprojection.
+    Matrix4 previousViewProj_;
+    Vector3 previousCameraDirection_;
+    float previousFarClip_{};
+    /// Number of temporal samples rendered.
+    unsigned taaFrame_{};
+    /// Weight assigned to the previous frame by the temporal resolve.
+    float taaStrength_{0.5f};
 };

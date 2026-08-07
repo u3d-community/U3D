@@ -100,11 +100,13 @@
         float distL      = length(closestPoint);
         float alpha      = max(roughness, 0.08) * max(roughness, 0.08);
         float alphaPrime = saturate(radius / (distL * 2.0) + alpha);
+        float specEnergy = alpha / alphaPrime;
+        specEnergy *= specEnergy;
 
        const float3 fresnelTerm = Fresnel(specColor, hdv, hdl) ;
        const float distTerm = Distribution(hdn, roughness);
        const float visTerm = Visibility(ndl, ndv, roughness);
-       return distTerm * visTerm * fresnelTerm / M_PI;
+       return specEnergy * distTerm * visTerm * fresnelTerm / M_PI;
     }
 
 	//Return the PBR BRDF value

@@ -11,7 +11,18 @@ local dynamicMaterial = nil
 local roughnessLabel = nil
 local metallicLabel = nil
 local ambientLabel = nil
+local taaLabel = nil
 local zone = nil
+local effectRenderPath = nil
+local currentJitter = Vector2(0, 0)
+local previousCameraPosition = Vector3(0, 0, 0)
+local previousViewSize = IntVector2(0, 0)
+local previousViewProj = Matrix4()
+local previousCameraDirection = Vector3(0, 0, 1)
+local previousFarClip = 0
+local taaFrame = 0
+local taaStrength = 0.5
+local cullCameraNode = nil
 
 function Start()
     -- Execute the common startup for samples
@@ -100,6 +111,11 @@ function CreateUI()
     ambientLabel:SetPosition(370, 150)
     ambientLabel.textEffect = TE_SHADOW
 
+    taaLabel = ui.root:CreateChild("Text")
+    taaLabel:SetFont(cache:GetResource("Font", "Fonts/Anonymous Pro.ttf"), 15)
+    taaLabel:SetPosition(370, 200)
+    taaLabel.textEffect = TE_SHADOW
+
     local roughnessSlider = ui.root:CreateChild("Slider")
     roughnessSlider:SetStyleAuto()
     roughnessSlider:SetPosition(50, 50)
@@ -123,6 +139,14 @@ function CreateUI()
     ambientSlider.range = 10.0    -- 0 - 10 range
     SubscribeToEvent(ambientSlider, "SliderChanged", "HandleAmbientSliderChanged")
     ambientSlider.value = zone.ambientColor.a
+
+    local taaSlider = ui.root:CreateChild("Slider")
+    taaSlider:SetStyleAuto()
+    taaSlider:SetPosition(50, 200)
+    taaSlider:SetSize(300, 20)
+    taaSlider.range = 0.95
+    SubscribeToEvent(taaSlider, "SliderChanged", "HandleTAASliderChanged")
+    taaSlider.value = taaStrength
 end
 
 function HandleRoughnessSliderChanged(eventType, eventData)
@@ -144,21 +168,64 @@ function HandleAmbientSliderChanged(eventType, eventData)
     ambientLabel.text = "Ambient HDR Scale: " .. zone.ambientColor.a
 end
 
+function HandleTAASliderChanged(eventType, eventData)
+    taaStrength = eventData["Value"]:GetFloat()
+    taaLabel.text = "TAA Strength: " .. taaStrength
+end
+
 function SetupViewport()
     renderer.hdrRendering = true
 
     -- Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
     local viewport = Viewport:new(scene_, cameraNode:GetComponent("Camera"))
+    viewport:SetRenderPath(cache:GetResource("XMLFile", "RenderPaths/ForwardDepth.xml"))
+    cullCameraNode = scene_:CreateChild("TAACullCamera")
+    cullCameraNode.worldPosition = cameraNode.worldPosition
+    cullCameraNode.worldRotation = cameraNode.worldRotation
+    viewport.cullCamera = cullCameraNode:CreateComponent("Camera")
     renderer:SetViewport(0, viewport)
 
     -- Add post-processing effects appropriate with the example scene
-    local effectRenderPath = viewport:GetRenderPath():Clone()
-    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/FXAA2.xml"))
-    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/GammaCorrection.xml"))
-    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/Tonemap.xml"))
+    effectRenderPath = viewport:GetRenderPath():Clone()
     effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/AutoExposure.xml"))
+    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/TAA.xml"))
+    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/Tonemap.xml"))
+    effectRenderPath:Append(cache:GetResource("XMLFile", "PostProcess/GammaCorrection.xml"))
 
     viewport.renderPath = effectRenderPath
+end
+
+function UpdateTAA()
+    local pattern = {
+        Vector2(0, -0.166667), Vector2(-0.25, 0.166667), Vector2(0.25, -0.388889),
+        Vector2(-0.375, -0.055556), Vector2(0.125, 0.277778), Vector2(-0.125, -0.277778),
+        Vector2(0.375, 0.055556), Vector2(-0.4375, 0.388889)
+    }
+    local sample = pattern[taaFrame % #pattern + 1]
+    local cameraPosition = cameraNode.worldPosition
+    local cameraRotation = cameraNode.worldRotation
+    local viewSize = IntVector2(Max(graphics.width, 1), Max(graphics.height, 1))
+    local viewResized = viewSize ~= previousViewSize
+    currentJitter = Vector2(sample.x / viewSize.x, sample.y / viewSize.y)
+    local camera = cameraNode:GetComponent("Camera")
+    camera.projectionOffset = currentJitter
+    local currentViewProj = camera:GetProjection() * camera:GetView()
+    local currentCameraDirection = cameraNode.worldDirection
+    local historyWeight = taaFrame ~= 0 and not viewResized and taaStrength or 0.0
+    effectRenderPath:SetShaderParameter("TAAParams", Vector4(historyWeight, 0.02, 0, 0))
+    effectRenderPath:SetShaderParameter("PrevViewProj", taaFrame ~= 0 and previousViewProj or currentViewProj)
+    effectRenderPath:SetShaderParameter("PrevCameraPos", Vector4(previousCameraPosition,
+        previousFarClip > 0 and previousFarClip or camera.farClip))
+    effectRenderPath:SetShaderParameter("PrevCameraDir", Vector4(
+        taaFrame ~= 0 and previousCameraDirection or currentCameraDirection, 0))
+    previousCameraPosition = cameraPosition
+    previousViewSize = viewSize
+    cullCameraNode.worldPosition = cameraPosition
+    cullCameraNode.worldRotation = cameraRotation
+    previousViewProj = currentViewProj
+    previousCameraDirection = currentCameraDirection
+    previousFarClip = camera.farClip
+    taaFrame = taaFrame + 1
 end
 
 function SubscribeToEvents()
@@ -172,6 +239,8 @@ function HandleUpdate(eventType, eventData)
 
     -- Move the camera, scale movement with time step
     MoveCamera(timeStep)
+
+    UpdateTAA()
 end
 
 function MoveCamera(timeStep)

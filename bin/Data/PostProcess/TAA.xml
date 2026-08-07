@@ -1,0 +1,28 @@
+<renderpath>
+    <rendertarget name="TAAHistory" tag="TAA" sizedivisor="1 1" format="rgba16f" filter="true" persistent="true" />
+    <rendertarget name="TAAPrevHistory" tag="TAA" sizedivisor="1 1" format="rgba16f" filter="true" />
+    <rendertarget name="TAAHistoryDepth" tag="TAA" sizedivisor="1 1" format="lineardepth" filter="false" persistent="true" />
+    <rendertarget name="TAAPrevHistoryDepth" tag="TAA" sizedivisor="1 1" format="lineardepth" filter="false" />
+    <command type="quad" tag="TAA" vs="CopyFramebuffer" ps="CopyFramebuffer" output="TAAPrevHistory">
+        <texture unit="diffuse" name="TAAHistory" />
+    </command>
+    <command type="quad" tag="TAA" vs="CopyFramebuffer" ps="CopyFramebuffer" output="TAAPrevHistoryDepth">
+        <texture unit="diffuse" name="TAAHistoryDepth" />
+    </command>
+    <command type="quad" tag="TAA" vs="TAA" ps="TAA" output="TAAHistory">
+        <parameter name="TAAParams" value="0 0.01 0 0" />
+        <parameter name="PrevViewProj" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1" />
+        <parameter name="PrevCameraPos" value="0 0 0 1000" />
+        <parameter name="PrevCameraDir" value="0 0 1 0" />
+        <texture unit="diffuse" name="viewport" />
+        <texture unit="normal" name="TAAPrevHistory" />
+        <texture unit="depth" name="depth" />
+        <texture unit="specular" name="TAAPrevHistoryDepth" />
+    </command>
+    <command type="quad" tag="TAA" vs="CopyFramebuffer" ps="CopyFramebuffer" output="TAAHistoryDepth">
+        <texture unit="diffuse" name="depth" />
+    </command>
+    <command type="quad" tag="TAA" vs="CopyFramebuffer" ps="CopyFramebuffer" output="viewport">
+        <texture unit="diffuse" name="TAAHistory" />
+    </command>
+</renderpath>

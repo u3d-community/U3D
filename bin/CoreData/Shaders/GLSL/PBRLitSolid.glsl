@@ -1,3 +1,7 @@
+#if defined(GL_ES) && defined(COMPILEPS)
+#extension GL_OES_standard_derivatives : enable
+#endif
+
 #include "Uniforms.glsl"
 #include "Samplers.glsl"
 #include "Transform.glsl"
@@ -161,7 +165,7 @@ void PS()
         vec3 normal = normalize(vNormal);
     #endif
 
-    #ifndef GL_ES
+    #if !defined(GL_ES) || defined(GL_OES_standard_derivatives)
         // Tokuyoshi & Kaplanyan 2019, "Improved Geometric Specular Antialiasing"
         vec3 normalDx = dFdx(normal);
         vec3 normalDy = dFdy(normal);
