@@ -161,6 +161,14 @@ void PS()
         vec3 normal = normalize(vNormal);
     #endif
 
+    #ifndef GL_ES
+        // Tokuyoshi & Kaplanyan 2019, "Improved Geometric Specular Antialiasing"
+        vec3 normalDx = dFdx(normal);
+        vec3 normalDy = dFdy(normal);
+        float normalVariance = 0.25 * (dot(normalDx, normalDx) + dot(normalDy, normalDy));
+        roughness = sqrt(min(roughness * roughness + min(2.0 * normalVariance, 0.18), 1.0));
+    #endif
+
     // Get fog factor
     #ifdef HEIGHTFOG
         float fogFactor = GetHeightFogFactor(vWorldPos.w, vWorldPos.y);
@@ -200,7 +208,7 @@ void PS()
 
         vec3 BRDF = GetBRDF(vWorldPos.xyz, lightDir, lightVec, toCamera, normal, roughness, diffColor.rgb, specColor);
 
-        finalColor.rgb = BRDF * lightColor * (atten * shadow) / M_PI;
+        finalColor.rgb = BRDF * lightColor * (atten * shadow);
 
         #ifdef AMBIENT
             finalColor += cAmbientColor.rgb * diffColor.rgb;

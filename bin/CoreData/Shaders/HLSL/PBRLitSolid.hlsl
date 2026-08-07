@@ -241,6 +241,12 @@ void PS(
         const float3 normal = normalize(iNormal);
     #endif
 
+    // Tokuyoshi & Kaplanyan 2019, "Improved Geometric Specular Antialiasing"
+    const float3 normalDx = ddx(normal);
+    const float3 normalDy = ddy(normal);
+    const float normalVariance = 0.25 * (dot(normalDx, normalDx) + dot(normalDy, normalDy));
+    roughness = sqrt(min(roughness * roughness + min(2.0 * normalVariance, 0.18), 1.0));
+
     // Get fog factor
     #ifdef HEIGHTFOG
         const float fogFactor = GetHeightFogFactor(iWorldPos.w, iWorldPos.y);
@@ -284,7 +290,7 @@ void PS(
 
 
         float3 BRDF = GetBRDF(iWorldPos.xyz, lightDir, lightVec, toCamera, normal, roughness, diffColor.rgb, specColor);
-        finalColor.rgb = BRDF * lightColor * (atten * shadow) / M_PI;
+        finalColor.rgb = BRDF * lightColor * (atten * shadow);
 
         #ifdef AMBIENT
             finalColor += cAmbientColor.rgb * diffColor.rgb;
