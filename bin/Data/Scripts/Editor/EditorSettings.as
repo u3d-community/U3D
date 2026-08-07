@@ -37,6 +37,8 @@ void UpdateEditorSettingsDialog()
     CheckBox@ limitRotationToggle = settingsDialog.GetChild("LimitRotationToggle", true);
     limitRotationToggle.checked = limitRotation;
 
+    CheckBox@ keepShowingCameraToggle = settingsDialog.GetChild("KeepShowingCameraPreviewToggle", true);
+    keepShowingCameraToggle.checked = keepShowingCameraPreview;
 
     DropDownList@ mouseOrbitEdit = settingsDialog.GetChild("MouseOrbitEdit", true);
     mouseOrbitEdit.selection = mouseOrbitMode;
@@ -140,6 +142,7 @@ void UpdateEditorSettingsDialog()
         SubscribeToEvent(speedEdit, "TextChanged", "EditCameraSpeed");
         SubscribeToEvent(speedEdit, "TextFinished", "EditCameraSpeed");
         SubscribeToEvent(limitRotationToggle, "Toggled", "EditLimitRotation");
+        SubscribeToEvent(keepShowingCameraToggle, "Toggled", "EditKeepShowingCamera");
         SubscribeToEvent(middleMousePanToggle, "Toggled", "EditMiddleMousePan");
         SubscribeToEvent(rotateAroundSelectToggle, "Toggled", "EditRotateAroundSelect");
         SubscribeToEvent(mouseOrbitEdit, "ItemSelected", "EditMouseOrbitMode");
@@ -248,6 +251,12 @@ void EditLimitRotation(StringHash eventType, VariantMap& eventData)
 {
     CheckBox@ edit = eventData["Element"].GetPtr();
     limitRotation = edit.checked;
+}
+
+void EditKeepShowingCamera(StringHash eventType, VariantMap& eventData)
+{
+    CheckBox@ edit = eventData["Element"].GetPtr();
+    keepShowingCameraPreview = edit.checked;
 }
 
 void EditMouseOrbitMode(StringHash eventType, VariantMap& eventData)

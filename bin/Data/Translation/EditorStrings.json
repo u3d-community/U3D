@@ -1426,5 +1426,10 @@
 		"en":"Show Grid",
 		"ru":"Показывать сетку",
 		"it":"Visualizza griglia"
+	},
+	"Keep camera preview after deselect":{
+		"en":"Keep camera preview after deselect",
+		"ru":"Сохранять предварительный просмотр камеры после снятия выделения",
+		"it":"Mantieni l'anteprima della camera dopo aver deselezionato"
 	}
 }

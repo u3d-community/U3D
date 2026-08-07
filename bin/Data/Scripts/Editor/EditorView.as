@@ -1,6 +1,7 @@
 // Urho3D editor view & camera functions
 
 WeakHandle previewCamera;
+WeakHandle lastSelectedCamera = null;
 
 Node@ cameraLookAtNode;
 Node@ cameraNode;
@@ -41,6 +42,7 @@ IntVector2 oldHierarchyWindowPosition; // used for restore hierarchy position wh
 int oldHierarchyWindowHeight;
 IntVector2 oldInspectorWindowPosition; // used for restore inspector position when switch between viewport modes
 int oldInspectorWindowHeight;
+bool keepShowingCameraPreview = false;
 
 const uint VIEWPORT_BORDER_H     = 0x00000001;
 const uint VIEWPORT_BORDER_H1    = 0x00000002;
@@ -1057,6 +1059,7 @@ void UpdateCameraPreview()
         {
             // Take the first encountered camera
             previewCamera = selectedComponents[i];
+            lastSelectedCamera = previewCamera.Get();
             break;
         }
     }
@@ -1066,9 +1069,17 @@ void UpdateCameraPreview()
         for (uint i = 0; i < selectedNodes.length; ++i)
         {
             previewCamera = selectedNodes[i].GetComponent("Camera");
-            if (previewCamera.Get() !is null)
+            if (previewCamera.Get() !is null) 
+            {
+                lastSelectedCamera = previewCamera.Get();
                 break;
+            }
         }
+    }
+
+    if(keepShowingCameraPreview)
+    {
+        previewCamera = lastSelectedCamera.Get();
     }
 
     // Remove extra viewport if it exists and no camera is selected
