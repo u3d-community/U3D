@@ -219,24 +219,25 @@ float GetShadow(vec4 shadowPos)
         #endif
         return cShadowIntensity.y + cShadowIntensity.x * inLight;
     #elif defined(PCF_SHADOW)
-        // Take four samples and average them
+        // Centered 3x3 PCF
         // Note: in case of sampling a point light cube shadow, we optimize out the w divide as it has already been performed
         #ifndef POINTLIGHT
             vec2 offsets = cShadowMapInvSize * shadowPos.w;
         #else
             vec2 offsets = cShadowMapInvSize;
         #endif
-        #ifndef GL3
-            return cShadowIntensity.y + cShadowIntensity.x * (shadow2DProj(sShadowMap, shadowPos).r +
-                shadow2DProj(sShadowMap, vec4(shadowPos.x + offsets.x, shadowPos.yzw)).r +
-                shadow2DProj(sShadowMap, vec4(shadowPos.x, shadowPos.y + offsets.y, shadowPos.zw)).r +
-                shadow2DProj(sShadowMap, vec4(shadowPos.xy + offsets.xy, shadowPos.zw)).r);
-        #else
-            return cShadowIntensity.y + cShadowIntensity.x * (textureProj(sShadowMap, shadowPos) +
-                textureProj(sShadowMap, vec4(shadowPos.x + offsets.x, shadowPos.yzw)) +
-                textureProj(sShadowMap, vec4(shadowPos.x, shadowPos.y + offsets.y, shadowPos.zw)) +
-                textureProj(sShadowMap, vec4(shadowPos.xy + offsets.xy, shadowPos.zw)));
-        #endif
+        float inLight = 0.0;
+        for (int y = -1; y <= 1; ++y)
+            for (int x = -1; x <= 1; ++x)
+            {
+                vec4 samplePos = vec4(shadowPos.xy + vec2(float(x), float(y)) * offsets, shadowPos.zw);
+                #ifndef GL3
+                    inLight += shadow2DProj(sShadowMap, samplePos).r;
+                #else
+                    inLight += textureProj(sShadowMap, samplePos);
+                #endif
+            }
+        return cShadowIntensity.y + cShadowIntensity.x * inLight;
     #elif defined(VSM_SHADOW)
         vec2 samples = texture2D(sShadowMap, shadowPos.xy / shadowPos.w).rg; 
         return cShadowIntensity.y + cShadowIntensity.x * Chebyshev(samples, shadowPos.z / shadowPos.w);
@@ -249,15 +250,16 @@ float GetShadow(highp vec4 shadowPos)
         // Take one sample
         return cShadowIntensity.y + (texture2DProj(sShadowMap, shadowPos).r * shadowPos.w > shadowPos.z ? cShadowIntensity.x : 0.0);
     #elif defined(PCF_SHADOW)
-        // Take four samples and average them
+        // Centered 3x3 PCF
         vec2 offsets = cShadowMapInvSize * shadowPos.w;
-        vec4 inLight = vec4(
-            texture2DProj(sShadowMap, shadowPos).r * shadowPos.w > shadowPos.z,
-            texture2DProj(sShadowMap, vec4(shadowPos.x + offsets.x, shadowPos.yzw)).r * shadowPos.w > shadowPos.z,
-            texture2DProj(sShadowMap, vec4(shadowPos.x, shadowPos.y + offsets.y, shadowPos.zw)).r * shadowPos.w > shadowPos.z,
-            texture2DProj(sShadowMap, vec4(shadowPos.xy + offsets.xy, shadowPos.zw)).r * shadowPos.w > shadowPos.z
-        );
-        return cShadowIntensity.y + dot(inLight, vec4(cShadowIntensity.x));
+        float inLight = 0.0;
+        for (int y = -1; y <= 1; ++y)
+            for (int x = -1; x <= 1; ++x)
+            {
+                vec4 samplePos = vec4(shadowPos.xy + vec2(float(x), float(y)) * offsets, shadowPos.zw);
+                inLight += float(texture2DProj(sShadowMap, samplePos).r * shadowPos.w > shadowPos.z);
+            }
+        return cShadowIntensity.y + cShadowIntensity.x * inLight;
     #elif defined(VSM_SHADOW)
         vec2 samples = texture2D(sShadowMap, shadowPos.xy / shadowPos.w).rg; 
         return cShadowIntensity.y + cShadowIntensity.x * Chebyshev(samples, shadowPos.z / shadowPos.w);
@@ -296,18 +298,34 @@ float GetDirShadowFade(float inLight, float depth)
 #if !defined(GL_ES) || defined(WEBGL)
 float GetDirShadow(const vec4 iShadowPos[NUMCASCADES], float depth)
 {
-    vec4 shadowPos;
-
     if (depth < cShadowSplits.x)
-        shadowPos = iShadowPos[0];
+    {
+        float shadow = GetShadow(iShadowPos[0]);
+        float blendStart = cShadowSplits.x * (1.0 - cShadowCascadeBlend.x);
+        if (depth > blendStart)
+            shadow = mix(shadow, GetShadow(iShadowPos[1]),
+                clamp((depth - blendStart) / max(cShadowSplits.x - blendStart, 0.00001), 0.0, 1.0));
+        return GetDirShadowFade(shadow, depth);
+    }
     else if (depth < cShadowSplits.y)
-        shadowPos = iShadowPos[1];
+    {
+        float shadow = GetShadow(iShadowPos[1]);
+        float blendStart = cShadowSplits.y - (cShadowSplits.y - cShadowSplits.x) * cShadowCascadeBlend.x;
+        if (depth > blendStart)
+            shadow = mix(shadow, GetShadow(iShadowPos[2]),
+                clamp((depth - blendStart) / max(cShadowSplits.y - blendStart, 0.00001), 0.0, 1.0));
+        return GetDirShadowFade(shadow, depth);
+    }
     else if (depth < cShadowSplits.z)
-        shadowPos = iShadowPos[2];
-    else
-        shadowPos = iShadowPos[3];
-        
-    return GetDirShadowFade(GetShadow(shadowPos), depth);
+    {
+        float shadow = GetShadow(iShadowPos[2]);
+        float blendStart = cShadowSplits.z - (cShadowSplits.z - cShadowSplits.y) * cShadowCascadeBlend.x;
+        if (depth > blendStart)
+            shadow = mix(shadow, GetShadow(iShadowPos[3]),
+                clamp((depth - blendStart) / max(cShadowSplits.z - blendStart, 0.00001), 0.0, 1.0));
+        return GetDirShadowFade(shadow, depth);
+    }
+    return GetDirShadowFade(GetShadow(iShadowPos[3]), depth);
 }
 #else
 float GetDirShadow(const highp vec4 iShadowPos[NUMCASCADES], float depth)
@@ -319,30 +337,22 @@ float GetDirShadow(const highp vec4 iShadowPos[NUMCASCADES], float depth)
 #ifndef GL_ES
 float GetDirShadowDeferred(vec4 projWorldPos, vec3 normal, float depth)
 {
-    vec4 shadowPos;
-
     #ifdef NORMALOFFSET
         float cosAngle = clamp(1.0 - dot(normal, cLightDirPS), 0.0, 1.0);
-        if (depth < cShadowSplits.x)
-            shadowPos = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.x * normal, 1.0) * cLightMatricesPS[0];
-        else if (depth < cShadowSplits.y)
-            shadowPos = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.y * normal, 1.0) * cLightMatricesPS[1];
-        else if (depth < cShadowSplits.z)
-            shadowPos = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.z * normal, 1.0) * cLightMatricesPS[2];
-        else
-            shadowPos = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.w * normal, 1.0) * cLightMatricesPS[3];
+        vec4 shadowPos0 = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.x * normal, 1.0) * cLightMatricesPS[0];
+        vec4 shadowPos1 = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.y * normal, 1.0) * cLightMatricesPS[1];
+        vec4 shadowPos2 = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.z * normal, 1.0) * cLightMatricesPS[2];
+        vec4 shadowPos3 = vec4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.w * normal, 1.0) * cLightMatricesPS[3];
     #else
-        if (depth < cShadowSplits.x)
-            shadowPos = projWorldPos * cLightMatricesPS[0];
-        else if (depth < cShadowSplits.y)
-            shadowPos = projWorldPos * cLightMatricesPS[1];
-        else if (depth < cShadowSplits.z)
-            shadowPos = projWorldPos * cLightMatricesPS[2];
-        else
-            shadowPos = projWorldPos * cLightMatricesPS[3];
+        vec4 shadowPos0 = projWorldPos * cLightMatricesPS[0];
+        vec4 shadowPos1 = projWorldPos * cLightMatricesPS[1];
+        vec4 shadowPos2 = projWorldPos * cLightMatricesPS[2];
+        vec4 shadowPos3 = projWorldPos * cLightMatricesPS[3];
     #endif
-
-    return GetDirShadowFade(GetShadow(shadowPos), depth);
+    vec4 shadowPositions[4];
+    shadowPositions[0] = shadowPos0; shadowPositions[1] = shadowPos1;
+    shadowPositions[2] = shadowPos2; shadowPositions[3] = shadowPos3;
+    return GetDirShadow(shadowPositions, depth);
 }
 #endif
 #endif

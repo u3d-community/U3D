@@ -81,6 +81,7 @@ extern URHO3D_API const StringHash PSP_SHADOWDEPTHFADE("ShadowDepthFade");
 extern URHO3D_API const StringHash PSP_SHADOWINTENSITY("ShadowIntensity");
 extern URHO3D_API const StringHash PSP_SHADOWMAPINVSIZE("ShadowMapInvSize");
 extern URHO3D_API const StringHash PSP_SHADOWSPLITS("ShadowSplits");
+extern URHO3D_API const StringHash PSP_SHADOWCASCADEBLEND("ShadowCascadeBlend");
 extern URHO3D_API const StringHash PSP_LIGHTMATRICES("LightMatricesPS");
 extern URHO3D_API const StringHash PSP_VSMSHADOWPARAMS("VSMShadowParams");
 extern URHO3D_API const StringHash PSP_ROUGHNESS("Roughness");

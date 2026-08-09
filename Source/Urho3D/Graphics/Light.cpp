@@ -153,6 +153,9 @@ void Light::RegisterObject(Context* context)
     URHO3D_ATTRIBUTE_EX("CSM Splits", Vector4, shadowCascade_.splits_, ValidateShadowCascade, Vector4(DEFAULT_SHADOWSPLIT, 0.0f, 0.0f, 0.0f), AM_DEFAULT);
     URHO3D_ATTRIBUTE_EX("CSM Fade Start", float, shadowCascade_.fadeStart_, ValidateShadowCascade, DEFAULT_SHADOWFADESTART, AM_DEFAULT);
     URHO3D_ATTRIBUTE_EX("CSM Bias Auto Adjust", float, shadowCascade_.biasAutoAdjust_, ValidateShadowCascade, DEFAULT_BIASAUTOADJUST, AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("CSM Auto Splits", GetShadowCascadeAuto, SetShadowCascadeAuto, bool, false, AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("CSM Split Lambda", GetShadowCascadeLambda, SetShadowCascadeLambda, float, 0.7f, AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("CSM Blend", GetShadowCascadeBlend, SetShadowCascadeBlend, float, 0.08f, AM_DEFAULT);
     URHO3D_ATTRIBUTE_EX("View Size Quantize", float, shadowFocus_.quantize_, ValidateShadowFocus, DEFAULT_SHADOWQUANTIZE, AM_DEFAULT);
     URHO3D_ATTRIBUTE_EX("View Size Minimum", float, shadowFocus_.minView_, ValidateShadowFocus, DEFAULT_SHADOWMINVIEW, AM_DEFAULT);
     URHO3D_ATTRIBUTE_EX("Depth Constant Bias", float, shadowBias_.constantBias_, ValidateShadowBias, DEFAULT_CONSTANTBIAS, AM_DEFAULT);
@@ -488,6 +491,26 @@ int Light::GetNumShadowSplits() const
     }
 
     return (int)Min(ret, MAX_CASCADE_SPLITS);
+}
+
+Vector4 Light::GetShadowCascadeSplits(float nearClip, float farClip) const
+{
+    Vector4 result = shadowCascade_.splits_;
+    if (!shadowCascadeAuto_)
+        return result;
+
+    const int numSplits = GetNumShadowSplits();
+    const float shadowRange = Min(farClip, shadowCascade_.GetShadowRange());
+    nearClip = Max(nearClip, M_MIN_NEARCLIP);
+    float splits[MAX_CASCADE_SPLITS] = {result.x_, result.y_, result.z_, result.w_};
+    for (int i = 0; i < numSplits; ++i)
+    {
+        const float ratio = (float)(i + 1) / (float)numSplits;
+        const float linear = nearClip + (shadowRange - nearClip) * ratio;
+        const float logarithmic = nearClip * Pow(shadowRange / nearClip, ratio);
+        splits[i] = i + 1 == numSplits ? shadowRange : Lerp(linear, logarithmic, shadowCascadeLambda_);
+    }
+    return Vector4(splits[0], splits[1], splits[2], splits[3]);
 }
 
 const Matrix3x4& Light::GetVolumeTransform(Camera* camera)

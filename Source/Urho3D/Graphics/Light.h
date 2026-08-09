@@ -217,6 +217,12 @@ public:
     /// Set directional light cascaded shadow parameters.
     /// @property
     void SetShadowCascade(const CascadeParameters& parameters);
+    /// Enable automatic practical split distribution for directional-light cascades.
+    void SetShadowCascadeAuto(bool enable) { shadowCascadeAuto_ = enable; }
+    /// Set logarithmic weight used by automatic practical cascade splits.
+    void SetShadowCascadeLambda(float value) { shadowCascadeLambda_ = Clamp(value, 0.0f, 1.0f); }
+    /// Set fractional transition width used to blend adjacent cascades.
+    void SetShadowCascadeBlend(float value) { shadowCascadeBlend_ = Clamp(value, 0.0f, 0.5f); }
     /// Set shadow map focusing parameters.
     /// @property
     void SetShadowFocus(const FocusParameters& parameters);
@@ -314,6 +320,12 @@ public:
     /// Return directional light cascaded shadow parameters.
     /// @property
     const CascadeParameters& GetShadowCascade() const { return shadowCascade_; }
+    /// Return whether practical cascade splits are generated automatically.
+    bool GetShadowCascadeAuto() const { return shadowCascadeAuto_; }
+    /// Return automatic cascade logarithmic weight.
+    float GetShadowCascadeLambda() const { return shadowCascadeLambda_; }
+    /// Return adjacent-cascade transition width.
+    float GetShadowCascadeBlend() const { return shadowCascadeBlend_; }
 
     /// Return shadow map focus parameters.
     /// @property
@@ -352,6 +364,8 @@ public:
     /// Return number of shadow map cascade splits for a directional light, considering also graphics API limitations.
     /// @property
     int GetNumShadowSplits() const;
+    /// Calculate effective directional cascade far distances for a camera clip range.
+    Vector4 GetShadowCascadeSplits(float nearClip, float farClip) const;
 
     /// Return whether light has negative (darkening) color.
     /// @property
@@ -412,6 +426,9 @@ private:
     BiasParameters shadowBias_;
     /// Directional light cascaded shadow parameters.
     CascadeParameters shadowCascade_;
+    bool shadowCascadeAuto_{};
+    float shadowCascadeLambda_{0.7f};
+    float shadowCascadeBlend_{0.08f};
     /// Shadow map focus parameters.
     FocusParameters shadowFocus_;
     /// Custom world transform for the light volume.

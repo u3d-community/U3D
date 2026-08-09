@@ -239,7 +239,7 @@ float GetShadow(float4 shadowPos)
         #endif
     
     #elif defined(PCF_SHADOW)
-        // Take four samples and average them
+        // Centered 3x3 PCF
         // Note: in case of sampling a point light cube shadow, we optimize out the w divide as it has already been performed
         #ifdef D3D11
             shadowPos.xyz /= shadowPos.w;
@@ -249,25 +249,26 @@ float GetShadow(float4 shadowPos)
         #else
             float2 offsets = cShadowMapInvSize;
         #endif
-        float4 shadowPos2 = float4(shadowPos.x + offsets.x, shadowPos.yzw);
-        float4 shadowPos3 = float4(shadowPos.x, shadowPos.y + offsets.y, shadowPos.zw);
-        float4 shadowPos4 = float4(shadowPos.xy + offsets.xy, shadowPos.zw);
-
-        float4 inLight = float4(
-            SampleShadow(ShadowMap, shadowPos).r,
-            SampleShadow(ShadowMap, shadowPos2).r,
-            SampleShadow(ShadowMap, shadowPos3).r,
-            SampleShadow(ShadowMap, shadowPos4).r
-        );
+        float inLight = 0.0;
+        [unroll]
+        for (int y = -1; y <= 1; ++y)
+        {
+            [unroll]
+            for (int x = -1; x <= 1; ++x)
+            {
+                float4 samplePos = float4(shadowPos.xy + float2(x, y) * offsets, shadowPos.zw);
         #ifndef SHADOWCMP
-            return cShadowIntensity.y + dot(inLight, cShadowIntensity.x);
+                inLight += SampleShadow(ShadowMap, samplePos).r;
         #else
             #ifndef POINTLIGHT
-                return cShadowIntensity.y + dot(inLight * shadowPos.w > shadowPos.z, cShadowIntensity.x);
+                inLight += (SampleShadow(ShadowMap, samplePos).r * shadowPos.w > shadowPos.z) ? 1.0 : 0.0;
             #else
-                return cShadowIntensity.y + dot(inLight > shadowPos.z, cShadowIntensity.x);
+                inLight += (SampleShadow(ShadowMap, samplePos).r > shadowPos.z) ? 1.0 : 0.0;
             #endif
         #endif
+            }
+        }
+        return cShadowIntensity.y + cShadowIntensity.x * inLight;
     
     #elif defined(VSM_SHADOW)
         float2 samples = Sample2D(ShadowMap, shadowPos.xy / shadowPos.w).rg;
@@ -305,46 +306,54 @@ float GetDirShadowFade(float inLight, float depth)
 
 float GetDirShadow(const float4 iShadowPos[NUMCASCADES], float depth)
 {
-    float4 shadowPos;
-
     if (depth < cShadowSplits.x)
-        shadowPos = iShadowPos[0];
+    {
+        float shadow = GetShadow(iShadowPos[0]);
+        float blendStart = cShadowSplits.x * (1.0 - cShadowCascadeBlend.x);
+        if (depth > blendStart)
+            shadow = lerp(shadow, GetShadow(iShadowPos[1]),
+                saturate((depth - blendStart) / max(cShadowSplits.x - blendStart, 0.00001)));
+        return GetDirShadowFade(shadow, depth);
+    }
     else if (depth < cShadowSplits.y)
-        shadowPos = iShadowPos[1];
+    {
+        float shadow = GetShadow(iShadowPos[1]);
+        float blendStart = cShadowSplits.y - (cShadowSplits.y - cShadowSplits.x) * cShadowCascadeBlend.x;
+        if (depth > blendStart)
+            shadow = lerp(shadow, GetShadow(iShadowPos[2]),
+                saturate((depth - blendStart) / max(cShadowSplits.y - blendStart, 0.00001)));
+        return GetDirShadowFade(shadow, depth);
+    }
     else if (depth < cShadowSplits.z)
-        shadowPos = iShadowPos[2];
-    else
-        shadowPos = iShadowPos[3];
-
-    return GetDirShadowFade(GetShadow(shadowPos), depth);
+    {
+        float shadow = GetShadow(iShadowPos[2]);
+        float blendStart = cShadowSplits.z - (cShadowSplits.z - cShadowSplits.y) * cShadowCascadeBlend.x;
+        if (depth > blendStart)
+            shadow = lerp(shadow, GetShadow(iShadowPos[3]),
+                saturate((depth - blendStart) / max(cShadowSplits.z - blendStart, 0.00001)));
+        return GetDirShadowFade(shadow, depth);
+    }
+    return GetDirShadowFade(GetShadow(iShadowPos[3]), depth);
 }
 
 float GetDirShadowDeferred(float4 projWorldPos, float3 normal, float depth)
 {
-    float4 shadowPos;
-
     #ifdef NORMALOFFSET
         float cosAngle = saturate(1.0 - dot(normal, cLightDirPS));
-        if (depth < cShadowSplits.x)
-            shadowPos = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.x * normal, 1.0), cLightMatricesPS[0]);
-        else if (depth < cShadowSplits.y)
-            shadowPos = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.y * normal, 1.0), cLightMatricesPS[1]);
-        else if (depth < cShadowSplits.z)
-            shadowPos = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.z * normal, 1.0), cLightMatricesPS[2]);
-        else
-            shadowPos = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.w * normal, 1.0), cLightMatricesPS[3]);
+        float4 shadowPos0 = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.x * normal, 1.0), cLightMatricesPS[0]);
+        float4 shadowPos1 = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.y * normal, 1.0), cLightMatricesPS[1]);
+        float4 shadowPos2 = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.z * normal, 1.0), cLightMatricesPS[2]);
+        float4 shadowPos3 = mul(float4(projWorldPos.xyz + cosAngle * cNormalOffsetScalePS.w * normal, 1.0), cLightMatricesPS[3]);
     #else
-        if (depth < cShadowSplits.x)
-            shadowPos = mul(projWorldPos, cLightMatricesPS[0]);
-        else if (depth < cShadowSplits.y)
-            shadowPos = mul(projWorldPos, cLightMatricesPS[1]);
-        else if (depth < cShadowSplits.z)
-            shadowPos = mul(projWorldPos, cLightMatricesPS[2]);
-        else
-            shadowPos = mul(projWorldPos, cLightMatricesPS[3]);
+        float4 shadowPos0 = mul(projWorldPos, cLightMatricesPS[0]);
+        float4 shadowPos1 = mul(projWorldPos, cLightMatricesPS[1]);
+        float4 shadowPos2 = mul(projWorldPos, cLightMatricesPS[2]);
+        float4 shadowPos3 = mul(projWorldPos, cLightMatricesPS[3]);
     #endif
-    
-    return GetDirShadowFade(GetShadow(shadowPos), depth);
+    float4 shadowPositions[4];
+    shadowPositions[0] = shadowPos0; shadowPositions[1] = shadowPos1;
+    shadowPositions[2] = shadowPos2; shadowPositions[3] = shadowPos3;
+    return GetDirShadow(shadowPositions, depth);
 }
 #endif
 

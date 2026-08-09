@@ -480,7 +480,7 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
                     float pcfValues = (1.0f - intensity);
                     float samples = 1.0f;
                     if (renderer->GetShadowQuality() == SHADOWQUALITY_PCF_16BIT || renderer->GetShadowQuality() == SHADOWQUALITY_PCF_24BIT)
-                        samples = 4.0f;
+                        samples = 9.0f;
                     graphics->SetShaderParameter(PSP_SHADOWINTENSITY, Vector4(pcfValues / samples, intensity, 0.0f, 0.0f));
                 }
 
@@ -497,6 +497,8 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
                     lightSplits.z_ = lightQueue_->shadowSplits_[2].farSplit_ / camera->GetFarClip();
 
                 graphics->SetShaderParameter(PSP_SHADOWSPLITS, lightSplits);
+                graphics->SetShaderParameter(PSP_SHADOWCASCADEBLEND,
+                    Vector4(light->GetShadowCascadeBlend(), 0.0f, 0.0f, 0.0f));
 
                 if (graphics->HasShaderParameter(PSP_VSMSHADOWPARAMS))
                     graphics->SetShaderParameter(PSP_VSMSHADOWPARAMS, renderer->GetVSMShadowParameters());
@@ -505,21 +507,26 @@ void Batch::Prepare(View* view, Camera* camera, bool setModelTransform, bool all
                 {
                     Vector4 normalOffsetScale(Vector4::ZERO);
 
-                    // Scale normal offset strength with the width of the shadow camera view
+                    // Express normal offset in shadow texels so it remains stable across cascade scales and resolutions.
                     if (light->GetLightType() != LIGHT_DIRECTIONAL)
                     {
                         Camera* shadowCamera = lightQueue_->shadowSplits_[0].shadowCamera_;
-                        normalOffsetScale.x_ = 2.0f * tanf(shadowCamera->GetFov() * M_DEGTORAD * 0.5f) * shadowCamera->GetFarClip();
+                        normalOffsetScale.x_ = 2.0f * tanf(shadowCamera->GetFov() * M_DEGTORAD * 0.5f) *
+                            shadowCamera->GetFarClip() / lightQueue_->shadowSplits_[0].shadowViewport_.Width();
                     }
                     else
                     {
-                        normalOffsetScale.x_ = lightQueue_->shadowSplits_[0].shadowCamera_->GetOrthoSize();
+                        normalOffsetScale.x_ = lightQueue_->shadowSplits_[0].shadowCamera_->GetOrthoSize() /
+                            lightQueue_->shadowSplits_[0].shadowViewport_.Width();
                         if (lightQueue_->shadowSplits_.Size() > 1)
-                            normalOffsetScale.y_ = lightQueue_->shadowSplits_[1].shadowCamera_->GetOrthoSize();
+                            normalOffsetScale.y_ = lightQueue_->shadowSplits_[1].shadowCamera_->GetOrthoSize() /
+                                lightQueue_->shadowSplits_[1].shadowViewport_.Width();
                         if (lightQueue_->shadowSplits_.Size() > 2)
-                            normalOffsetScale.z_ = lightQueue_->shadowSplits_[2].shadowCamera_->GetOrthoSize();
+                            normalOffsetScale.z_ = lightQueue_->shadowSplits_[2].shadowCamera_->GetOrthoSize() /
+                                lightQueue_->shadowSplits_[2].shadowViewport_.Width();
                         if (lightQueue_->shadowSplits_.Size() > 3)
-                            normalOffsetScale.w_ = lightQueue_->shadowSplits_[3].shadowCamera_->GetOrthoSize();
+                            normalOffsetScale.w_ = lightQueue_->shadowSplits_[3].shadowCamera_->GetOrthoSize() /
+                                lightQueue_->shadowSplits_[3].shadowViewport_.Width();
                     }
 
                     normalOffsetScale *= light->GetShadowBias().normalOffset_;
