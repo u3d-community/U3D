@@ -231,6 +231,8 @@ void PBRMaterials::SetupViewport()
     auto* renderer = GetSubsystem<Renderer>();
 
     renderer->SetHDRRendering(true);
+    renderer->SetShadowMapSize(2048);
+    renderer->SetShadowQuality(SHADOWQUALITY_PCF_24BIT);
 
     // Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
     SharedPtr<Viewport> viewport(new Viewport(context_, scene_, cameraNode_->GetComponent<Camera>()));

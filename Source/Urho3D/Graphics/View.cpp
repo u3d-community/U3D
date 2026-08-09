@@ -2533,6 +2533,8 @@ void View::SetupShadowCameras(LightQueryResult& query)
             float nearSplit = cullCamera_->GetNearClip();
             float farSplit;
             int numSplits = light->GetNumShadowSplits();
+            const Vector4 effectiveSplits = light->GetShadowCascadeSplits(
+                cullCamera_->GetNearClip(), cullCamera_->GetFarClip());
 
             while (splits < numSplits)
             {
@@ -2540,7 +2542,7 @@ void View::SetupShadowCameras(LightQueryResult& query)
                 if (nearSplit > cullCamera_->GetFarClip())
                     break;
 
-                farSplit = Min(cullCamera_->GetFarClip(), cascade.splits_[splits]);
+                farSplit = Min(cullCamera_->GetFarClip(), effectiveSplits.Data()[splits]);
                 if (farSplit <= nearSplit)
                     break;
 
@@ -2709,12 +2711,11 @@ void View::FinalizeShadowCamera(Camera* shadowCamera, Light* light, const IntRec
             shadowCamera->SetZoom(1.0f / viewSize);
     }
 
-    // Perform a finalization step for all lights: ensure zoom out of 2 pixels to eliminate border filtering issues
-    // For point lights use 4 pixels, as they must not cross sides of the virtual cube map (maximum 3x3 PCF)
+    // Reserve a two-texel guard band for centered 3x3 PCF and its bilinear footprint
     if (shadowCamera->GetZoom() >= 1.0f)
     {
         if (light->GetLightType() != LIGHT_POINT)
-            shadowCamera->SetZoom(shadowCamera->GetZoom() * ((shadowMapWidth - 2.0f) / shadowMapWidth));
+            shadowCamera->SetZoom(shadowCamera->GetZoom() * ((shadowMapWidth - 4.0f) / shadowMapWidth));
         else
         {
 #ifdef URHO3D_OPENGL
@@ -3103,11 +3104,13 @@ void View::RenderShadowMap(const LightBatchQueue& queue)
         const ShadowBatchQueue& shadowQueue = queue.shadowSplits_[i];
 
         float multiplier = 1.0f;
-        // For directional light cascade splits, adjust depth bias according to the far clip ratio of the splits
+        // Scale bias by relative world-space texel size instead of cascade depth range
         if (i > 0 && queue.light_->GetLightType() == LIGHT_DIRECTIONAL)
         {
-            multiplier =
-                Max(shadowQueue.shadowCamera_->GetFarClip() / queue.shadowSplits_[0].shadowCamera_->GetFarClip(), 1.0f);
+            const float firstTexelSize = queue.shadowSplits_[0].shadowCamera_->GetOrthoSize() /
+                queue.shadowSplits_[0].shadowViewport_.Width();
+            const float texelSize = shadowQueue.shadowCamera_->GetOrthoSize() / shadowQueue.shadowViewport_.Width();
+            multiplier = Max(texelSize / firstTexelSize, 1.0f);
             multiplier = 1.0f + (multiplier - 1.0f) * queue.light_->GetShadowCascade().biasAutoAdjust_;
             // Quantize multiplier to prevent creation of too many rasterizer states on D3D11
             multiplier = (int)(multiplier * 10.0f) / 10.0f;

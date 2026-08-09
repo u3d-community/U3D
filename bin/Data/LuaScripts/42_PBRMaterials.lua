@@ -47,7 +47,8 @@ function CreateInstructions()
     -- Construct new Text object, set string to display and font to use
     local instructionText = ui.root:CreateChild("Text")
     instructionText:SetText("Use sliders to change Roughness and Metallic\n" ..
-                            "Hold RMB and use WASD keys and mouse to move")
+                            "Hold RMB and use WASD keys and mouse to move\n" ..
+                            "Press C to show practical CSM cascade volumes")
     instructionText:SetFont(cache:GetResource("Font", "Fonts/Anonymous Pro.ttf"), 15)
 
     -- Position the text relative to the screen center
@@ -175,6 +176,8 @@ end
 
 function SetupViewport()
     renderer.hdrRendering = true
+    renderer.shadowMapSize = 2048
+    renderer.shadowQuality = SHADOWQUALITY_PCF_24BIT
 
     -- Set up a viewport to the Renderer subsystem so that the 3D scene can be seen
     local viewport = Viewport:new(scene_, cameraNode:GetComponent("Camera"))

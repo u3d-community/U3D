@@ -1137,7 +1137,17 @@
 					<attribute name="Brightness Multiplier" value="5000" />
 					<attribute name="Use Physical Values" value="true" />
 					<attribute name="Cast Shadows" value="true" />
-					<attribute name="CSM Splits" value="4 16 128 1024" />
+					<attribute name="CSM Splits" value="8 25 70 200" />
+					<attribute name="CSM Fade Start" value="0.85" />
+					<attribute name="CSM Bias Auto Adjust" value="0.35" />
+					<attribute name="CSM Auto Splits" value="true" />
+					<attribute name="CSM Split Lambda" value="0.85" />
+					<attribute name="CSM Blend" value="0.08" />
+					<attribute name="Focus To Scene" value="false" />
+					<attribute name="Non-uniform View" value="false" />
+					<attribute name="Depth Constant Bias" value="0.0001" />
+					<attribute name="Depth Slope Bias" value="0.75" />
+					<attribute name="Normal Offset" value="0.5" />
 				</component>
 			</node>
 		</node>
