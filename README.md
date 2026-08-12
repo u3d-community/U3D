@@ -116,7 +116,7 @@ U3D is greatly inspired by [Urho3D](https://web.archive.org/web/20170406232054/h
 
 U3D uses the following third-party libraries:
 
-- AngelScript 2.35.1 WIP (http://www.angelcode.com/angelscript)
+- AngelScript 2.38.0 (http://www.angelcode.com/angelscript)
 - Boost 1.64.0 (http://www.boost.org) - only used for AngelScript generic bindings
 - Box2D 2.3.2 WIP (http://box2d.org)
 - Bullet 3.26 (http://www.bulletphysics.org)
