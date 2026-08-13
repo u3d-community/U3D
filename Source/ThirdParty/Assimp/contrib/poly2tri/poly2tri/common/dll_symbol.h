@@ -31,9 +31,7 @@
 
 #pragma once
 
-// U3D : only for MSVC / pragma don't work for mingw
-#ifdef _MSC_VER
-//#if defined(_WIN32)
+#if defined(_MSC_VER)
 #  pragma warning( disable: 4273)
 #  define P2T_COMPILER_DLLEXPORT __declspec(dllexport)
 #  define P2T_COMPILER_DLLIMPORT __declspec(dllimport)
