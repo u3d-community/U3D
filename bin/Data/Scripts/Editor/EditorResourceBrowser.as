@@ -354,6 +354,7 @@ void InitializeBrowserFileListRow(Text@ fileText, BrowserFile@ file)
     if (file.resourceType == RESOURCE_TYPE_MATERIAL ||
             file.resourceType == RESOURCE_TYPE_MODEL ||
             file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT ||
+            file.resourceType == RESOURCE_TYPE_PARTICLEEMITTER ||
             file.resourceType == RESOURCE_TYPE_PREFAB
         )
     {
@@ -451,7 +452,7 @@ void HandleBrowserFileClick(StringHash eventType, VariantMap& eventData)
     {
         actions.Push(CreateBrowserFileActionMenu("Execute Script", "HandleBrowserRunScript", file));
     }
-    else if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT)
+    else if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT || file.resourceType == RESOURCE_TYPE_PARTICLEEMITTER)
     {
         actions.Push(CreateBrowserFileActionMenu("Edit", "HandleBrowserEditResource", file));
     }
@@ -897,7 +898,7 @@ void HandleBrowserEditResource(StringHash eventType, VariantMap& eventData)
             EditMaterial(material);
     }
 
-    if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT)
+    if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT || file.resourceType == RESOURCE_TYPE_PARTICLEEMITTER)
     {
         ParticleEffect@ particleEffect = cache.GetResource("ParticleEffect", file.resourceKey);
         if (particleEffect !is null)
@@ -1636,7 +1637,7 @@ void CreateResourcePreview(String path, Node@ previewNode)
             previewNode.RemoveAllChildren();
             previewNode.RemoveAllComponents();
         }
-        else if (resourceType == RESOURCE_TYPE_PARTICLEEFFECT)
+        else if (resourceType == RESOURCE_TYPE_PARTICLEEFFECT || resourceType == RESOURCE_TYPE_PARTICLEEMITTER)
         {
             ParticleEffect@ particleEffect = ParticleEffect();
             if (particleEffect.Load(file))
