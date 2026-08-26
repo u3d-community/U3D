@@ -1649,6 +1649,17 @@ void CreateResourcePreview(String path, Node@ previewNode)
                 return;
             }
         }
+        else if (resourceType == RESOURCE_TYPE_2D_PARTICLE_EFFECT)
+        {
+            ParticleEffect2D@ particleEffect2d = ParticleEffect2D();
+            if (particleEffect2d.Load(file))
+            {
+                ParticleEmitter2D@ particleEmitter2d = previewNode.CreateComponent("ParticleEmitter2D");
+                particleEmitter2d.effect = particleEffect2d;
+                resourceBrowserPreview.autoUpdate = true;
+                return;
+            }
+        }
     }
 
     StaticModel@ staticModel = previewNode.CreateComponent("StaticModel");
