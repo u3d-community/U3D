@@ -14725,6 +14725,12 @@ template <class T> void RegisterMembers_ParticleEffect2D(asIScriptEngine* engine
     // float ParticleEffect2D::GetTangentialAccelVariance() const
     engine->RegisterObjectMethod(className, "float GetTangentialAccelVariance() const", AS_METHODPR(T, GetTangentialAccelVariance, () const, float), AS_CALL_THISCALL);
 
+    // bool ParticleEffect2D::Load(const XMLElement& source)
+    engine->RegisterObjectMethod(className, "bool Load(const XMLElement&in)", AS_METHODPR(T, Load, (const XMLElement&), bool), AS_CALL_THISCALL);
+
+    // bool ParticleEffect2D::Save(XMLElement& dest) const
+    engine->RegisterObjectMethod(className, "bool Save(XMLElement&) const", AS_METHODPR(T, Save, (XMLElement&) const, bool), AS_CALL_THISCALL);
+
     // void ParticleEffect2D::SetAngle(float angle)
     engine->RegisterObjectMethod(className, "void SetAngle(float)", AS_METHODPR(T, SetAngle, (float), void), AS_CALL_THISCALL);
 
@@ -25122,6 +25128,15 @@ template <class T> void RegisterMembers_ParticleEmitter2D(asIScriptEngine* engin
     // bool ParticleEmitter2D::IsEmitting() const
     engine->RegisterObjectMethod(className, "bool IsEmitting() const", AS_METHODPR(T, IsEmitting, () const, bool), AS_CALL_THISCALL);
     engine->RegisterObjectMethod(className, "bool get_emitting() const", AS_METHODPR(T, IsEmitting, () const, bool), AS_CALL_THISCALL);
+
+    // void ParticleEmitter2D::RemoveAllParticles()
+    engine->RegisterObjectMethod(className, "void RemoveAllParticles()", AS_METHODPR(T, RemoveAllParticles, (), void), AS_CALL_THISCALL);
+
+    // void ParticleEmitter2D::Reset()
+    engine->RegisterObjectMethod(className, "void Reset()", AS_METHODPR(T, Reset, (), void), AS_CALL_THISCALL);
+
+    // void ParticleEmitter2D::ResetEmissionTimer()
+    engine->RegisterObjectMethod(className, "void ResetEmissionTimer()", AS_METHODPR(T, ResetEmissionTimer, (), void), AS_CALL_THISCALL);
 
     // void ParticleEmitter2D::SetBlendMode(BlendMode blendMode)
     engine->RegisterObjectMethod(className, "void SetBlendMode(BlendMode)", AS_METHODPR(T, SetBlendMode, (BlendMode), void), AS_CALL_THISCALL);

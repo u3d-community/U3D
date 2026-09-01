@@ -1013,6 +1013,45 @@ class EditParticleEffectAction : EditAction
     }
 }
 
+class EditParticleEffect2dAction : EditAction
+{
+    XMLFile@ oldState;
+    XMLFile@ newState;
+    WeakHandle particleEffect;
+    ParticleEmitter2D@ particleEmitter;
+
+    void Define(ParticleEmitter2D@ particleEmitter_, ParticleEffect2D@ particleEffect_, XMLFile@ oldState_)
+    {
+        particleEmitter = particleEmitter_;
+        particleEffect = particleEffect_;
+        oldState = oldState_;
+        newState = XMLFile();
+
+        XMLElement particleElem = newState.CreateRoot("particleEmitterConfig");
+        particleEffect_.Save(particleElem);
+    }
+
+    void Undo()
+    {
+        ParticleEffect2D@ effect = particleEffect.Get();
+        if (effect !is null)
+        {
+            effect.Load(oldState.root);
+            RefreshParticleEffectEditor2d();
+        }
+    }
+
+    void Redo()
+    {
+        ParticleEffect2D@ effect = particleEffect.Get();
+        if (effect !is null)
+        {
+            effect.Load(newState.root);
+            RefreshParticleEffectEditor2d();
+        }
+    }
+}
+
 class AssignMaterialAction : EditAction
 {
     WeakHandle model;

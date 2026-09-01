@@ -395,6 +395,18 @@
 		"fr":"Éditeur de particules",
 		"it":"Editor particelle"
 	},
+	"Particle editor 2D":{
+		"en":"Particle editor 2D",
+		"ru":"Редактор частиц 2D",
+		"fr":"Éditeur de particules 2D",
+		"it":"Editor particelle 2D"
+	},
+	"2D Particle editor":{
+		"en":"Particle editor 2D",
+		"ru":"Редактор частиц 2D",
+		"fr":"Éditeur de particules 2D",
+		"it":"Editor particelle 2D"
+	},
 	"Spawn editor":{
 		"en":"Spawn editor",
 		"ru":"Редактор спауна",
@@ -965,6 +977,12 @@
 		"fr":"Sauvegarder l'effêt de particule comme",
 		"it":"Salva effetto particellare come"
 	},
+	"Save particle effect 2D as":{
+		"en":"Save particle effect 2D as",
+		"ru":"Сохранить эффект из частиц 2D как",
+		"fr":"Sauvegarder l'effêt de particule 2D comme",
+		"it":"Salva effetto particellare 2D come"
+	},
 	"Load":{
 		"en":"Load",
 		"ru":"Загрузить",
@@ -1391,6 +1409,12 @@
 		"fr":"Couleur",
 		"it":"Colore"
 	},
+	"Colors":{
+		"en":"Colors",
+		"ru":"Цвета",
+		"fr":"Couleurs",
+		"it":"Colori"
+	},
 	"Tags":{
 		"en":"Tags",
 		"ru":"Теги",
@@ -1431,5 +1455,20 @@
 		"en":"Keep camera preview after deselect",
 		"ru":"Сохранять предварительный просмотр камеры после снятия выделения",
 		"it":"Mantieni l'anteprima della camera dopo aver deselezionato"
+	},
+	"Loop Emission":{
+		"en":"Loop Emission",
+		"ru":"Цикл выбросов",
+		"it":"Emissione in ciclo"
+	},
+	"Gravity Emitter Config":{
+		"en":"Gravity Emitter Config",
+		"ru":"Конфигурация гравитационного излучателя",
+		"it":"Config. emettitore di gravità"
+	},
+	"Radial Emitter Config":{
+		"en":"Radial Emitter Config",
+		"ru":"Радиальная конфигурация излучателя",
+		"it":"Config. emettitore radiale"
 	}
 }

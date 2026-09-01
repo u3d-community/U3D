@@ -103,6 +103,12 @@ public:
     /// Set whether should be emitting. If the state was changed, also resets the emission period timer.
     /// @property
     void SetEmitting(bool enable);
+    /// Reset the emission period timer.
+    void ResetEmissionTimer();
+    /// Sets time left of all current particles to zero.
+    void RemoveAllParticles();
+    /// Reset the particle emitter completely. Removes current particles, sets emitting state on, and resets the emission timer.
+    void Reset();
 
     /// Return particle effect.
     /// @property

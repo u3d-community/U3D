@@ -89,6 +89,7 @@ void CreateUI()
     CreateEditorPreferencesDialog();
     CreateMaterialEditor();
     CreateParticleEffectEditor();
+    CreateParticleEffectEditor2d();
     CreateSpawnEditor();
     CreateSoundTypeEditor();
     CreateStatsBar();
@@ -534,6 +535,7 @@ void CreateMenuBar()
         popup.AddChild(CreateMenuItem("Resource browser", @ToggleResourceBrowserWindow, KEY_B, QUAL_CTRL));
         popup.AddChild(CreateMenuItem("Material editor", @ToggleMaterialEditor));
         popup.AddChild(CreateMenuItem("Particle editor", @ToggleParticleEffectEditor));
+        popup.AddChild(CreateMenuItem("2D Particle editor", @ToggleParticleEffectEditor2d));
         popup.AddChild(CreateMenuItem("Terrain editor", TerrainEditorShowCallback(terrainEditor.Show)));
         popup.AddChild(CreateMenuItem("Spawn editor", @ToggleSpawnEditor));
         popup.AddChild(CreateMenuItem("Duplicator editor", @ToggleDuplicatorEditor));
