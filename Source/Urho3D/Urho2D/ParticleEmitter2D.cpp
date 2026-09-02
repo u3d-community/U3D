@@ -137,6 +137,25 @@ void ParticleEmitter2D::SetMaxParticles(unsigned maxParticles)
     numParticles_ = Min(maxParticles, numParticles_);
 }
 
+void ParticleEmitter2D::ResetEmissionTimer()
+{
+    emitParticleTime_ = 0.0f;
+    if(effect_) emissionTime_ = effect_->GetDuration();
+}
+
+void ParticleEmitter2D::RemoveAllParticles()
+{
+    for (auto i = particles_.Begin(); i != particles_.End(); ++i)
+        i->timeToLive_ = 0.0f;
+}
+
+void ParticleEmitter2D::Reset()
+{
+    RemoveAllParticles();
+    ResetEmissionTimer();
+    SetEmitting(true);
+}
+
 ParticleEffect2D* ParticleEmitter2D::GetEffect() const
 {
     return effect_;
@@ -171,7 +190,7 @@ void ParticleEmitter2D::SetEmitting(bool enable)
         return;
 
     emitting_ = enable;
-    emitParticleTime_ = 0.0f;
+    ResetEmissionTimer();
 
     MarkNetworkUpdate();
 }

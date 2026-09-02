@@ -7,6 +7,9 @@ public:
     void SetSprite(Sprite2D* sprite);
     void SetBlendMode(BlendMode blendMode);
     void SetEmitting(bool emitting);
+    void RemoveAllParticles();
+    void Reset();
+    void ResetEmissionTimer();
 
     ParticleEffect2D* GetEffect() const;
     Sprite2D* GetSprite() const;

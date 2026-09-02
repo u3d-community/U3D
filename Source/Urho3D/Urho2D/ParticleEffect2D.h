@@ -61,6 +61,13 @@ public:
     /// Save resource. Return true if successful.
     bool Save(Serializer& dest) const override;
 
+    using Resource::Load;
+
+    /// Save resource to XMLElement. Return true if successful.
+    bool Save(XMLElement& dest) const;
+    /// Load resource from XMLElement synchronously. Return true if successful.
+    bool Load(const XMLElement& source);
+
     /// Set sprite.
     void SetSprite(Sprite2D* sprite);
     /// Set source position variance.

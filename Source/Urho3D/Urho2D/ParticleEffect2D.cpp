@@ -88,7 +88,7 @@ ParticleEffect2D::ParticleEffect2D(Context* context) :
     startParticleSizeVariance_(40.0f),
     finishParticleSize_(5.0f),
     finishParticleSizeVariance_(5.0f),
-    duration_(-1.0f),
+    duration_(M_INFINITY),
     emitterType_(EMITTER_TYPE_GRAVITY),
     maxRadius_(100.0f),
     maxRadiusVariance_(0.0f),
@@ -126,86 +126,11 @@ bool ParticleEffect2D::BeginLoad(Deserializer& source)
     if (!rootElem)
         return false;
 
-    String texture = rootElem.GetChild("texture").GetAttribute("name");
-    loadSpriteName_ = GetParentPath(GetName()) + texture;
-    // If async loading, request the sprite beforehand
-    if (GetAsyncLoadState() == ASYNC_LOADING)
-        GetSubsystem<ResourceCache>()->BackgroundLoadResource<Sprite2D>(loadSpriteName_, true, this);
-
-    sourcePositionVariance_ = ReadVector2(rootElem, "sourcePositionVariance");
-
-    speed_ = ReadFloat(rootElem, "speed");
-    speedVariance_ = ReadFloat(rootElem, "speedVariance");
-
-    particleLifeSpan_ = Max(0.01f, ReadFloat(rootElem, "particleLifeSpan"));
-    particleLifespanVariance_ = ReadFloat(rootElem, "particleLifespanVariance");
-
-    angle_ = ReadFloat(rootElem, "angle");
-    angleVariance_ = ReadFloat(rootElem, "angleVariance");
-
-    gravity_ = ReadVector2(rootElem, "gravity");
-
-    radialAcceleration_ = ReadFloat(rootElem, "radialAcceleration");
-    tangentialAcceleration_ = ReadFloat(rootElem, "tangentialAcceleration");
-
-    radialAccelVariance_ = ReadFloat(rootElem, "radialAccelVariance");
-    tangentialAccelVariance_ = ReadFloat(rootElem, "tangentialAccelVariance");
-
-    startColor_ = ReadColor(rootElem, "startColor");
-    startColorVariance_ = ReadColor(rootElem, "startColorVariance");
-
-    finishColor_ = ReadColor(rootElem, "finishColor");
-    finishColorVariance_ = ReadColor(rootElem, "finishColorVariance");
-
-    maxParticles_ = ReadInt(rootElem, "maxParticles");
-
-    startParticleSize_ = ReadFloat(rootElem, "startParticleSize");
-    startParticleSizeVariance_ = ReadFloat(rootElem, "startParticleSizeVariance");
-
-    finishParticleSize_ = ReadFloat(rootElem, "finishParticleSize");
-    // Typo in pex file
-    finishParticleSizeVariance_ = ReadFloat(rootElem, "FinishParticleSizeVariance");
-
-    duration_ = M_INFINITY;
-    if (rootElem.HasChild("duration"))
-    {
-        float duration = ReadFloat(rootElem, "duration");
-        if (duration > 0.0f)
-            duration_ = duration;
-    }
-
-
-    emitterType_ = (EmitterType2D)ReadInt(rootElem, "emitterType");
-
-    maxRadius_ = ReadFloat(rootElem, "maxRadius");
-    maxRadiusVariance_ = ReadFloat(rootElem, "maxRadiusVariance");
-    minRadius_ = ReadFloat(rootElem, "minRadius");
-    minRadiusVariance_ = ReadFloat(rootElem, "minRadiusVariance");
-
-    rotatePerSecond_ = ReadFloat(rootElem, "rotatePerSecond");
-    rotatePerSecondVariance_ = ReadFloat(rootElem, "rotatePerSecondVariance");
-
-    int blendFuncSource = ReadInt(rootElem, "blendFuncSource");
-    int blendFuncDestination = ReadInt(rootElem, "blendFuncDestination");
-    blendMode_ = BLEND_ALPHA;
-    for (int i = 0; i < MAX_BLENDMODES; ++i)
-    {
-        if (blendFuncSource == srcBlendFuncs[i] && blendFuncDestination == destBlendFuncs[i])
-        {
-            blendMode_ = (BlendMode)i;
-            break;
-        }
-    }
-
-    rotationStart_ = ReadFloat(rootElem, "rotationStart");
-    rotationStartVariance_ = ReadFloat(rootElem, "rotationStartVariance");
-
-    rotationEnd_ = ReadFloat(rootElem, "rotationEnd");
-    rotationEndVariance_ = ReadFloat(rootElem, "rotationEndVariance");
-
     // Note: not accurate
-    SetMemoryUse(source.GetSize());
-    return true;
+    bool success = Load(rootElem);
+    if (success)
+        SetMemoryUse(source.GetSize());
+    return success;
 }
 
 bool ParticleEffect2D::EndLoad()
@@ -232,68 +157,273 @@ bool ParticleEffect2D::Save(Serializer& dest) const
     XMLFile xmlFile(context_);
     XMLElement rootElem = xmlFile.CreateRoot("particleEmitterConfig");
 
+    Save(rootElem);
+
+    return xmlFile.Save(dest);
+}
+
+bool ParticleEffect2D::Save(XMLElement& dest) const
+{
+    if (!sprite_)
+        return false;
+
+    if (dest.IsNull())
+    {
+        URHO3D_LOGERROR("Can not save particle effect to null XML element");
+        return false;
+    }
+
     String fileName = GetFileNameAndExtension(sprite_->GetName());
-    rootElem.CreateChild("texture").SetAttribute("name", fileName);
+    dest.CreateChild("texture").SetAttribute("name", fileName);
 
-    WriteVector2(rootElem, "sourcePosition", Vector2::ZERO);
-    WriteVector2(rootElem, "sourcePositionVariance", sourcePositionVariance_);
+    WriteVector2(dest, "sourcePosition", Vector2::ZERO);
+    WriteVector2(dest, "sourcePositionVariance", sourcePositionVariance_);
 
-    WriteFloat(rootElem, "speed", speed_);
-    WriteFloat(rootElem, "speedVariance", speedVariance_);
+    WriteFloat(dest, "speed", speed_);
+    WriteFloat(dest, "speedVariance", speedVariance_);
 
-    WriteFloat(rootElem, "particleLifeSpan", particleLifeSpan_);
-    WriteFloat(rootElem, "particleLifespanVariance", particleLifespanVariance_);
+    WriteFloat(dest, "particleLifeSpan", particleLifeSpan_);
+    WriteFloat(dest, "particleLifespanVariance", particleLifespanVariance_);
 
-    WriteFloat(rootElem, "angle", angle_);
-    WriteFloat(rootElem, "angleVariance", angleVariance_);
+    WriteFloat(dest, "angle", angle_);
+    WriteFloat(dest, "angleVariance", angleVariance_);
 
-    WriteVector2(rootElem, "gravity", gravity_);
+    WriteVector2(dest, "gravity", gravity_);
 
-    WriteFloat(rootElem, "radialAcceleration", radialAcceleration_);
-    WriteFloat(rootElem, "tangentialAcceleration", tangentialAcceleration_);
+    WriteFloat(dest, "radialAcceleration", radialAcceleration_);
+    WriteFloat(dest, "tangentialAcceleration", tangentialAcceleration_);
 
-    WriteFloat(rootElem, "radialAccelVariance", radialAccelVariance_);
-    WriteFloat(rootElem, "tangentialAccelVariance", tangentialAccelVariance_);
+    WriteFloat(dest, "radialAccelVariance", radialAccelVariance_);
+    WriteFloat(dest, "tangentialAccelVariance", tangentialAccelVariance_);
 
-    WriteColor(rootElem, "startColor", startColor_);
-    WriteColor(rootElem, "startColorVariance", startColorVariance_);
+    WriteColor(dest, "startColor", startColor_);
+    WriteColor(dest, "startColorVariance", startColorVariance_);
 
-    WriteColor(rootElem, "finishColor", finishColor_);
-    WriteColor(rootElem, "finishColorVariance", finishColorVariance_);
+    WriteColor(dest, "finishColor", finishColor_);
+    WriteColor(dest, "finishColorVariance", finishColorVariance_);
 
-    WriteInt(rootElem, "maxParticles", maxParticles_);
+    WriteInt(dest, "maxParticles", maxParticles_);
 
-    WriteFloat(rootElem, "startParticleSize", startParticleSize_);
-    WriteFloat(rootElem, "startParticleSizeVariance", startParticleSizeVariance_);
+    WriteFloat(dest, "startParticleSize", startParticleSize_);
+    WriteFloat(dest, "startParticleSizeVariance", startParticleSizeVariance_);
 
-    WriteFloat(rootElem, "finishParticleSize", finishParticleSize_);
+    WriteFloat(dest, "finishParticleSize", finishParticleSize_);
     // Typo in pex file
-    WriteFloat(rootElem, "FinishParticleSizeVariance", finishParticleSizeVariance_);
+    WriteFloat(dest, "FinishParticleSizeVariance", finishParticleSizeVariance_);
 
     float duration = duration_;
     if (duration == M_INFINITY)
         duration = -1.0f;
-    WriteFloat(rootElem, "duration", duration);
-    WriteInt(rootElem, "emitterType", (int)emitterType_);
+    WriteFloat(dest, "duration", duration);
+    WriteInt(dest, "emitterType", (int)emitterType_);
 
-    WriteFloat(rootElem, "maxRadius", maxRadius_);
-    WriteFloat(rootElem, "maxRadiusVariance", maxRadiusVariance_);
-    WriteFloat(rootElem, "minRadius", minRadius_);
-    WriteFloat(rootElem, "minRadiusVariance", minRadiusVariance_);
+    WriteFloat(dest, "maxRadius", maxRadius_);
+    WriteFloat(dest, "maxRadiusVariance", maxRadiusVariance_);
+    WriteFloat(dest, "minRadius", minRadius_);
+    WriteFloat(dest, "minRadiusVariance", minRadiusVariance_);
 
-    WriteFloat(rootElem, "rotatePerSecond", rotatePerSecond_);
-    WriteFloat(rootElem, "rotatePerSecondVariance", rotatePerSecondVariance_);
+    WriteFloat(dest, "rotatePerSecond", rotatePerSecond_);
+    WriteFloat(dest, "rotatePerSecondVariance", rotatePerSecondVariance_);
 
-    WriteInt(rootElem, "blendFuncSource", srcBlendFuncs[blendMode_]);
-    WriteInt(rootElem, "blendFuncDestination", destBlendFuncs[blendMode_]);
+    WriteInt(dest, "blendFuncSource", srcBlendFuncs[blendMode_]);
+    WriteInt(dest, "blendFuncDestination", destBlendFuncs[blendMode_]);
 
-    WriteFloat(rootElem, "rotationStart", rotationStart_);
-    WriteFloat(rootElem, "rotationStartVariance", rotationStartVariance_);
+    WriteFloat(dest, "rotationStart", rotationStart_);
+    WriteFloat(dest, "rotationStartVariance", rotationStartVariance_);
 
-    WriteFloat(rootElem, "rotationEnd", rotationEnd_);
-    WriteFloat(rootElem, "rotationEndVariance", rotationEndVariance_);
+    WriteFloat(dest, "rotationEnd", rotationEnd_);
+    WriteFloat(dest, "rotationEndVariance", rotationEndVariance_);
 
-    return xmlFile.Save(dest);
+    return true;
+}
+
+bool ParticleEffect2D::Load(const XMLElement& source)
+{
+    // Reset to defaults first so that missing parameters in case of a live reload behave as expected
+    sourcePositionVariance_ = Vector2(7.0f, 7.0f);
+    speed_ = 260.0f;
+    speedVariance_ = 10.0f;
+    particleLifeSpan_ = 1.000f;
+    particleLifespanVariance_ = 0.700f;
+    angle_ = 0.0f;
+    angleVariance_ = 360.0f;
+    gravity_ = Vector2(0.0f, 0.0f);
+    radialAcceleration_ = -380.0f;
+    tangentialAcceleration_ = -140.0f;
+    radialAccelVariance_ = 0.0f;
+    tangentialAccelVariance_ = 0.0f;
+    startColor_ = Color(1.0f, 0.0f, 0.0f, 1.0f);
+    startColorVariance_ = Color(0.0f, 0.0f, 0.0f, 0.0f);
+    finishColor_ = Color(1.0f, 1.0f, 0.0f, 1.0f);
+    finishColorVariance_ = Color(0.0f, 0.0f, 0.0f, 0.0f);
+    maxParticles_ = 600;
+    startParticleSize_ = 60.0f;
+    startParticleSizeVariance_ = 40.0f;
+    finishParticleSize_ = 5.0f;
+    finishParticleSizeVariance_ = 5.0f;
+    duration_ = M_INFINITY;
+    emitterType_ = EMITTER_TYPE_GRAVITY;
+    maxRadius_ = 100.0f;
+    maxRadiusVariance_ = 0.0f;
+    minRadius_ = 0.0f;
+    minRadiusVariance_ = 0.0f;
+    rotatePerSecond_ = 0.0f;
+    rotatePerSecondVariance_ = 0.0f;
+    blendMode_ = BLEND_ALPHA;
+    rotationStart_ = 0.0f;
+    rotationStartVariance_ = 0.0f;
+    rotationEnd_ = 0.0f;
+    rotationEndVariance_ = 0.0f;
+
+    if (source.IsNull())
+    {
+        URHO3D_LOGERROR("Can not load particle effect 2D from null XML element");
+        return false;
+    }
+
+
+    if(source.HasChild("texture"))
+    {
+        String texture = source.GetChild("texture").GetAttribute("name");
+        loadSpriteName_ = GetParentPath(GetName()) + texture;
+        // If async loading, request the sprite beforehand
+        if (GetAsyncLoadState() == ASYNC_LOADING)
+            GetSubsystem<ResourceCache>()->BackgroundLoadResource<Sprite2D>(loadSpriteName_, true, this);
+    }
+
+
+    if(source.HasChild("sourcePositionVariance"))
+        sourcePositionVariance_ = ReadVector2(source, "sourcePositionVariance");
+
+
+    if(source.HasChild("speed"))
+        speed_ = ReadFloat(source, "speed");
+
+    if(source.HasChild("speedVariance"))
+        speedVariance_ = ReadFloat(source, "speedVariance");
+
+
+    if(source.HasChild("particleLifeSpan"))
+        particleLifeSpan_ = Max(0.01f, ReadFloat(source, "particleLifeSpan"));
+
+    if(source.HasChild("particleLifespanVariance"))
+        particleLifespanVariance_ = ReadFloat(source, "particleLifespanVariance");
+
+
+    if(source.HasChild("angle"))
+        angle_ = ReadFloat(source, "angle");
+    if(source.HasChild("angleVariance"))
+        angleVariance_ = ReadFloat(source, "angleVariance");
+
+
+    if(source.HasChild("gravity"))
+        gravity_ = ReadVector2(source, "gravity");
+
+
+    if(source.HasChild("radialAcceleration"))
+        radialAcceleration_ = ReadFloat(source, "radialAcceleration");
+
+    if(source.HasChild("tangentialAcceleration"))
+        tangentialAcceleration_ = ReadFloat(source, "tangentialAcceleration");
+
+
+    if(source.HasChild("radialAccelVariance"))
+        radialAccelVariance_ = ReadFloat(source, "radialAccelVariance");
+
+    if(source.HasChild("tangentialAccelVariance"))
+        tangentialAccelVariance_ = ReadFloat(source, "tangentialAccelVariance");
+
+
+    if(source.HasChild("startColor"))
+        startColor_ = ReadColor(source, "startColor");
+
+    if(source.HasChild("startColorVariance"))
+        startColorVariance_ = ReadColor(source, "startColorVariance");
+
+
+    if(source.HasChild("finishColor"))
+        finishColor_ = ReadColor(source, "finishColor");
+
+    if(source.HasChild("finishColorVariance"))
+        finishColorVariance_ = ReadColor(source, "finishColorVariance");
+
+
+    if(source.HasChild("maxParticles"))
+        maxParticles_ = ReadInt(source, "maxParticles");
+
+
+    if(source.HasChild("startParticleSize"))
+        startParticleSize_ = ReadFloat(source, "startParticleSize");
+
+    if(source.HasChild("startParticleSizeVariance"))
+        startParticleSizeVariance_ = ReadFloat(source, "startParticleSizeVariance");
+
+
+    if(source.HasChild("finishParticleSize"))
+        finishParticleSize_ = ReadFloat(source, "finishParticleSize");
+
+    // Typo in pex file
+    if(source.HasChild("FinishParticleSizeVariance"))
+        finishParticleSizeVariance_ = ReadFloat(source, "FinishParticleSizeVariance");
+
+    if (source.HasChild("duration"))
+    {
+        float duration = ReadFloat(source, "duration");
+        if (duration > 0.0f)
+            duration_ = duration;
+    }
+
+
+    if(source.HasChild("emitterType"))
+        emitterType_ = (EmitterType2D)ReadInt(source, "emitterType");
+
+
+    if(source.HasChild("maxRadius"))
+        maxRadius_ = ReadFloat(source, "maxRadius");
+
+    if(source.HasChild("maxRadiusVariance"))
+        maxRadiusVariance_ = ReadFloat(source, "maxRadiusVariance");
+
+    if(source.HasChild("minRadius"))
+        minRadius_ = ReadFloat(source, "minRadius");
+
+    if(source.HasChild("minRadiusVariance"))
+        minRadiusVariance_ = ReadFloat(source, "minRadiusVariance");
+
+
+    if(source.HasChild("rotatePerSecond"))
+        rotatePerSecond_ = ReadFloat(source, "rotatePerSecond");
+
+    if(source.HasChild("rotatePerSecondVariance"))
+        rotatePerSecondVariance_ = ReadFloat(source, "rotatePerSecondVariance");
+
+    if(source.HasChild("blendFuncSource") && source.HasChild("blendFuncDestination"))
+    {
+        int blendFuncSource = ReadInt(source, "blendFuncSource");
+        int blendFuncDestination = ReadInt(source, "blendFuncDestination");
+        for (int i = 0; i < MAX_BLENDMODES; ++i)
+        {
+            if (blendFuncSource == srcBlendFuncs[i] && blendFuncDestination == destBlendFuncs[i])
+            {
+                blendMode_ = (BlendMode)i;
+                break;
+            }
+        }
+    }
+
+    if(source.HasChild("rotationStart"))
+        rotationStart_ = ReadFloat(source, "rotationStart");
+
+    if(source.HasChild("rotationStartVariance"))
+        rotationStartVariance_ = ReadFloat(source, "rotationStartVariance");
+
+    if(source.HasChild("rotationEnd"))
+        rotationEnd_ = ReadFloat(source, "rotationEnd");
+
+    if(source.HasChild("rotationEndVariance"))
+        rotationEndVariance_ = ReadFloat(source, "rotationEndVariance");
+
+    return true;
 }
 
 void ParticleEffect2D::SetSprite(Sprite2D* sprite)

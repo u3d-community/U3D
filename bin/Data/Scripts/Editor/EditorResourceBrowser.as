@@ -452,7 +452,7 @@ void HandleBrowserFileClick(StringHash eventType, VariantMap& eventData)
     {
         actions.Push(CreateBrowserFileActionMenu("Execute Script", "HandleBrowserRunScript", file));
     }
-    else if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT || file.resourceType == RESOURCE_TYPE_PARTICLEEMITTER)
+    else if (file.resourceType == RESOURCE_TYPE_PARTICLEEFFECT || file.resourceType == RESOURCE_TYPE_PARTICLEEMITTER || file.resourceType == RESOURCE_TYPE_2D_PARTICLE_EFFECT)
     {
         actions.Push(CreateBrowserFileActionMenu("Edit", "HandleBrowserEditResource", file));
     }
@@ -903,6 +903,13 @@ void HandleBrowserEditResource(StringHash eventType, VariantMap& eventData)
         ParticleEffect@ particleEffect = cache.GetResource("ParticleEffect", file.resourceKey);
         if (particleEffect !is null)
             EditParticleEffect(particleEffect);
+    }
+
+    if (file.resourceType == RESOURCE_TYPE_2D_PARTICLE_EFFECT)
+    {
+        ParticleEffect2D@ particleEffect2d = cache.GetResource("ParticleEffect2D", file.resourceKey);
+        if (particleEffect2d !is null)
+            EditParticleEffect2d(particleEffect2d);
     }
 }
 

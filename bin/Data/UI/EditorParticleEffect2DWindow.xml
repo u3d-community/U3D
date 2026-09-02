@@ -1,0 +1,1248 @@
+<?xml version="1.0"?>
+<element type="Window">
+	<attribute name="Name" value="ParticleEffect2dWindow" />
+	<attribute name="Position" value="397 123" />
+	<attribute name="Size" value="794 384" />
+	<attribute name="Layout Mode" value="Vertical" />
+	<attribute name="Layout Spacing" value="4" />
+	<attribute name="Layout Border" value="6 6 6 6" />
+	<attribute name="Resize Border" value="6 6 6 6" />
+	<attribute name="Is Movable" value="true" />
+	<attribute name="Is Resizable" value="true" />
+	<element>
+		<attribute name="Min Size" value="0 16" />
+		<attribute name="Max Size" value="2147483647 16" />
+		<attribute name="Pivot" value="0 0" />
+		<attribute name="Layout Mode" value="Horizontal" />
+		<element type="Text">
+			<attribute name="Text" value="Particle editor 2D" />
+			<attribute name="Auto Localizable" value="true" />
+		</element>
+		<element type="Button" style="CloseButton">
+			<attribute name="Name" value="CloseButton" />
+			<attribute name="Border" value="4 4 4 4" />
+			<attribute name="Hover Image Offset" value="0 16" />
+			<attribute name="Pressed Image Offset" value="16 0" />
+		</element>
+	</element>
+	<element type="BorderImage" style="EditorDivider" />
+	<element>
+		<attribute name="Pivot" value="0 0" />
+		<attribute name="Layout Mode" value="Horizontal" />
+		<element>
+			<attribute name="Pivot" value="0 0" />
+			<attribute name="Layout Mode" value="Vertical" />
+			<element type="View3D" style="View3D">
+				<attribute name="Name" value="ParticleEffectPreview" />
+				<attribute name="Pivot" value="0 0" />
+				<attribute name="Use Derived Opacity" value="false" />
+				<attribute name="Image Rect" value="0 0 412 310" />
+			</element>
+			<element type="BorderImage" style="EditorDivider" />
+			<element>
+				<attribute name="Min Size" value="0 16" />
+				<attribute name="Max Size" value="2147483647 16" />
+				<attribute name="Pivot" value="0 0" />
+				<attribute name="Layout Mode" value="Horizontal" />
+				<attribute name="Layout Spacing" value="4" />
+				<element type="Button">
+					<attribute name="Name" value="ResetViewport" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Border" value="1 1 1 1" />
+					<element type="Text">
+						<attribute name="Text" value="Reset Viewport" />
+						<attribute name="Text Alignment" value="Center" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+				</element>
+				<element type="BorderImage" style="EditorVerticalDivider" />
+				<element>
+					<attribute name="Min Size" value="0 16" />
+					<attribute name="Max Size" value="2147483647 16" />
+					<attribute name="Pivot" value="0 0" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Spacing" value="10" />
+					<element type="Text" style="EditorAttributeText">
+						<attribute name="Pivot" value="0 0" />
+						<attribute name="Text" value="Show Grid" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+					<element>
+						<attribute name="Min Size" value="0 16" />
+						<attribute name="Max Size" value="2147483647 16" />
+						<attribute name="Pivot" value="0 0" />
+						<attribute name="Layout Mode" value="Horizontal" />
+						<attribute name="Layout Spacing" value="1" />
+						<element type="CheckBox">
+							<attribute name="Name" value="ShowGrid" />
+						</element>
+					</element>
+				</element>
+				<element type="BorderImage" style="EditorVerticalDivider" />
+				<element>
+					<attribute name="Min Size" value="0 16" />
+					<attribute name="Max Size" value="2147483647 16" />
+					<attribute name="Pivot" value="0 0" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Spacing" value="10" />
+					<element type="Text" style="EditorAttributeText">
+						<attribute name="Pivot" value="0 0" />
+						<attribute name="Text" value="Loop Emission" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+					<element>
+						<attribute name="Min Size" value="0 16" />
+						<attribute name="Max Size" value="2147483647 16" />
+						<attribute name="Pivot" value="0 0" />
+						<attribute name="Layout Mode" value="Horizontal" />
+						<attribute name="Layout Spacing" value="1" />
+						<element type="CheckBox">
+							<attribute name="Name" value="LoopEmission" />
+							<attribute name="Is Checked" value="true" />
+						</element>
+					</element>
+				</element>
+			</element>
+		</element>
+		<element type="BorderImage" style="EditorVerticalDivider" />
+		<element>
+			<attribute name="Pivot" value="0 0" />
+			<attribute name="Layout Mode" value="Vertical" />
+			<element>
+				<attribute name="Name" value="NameContainer" />
+				<attribute name="Min Size" value="0 16" />
+				<attribute name="Max Size" value="2147483647 16" />
+				<attribute name="Pivot" value="0 0" />
+				<attribute name="Layout Mode" value="Horizontal" />
+			</element>
+			<element type="BorderImage" style="EditorDivider" />
+			<element type="ListView" style="PanelView">
+				<attribute name="Min Size" value="0 60" />
+				<attribute name="Pivot" value="0 0" />
+				<element type="ScrollBar" internal="true" style="none">
+					<attribute name="Size" value="343 16" />
+					<attribute name="Min Anchor" value="0 1" />
+					<attribute name="Max Anchor" value="0 1" />
+					<attribute name="Pivot" value="0 1" />
+					<attribute name="Color" value="0 0 0 0" />
+					<attribute name="Top Left Color" value="0 0 0 0" />
+					<attribute name="Top Right Color" value="0 0 0 0" />
+					<attribute name="Bottom Left Color" value="0 0 0 0" />
+					<attribute name="Bottom Right Color" value="0 0 0 0" />
+					<element type="Button" internal="true" style="none">
+						<attribute name="Size" value="16 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<attribute name="Hover Image Offset" value="0 16" />
+						<attribute name="Pressed Image Offset" value="64 0" />
+					</element>
+					<element type="Slider" internal="true" style="none">
+						<attribute name="Position" value="16 0" />
+						<attribute name="Size" value="311 16" />
+						<attribute name="Image Rect" value="64 0 80 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<element type="BorderImage" internal="true" style="none">
+							<attribute name="Image Rect" value="16 0 32 16" />
+							<attribute name="Border" value="4 4 4 4" />
+							<attribute name="Hover Image Offset" value="0 16" />
+						</element>
+					</element>
+					<element type="Button" internal="true" style="none">
+						<attribute name="Position" value="327 0" />
+						<attribute name="Size" value="16 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<attribute name="Hover Image Offset" value="0 16" />
+						<attribute name="Pressed Image Offset" value="64 0" />
+					</element>
+				</element>
+				<element type="ScrollBar" internal="true" style="none">
+					<attribute name="Size" value="16 283" />
+					<attribute name="Min Anchor" value="1 0" />
+					<attribute name="Max Anchor" value="1 0" />
+					<attribute name="Pivot" value="1 0" />
+					<attribute name="Color" value="0 0 0 0" />
+					<attribute name="Top Left Color" value="0 0 0 0" />
+					<attribute name="Top Right Color" value="0 0 0 0" />
+					<attribute name="Bottom Left Color" value="0 0 0 0" />
+					<attribute name="Bottom Right Color" value="0 0 0 0" />
+					<element type="Button" internal="true" style="none">
+						<attribute name="Size" value="16 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<attribute name="Hover Image Offset" value="0 16" />
+						<attribute name="Pressed Image Offset" value="64 0" />
+					</element>
+					<element type="Slider" internal="true" style="none">
+						<attribute name="Position" value="0 16" />
+						<attribute name="Size" value="16 251" />
+						<attribute name="Image Rect" value="64 0 80 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<element type="BorderImage" internal="true" style="none">
+							<attribute name="Image Rect" value="16 0 32 16" />
+							<attribute name="Border" value="4 4 4 4" />
+							<attribute name="Hover Image Offset" value="0 16" />
+						</element>
+					</element>
+					<element type="Button" internal="true" style="none">
+						<attribute name="Position" value="0 267" />
+						<attribute name="Size" value="16 16" />
+						<attribute name="Border" value="4 4 4 4" />
+						<attribute name="Hover Image Offset" value="0 16" />
+						<attribute name="Pressed Image Offset" value="64 0" />
+					</element>
+				</element>
+				<element type="BorderImage" internal="true" style="none">
+					<attribute name="Clip Border" value="2 2 2 2" />
+					<attribute name="Image Rect" value="64 16 80 32" />
+					<attribute name="Border" value="4 4 4 4" />
+					<element internal="true" style="none">
+						<attribute name="Pivot" value="0 0" />
+						<attribute name="Layout Spacing" value="4" />
+						<attribute name="Layout Border" value="4 4 4 4" />
+						<element style="Panel">
+							<attribute name="Pivot" value="0 0" />
+							<element type="Text">
+								<attribute name="Text" value="Initial" />
+								<attribute name="Auto Localizable" value="true" />
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Active Duration" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="Duration" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Particle Lifespan" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="ParticleLifespan" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Lifespan Variance" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="ParticleLifespanVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Angle" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="ParticleAngle" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Angle Variance" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="ParticleAngleVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element type="BorderImage" style="EditorDivider" />
+						<element style="Panel">
+							<attribute name="Pivot" value="0 0" />
+							<element type="Text">
+								<attribute name="Text" value="Colors" />
+								<attribute name="Auto Localizable" value="true" />
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Start Color" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColor_R" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColor_G" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColor_B" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColor_A" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Start Color Variance" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColorVariance_R" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColorVariance_G" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColorVariance_B" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="StartColorVariance_A" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="End Color" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColor_R" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColor_G" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColor_B" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColor_A" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="End Color Variance" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColorVariance_R" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColorVariance_G" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColorVariance_B" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+								<element type="LineEdit">
+									<attribute name="Name" value="EndColorVariance_A" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element type="BorderImage" style="EditorDivider" />
+						<element style="Panel">
+							<attribute name="Pivot" value="0 0" />
+							<element type="Text">
+								<attribute name="Text" value="Renderer" />
+								<attribute name="Auto Localizable" value="true" />
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Max Num. Particles" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="MaxNumParticles" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element style="Panel">
+							<attribute name="Pivot" value="0 0" />
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Sprite" />
+								</element>
+								<element>
+									<attribute name="Name" value="ParticleSpriteContainer" />
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Blend Mode" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="DropDownList">
+									<attribute name="Name" value="BlendMode" />
+									<attribute name="Selection" value="-1" />
+									<element internal="true" style="none">
+										<attribute name="Pivot" value="0 0" />
+										<element type="Text" internal="true" style="none" />
+									</element>
+									<element popup="true" type="Window" internal="true" style="none">
+										<attribute name="Priority" value="2147483647" />
+										<attribute name="Layout Border" value="2 4 2 4" />
+										<attribute name="Image Rect" value="48 0 64 16" />
+										<attribute name="Border" value="4 4 4 4" />
+										<attribute name="Resize Border" value="8 8 8 8" />
+										<element type="ListView" internal="true" style="none">
+											<attribute name="Pivot" value="0 0" />
+											<attribute name="Highlight Mode" value="Always" />
+											<element type="BorderImage" internal="true" style="none">
+												<attribute name="Clip Border" value="2 0 2 0" />
+												<attribute name="Opacity" value="0" />
+												<attribute name="Image Rect" value="64 16 80 32" />
+												<attribute name="Border" value="4 4 4 4" />
+												<element internal="true" style="none">
+													<attribute name="Pivot" value="0 0" />
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_REPLACE" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_ADD" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_MULTIPLY" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_ALPHA" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_ADDALPHA" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_PREMULALPHA" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_INVDESTALPHA" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_SUBTRACT" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="BLEND_SUBTRACTALPHA" />
+													</element>
+												</element>
+											</element>
+										</element>
+									</element>
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Start Particle Size" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="StartParticleSize" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Start Particle Size Var." />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="StartParticleSizeVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="End Particle Size" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="EndParticleSize" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="End Particle Size Var." />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="EndParticleSizeVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Rotation Start" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="RotationStart" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Rotation Start Var." />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="RotationStartVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Rotation End" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="RotationEnd" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Rotation End Var." />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="LineEdit">
+									<attribute name="Name" value="RotationEndVariance" />
+									<element type="Text" internal="true" style="none" />
+									<element type="BorderImage" internal="true" style="none" />
+								</element>
+							</element>
+						</element>
+						<element>
+							<attribute name="Min Size" value="0 16" />
+							<attribute name="Max Size" value="2147483647 16" />
+							<attribute name="Pivot" value="0 0" />
+							<attribute name="Layout Mode" value="Horizontal" />
+							<attribute name="Layout Spacing" value="10" />
+							<element type="Text" style="EditorAttributeText">
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Text" value="Emitter Type" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="1" />
+								<element type="DropDownList">
+									<attribute name="Name" value="EmitterType" />
+									<attribute name="Resize Popup" value="true" />
+									<element internal="true" style="none">
+										<attribute name="Pivot" value="0 0" />
+										<element type="Text" internal="true" style="none" />
+									</element>
+									<element popup="true" type="Window" internal="true" style="none">
+										<attribute name="Priority" value="2147483647" />
+										<attribute name="Layout Border" value="2 4 2 4" />
+										<attribute name="Image Rect" value="48 0 64 16" />
+										<attribute name="Border" value="4 4 4 4" />
+										<attribute name="Resize Border" value="8 8 8 8" />
+										<element type="ListView" internal="true" style="none">
+											<attribute name="Pivot" value="0 0" />
+											<attribute name="View Position" value="0 16" />
+											<attribute name="Highlight Mode" value="Always" />
+											<element type="BorderImage" internal="true" style="none">
+												<attribute name="Clip Border" value="2 0 2 0" />
+												<attribute name="Opacity" value="0" />
+												<attribute name="Image Rect" value="64 16 80 32" />
+												<attribute name="Border" value="4 4 4 4" />
+												<element internal="true" style="none">
+													<attribute name="Pivot" value="0 0" />
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Is Selected" value="true" />
+														<attribute name="Text" value="Gravity" />
+													</element>
+													<element type="Text" style="FileSelectorFilterText">
+														<attribute name="Text" value="Radial" />
+													</element>
+												</element>
+											</element>
+										</element>
+									</element>
+								</element>
+							</element>
+						</element>
+						<element style="Panel">
+							<attribute name="Name" value="GravityOnlyContent" />
+							<attribute name="Pivot" value="0 0" />
+							<element type="Text">
+								<attribute name="Text" value="Gravity Emitter Config" />
+								<attribute name="Auto Localizable" value="true" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Speed" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="Speed" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Speed Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="SpeedVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Gravity" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="GravityX" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+									<element type="LineEdit">
+										<attribute name="Name" value="GravityY" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Radial Acceleration" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="RadialAcceleration" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Radial Accel. Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="RadialAccelerationVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Tangent Acceleration" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="TangentialAcceleration" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Tangent Accel. Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="TangentialAccelerationVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Source Pos Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="SourcePosVarianceX" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+									<element type="LineEdit">
+										<attribute name="Name" value="SourcePosVarianceY" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+						</element>
+						<element style="Panel">
+							<attribute name="Name" value="RadialOnlyContent" />
+							<attribute name="Pivot" value="0 0" />
+							<element type="Text">
+								<attribute name="Text" value="Radial Emitter Config" />
+								<attribute name="Auto Localizable" value="true" />
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Rotation Speed" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="RotationPerSecond" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Rotation Speed Var." />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="RotationPerSecondVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Min Radius" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="MinRadius" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Min Radius Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="MinRadiusVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Max Radius" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="MaxRadius" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+							<element>
+								<attribute name="Min Size" value="0 16" />
+								<attribute name="Max Size" value="2147483647 16" />
+								<attribute name="Pivot" value="0 0" />
+								<attribute name="Layout Mode" value="Horizontal" />
+								<attribute name="Layout Spacing" value="10" />
+								<element type="Text" style="EditorAttributeText">
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Text" value="Max Radius Variance" />
+								</element>
+								<element>
+									<attribute name="Min Size" value="0 16" />
+									<attribute name="Max Size" value="2147483647 16" />
+									<attribute name="Pivot" value="0 0" />
+									<attribute name="Layout Mode" value="Horizontal" />
+									<attribute name="Layout Spacing" value="1" />
+									<element type="LineEdit">
+										<attribute name="Name" value="MaxRadiusVariance" />
+										<element type="Text" internal="true" style="none" />
+										<element type="BorderImage" internal="true" style="none" />
+									</element>
+								</element>
+							</element>
+						</element>
+					</element>
+				</element>
+			</element>
+			<element type="BorderImage" style="EditorDivider" />
+			<element>
+				<attribute name="Name" value="ButtonContainer" />
+				<attribute name="Min Size" value="0 16" />
+				<attribute name="Max Size" value="2147483647 16" />
+				<attribute name="Pivot" value="0 0" />
+				<attribute name="Layout Mode" value="Horizontal" />
+				<attribute name="Layout Spacing" value="4" />
+				<element type="Button">
+					<attribute name="Name" value="NewButton" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Border" value="1 1 1 1" />
+					<element type="Text">
+						<attribute name="Text" value="New" />
+						<attribute name="Text Alignment" value="Center" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+				</element>
+				<element type="Button">
+					<attribute name="Name" value="RevertButton" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Border" value="1 1 1 1" />
+					<element type="Text">
+						<attribute name="Text" value="Revert" />
+						<attribute name="Text Alignment" value="Center" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+				</element>
+				<element type="Button">
+					<attribute name="Name" value="SaveButton" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Border" value="1 1 1 1" />
+					<element type="Text">
+						<attribute name="Text" value="Save" />
+						<attribute name="Text Alignment" value="Center" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+				</element>
+				<element type="Button">
+					<attribute name="Name" value="SaveAsButton" />
+					<attribute name="Layout Mode" value="Horizontal" />
+					<attribute name="Layout Border" value="1 1 1 1" />
+					<element type="Text">
+						<attribute name="Text" value="Save as" />
+						<attribute name="Text Alignment" value="Center" />
+						<attribute name="Auto Localizable" value="true" />
+					</element>
+				</element>
+			</element>
+		</element>
+	</element>
+</element>

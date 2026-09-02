@@ -8,6 +8,7 @@
 #include "Scripts/Editor/EditorGizmo.as"
 #include "Scripts/Editor/EditorMaterial.as"
 #include "Scripts/Editor/EditorParticleEffect.as"
+#include "Scripts/Editor/EditorParticle2D.as"
 #include "Scripts/Editor/EditorSettings.as"
 #include "Scripts/Editor/EditorPreferences.as"
 #include "Scripts/Editor/EditorToolBar.as"
@@ -163,6 +164,8 @@ void HandleUpdate(StringHash eventType, VariantMap& eventData)
             }
         }
     }
+
+    UpdateParticleEffect2dWindow(timeStep);
 }
 
 void HandleReloadFinishOrFail(StringHash eventType, VariantMap& eventData)
