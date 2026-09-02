@@ -1041,7 +1041,18 @@ void HandleDragDropFinish(StringHash eventType, VariantMap& eventData)
         if (sourceNodes.length > 0)
         {
             if (input.qualifierDown[QUAL_CTRL] && sourceNodes.length == 1)
-                SceneReorder(sourceNodes[0], targetNode);
+            {
+                if(!SceneReorder(sourceNodes[0], targetNode))
+                {
+                    // this can fail in case of different parents between source and target.
+                    // in that case, reparent first, then reorder
+                    if (sourceNodes[0] !is null && sourceNodes[0].parent !is null && targetNode.parent !is null)
+                    {
+                        SceneChangeParent(sourceNodes[0], targetNode.parent);
+                        SceneReorder(sourceNodes[0], targetNode);
+                    }
+                }
+            }
             else
             {
                 // If target is null, parent to scene
@@ -1070,7 +1081,21 @@ void HandleDragDropFinish(StringHash eventType, VariantMap& eventData)
         if (input.qualifierDown[QUAL_CTRL])
         {
             if (!UIElementReorder(sourceElement, targetElement))
-                return;
+            {
+                // this can fail in case of different parents between source and target.
+                // in that case, reparent first, then reorder
+                if (sourceElement !is null && sourceElement.parent !is null && targetElement.parent !is null)
+                {
+                    UIElementChangeParent(sourceElement, targetElement.parent);
+                    if (!UIElementReorder(sourceElement, targetElement))
+                        return;
+                }
+                else
+                {
+                    return;
+                }
+
+            }
         }
         else
         {
@@ -1221,15 +1246,8 @@ bool TestDragDrop(UIElement@ source, UIElement@ target, int& itemType)
         {
             itemType = ITEM_NODE;
 
-            // Ctrl pressed: reorder
-            if (input.qualifierDown[QUAL_CTRL] && sourceNodes.length == 1)
-            {
-                // Must be within the same parent
-                if (sourceNode.parent is null || sourceNode.parent !is targetNode.parent)
-                    return false;
-            }
-            // No ctrl: Reparent
-            else
+            // Ctrl pressed: reorder, possibly reparent. No ctrl: reparent
+            if (!input.qualifierDown[QUAL_CTRL])
             {
                 if (sourceNode.parent is targetNode)
                     return false;
@@ -1267,15 +1285,8 @@ bool TestDragDrop(UIElement@ source, UIElement@ target, int& itemType)
         {
             itemType = ITEM_UI_ELEMENT;
 
-            // Ctrl pressed: reorder
-            if (input.qualifierDown[QUAL_CTRL])
-            {
-                // Must be within the same parent
-                if (sourceElement.parent is null || sourceElement.parent !is targetElement.parent)
-                    return false;
-            }
-            // No ctrl: reparent
-            else
+            // Ctrl pressed: reorder, possibly reparent. No Ctrl: reparent
+            if (!input.qualifierDown[QUAL_CTRL])
             {
                 if (sourceElement.parent is targetElement)
                     return false;
