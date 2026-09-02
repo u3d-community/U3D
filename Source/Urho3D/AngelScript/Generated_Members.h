@@ -25104,6 +25104,10 @@ template <class T> void RegisterMembers_ParticleEmitter2D(asIScriptEngine* engin
 {
     RegisterMembers_Drawable2D<T>(engine, className);
 
+    // AutoRemoveMode ParticleEmitter2D::GetAutoRemoveMode() const
+    engine->RegisterObjectMethod(className, "AutoRemoveMode GetAutoRemoveMode() const", AS_METHODPR(T, GetAutoRemoveMode, () const, AutoRemoveMode), AS_CALL_THISCALL);
+    engine->RegisterObjectMethod(className, "AutoRemoveMode get_autoRemoveMode() const", AS_METHODPR(T, GetAutoRemoveMode, () const, AutoRemoveMode), AS_CALL_THISCALL);
+
     // BlendMode ParticleEmitter2D::GetBlendMode() const
     engine->RegisterObjectMethod(className, "BlendMode GetBlendMode() const", AS_METHODPR(T, GetBlendMode, () const, BlendMode), AS_CALL_THISCALL);
     engine->RegisterObjectMethod(className, "BlendMode get_blendMode() const", AS_METHODPR(T, GetBlendMode, () const, BlendMode), AS_CALL_THISCALL);
@@ -25137,6 +25141,10 @@ template <class T> void RegisterMembers_ParticleEmitter2D(asIScriptEngine* engin
 
     // void ParticleEmitter2D::ResetEmissionTimer()
     engine->RegisterObjectMethod(className, "void ResetEmissionTimer()", AS_METHODPR(T, ResetEmissionTimer, (), void), AS_CALL_THISCALL);
+
+    // void ParticleEmitter2D::SetAutoRemoveMode(AutoRemoveMode mode)
+    engine->RegisterObjectMethod(className, "void SetAutoRemoveMode(AutoRemoveMode)", AS_METHODPR(T, SetAutoRemoveMode, (AutoRemoveMode), void), AS_CALL_THISCALL);
+    engine->RegisterObjectMethod(className, "void set_autoRemoveMode(AutoRemoveMode)", AS_METHODPR(T, SetAutoRemoveMode, (AutoRemoveMode), void), AS_CALL_THISCALL);
 
     // void ParticleEmitter2D::SetBlendMode(BlendMode blendMode)
     engine->RegisterObjectMethod(className, "void SetBlendMode(BlendMode)", AS_METHODPR(T, SetBlendMode, (BlendMode), void), AS_CALL_THISCALL);
