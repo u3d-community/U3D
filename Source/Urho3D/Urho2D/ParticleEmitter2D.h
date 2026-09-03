@@ -103,6 +103,9 @@ public:
     /// Set whether should be emitting. If the state was changed, also resets the emission period timer.
     /// @property
     void SetEmitting(bool enable);
+    /// Set to remove either the emitter component or its owner node from the scene automatically on particle effect completion. Disabled by default.
+    /// @property
+    void SetAutoRemoveMode(AutoRemoveMode mode);
     /// Reset the emission period timer.
     void ResetEmissionTimer();
     /// Sets time left of all current particles to zero.
@@ -135,6 +138,9 @@ public:
     /// Return whether is currently emitting.
     /// @property
     bool IsEmitting() const { return emitting_; }
+    /// Return automatic removal mode on particle effect completion.
+    /// @property
+    AutoRemoveMode GetAutoRemoveMode() const { return autoRemove_; }
 
 private:
     /// Handle scene being assigned.
@@ -176,6 +182,8 @@ private:
     Vector3 boundingBoxMinPoint_;
     /// Bounding box max point.
     Vector3 boundingBoxMaxPoint_;
+    /// Automatic removal mode.
+    AutoRemoveMode autoRemove_;
 };
 
 }

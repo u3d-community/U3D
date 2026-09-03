@@ -1,5 +1,8 @@
 $#include "Urho2D/ParticleEmitter2D.h"
 
+// The actual enum is defined in Scene/Component.pkg
+enum AutoRemoveMode {};
+
 class ParticleEmitter2D : public Drawable2D
 {
 public:
@@ -7,6 +10,7 @@ public:
     void SetSprite(Sprite2D* sprite);
     void SetBlendMode(BlendMode blendMode);
     void SetEmitting(bool emitting);
+    void SetAutoRemoveMode(AutoRemoveMode mode);
     void RemoveAllParticles();
     void Reset();
     void ResetEmissionTimer();
@@ -15,9 +19,11 @@ public:
     Sprite2D* GetSprite() const;
     BlendMode GetBlendMode() const;
     bool IsEmitting() const;
+    AutoRemoveMode GetAutoRemoveMode() const;
 
     tolua_property__get_set ParticleEffect2D* effect;
     tolua_property__get_set Sprite2D* sprite;
     tolua_property__get_set BlendMode blendMode;
     tolua_property__is_set bool emitting;
+    tolua_property__get_set AutoRemoveMode autoRemoveMode;
 };

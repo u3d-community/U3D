@@ -42,6 +42,8 @@ namespace Urho3D
 extern const char* URHO2D_CATEGORY;
 extern const char* blendModeNames[];
 
+extern const char* autoRemoveModeNames[];
+
 ParticleEmitter2D::ParticleEmitter2D(Context* context) :
     Drawable2D(context),
     blendMode_(BLEND_ADDALPHA),
@@ -50,7 +52,8 @@ ParticleEmitter2D::ParticleEmitter2D(Context* context) :
     emitParticleTime_(0.0f),
     boundingBoxMinPoint_(Vector3::ZERO),
     boundingBoxMaxPoint_(Vector3::ZERO),
-    emitting_(true)
+    emitting_(true),
+    autoRemove_(REMOVE_DISABLED)
 {
     sourceBatches_.Resize(1);
     sourceBatches_[0].owner_ = this;
@@ -70,6 +73,7 @@ void ParticleEmitter2D::RegisterObject(Context* context)
         AM_DEFAULT);
     URHO3D_ENUM_ACCESSOR_ATTRIBUTE("Blend Mode", GetBlendMode, SetBlendMode, BlendMode, blendModeNames, BLEND_ALPHA, AM_DEFAULT);
     URHO3D_ACCESSOR_ATTRIBUTE("Is Emitting", IsEmitting, SetEmitting, bool, true, AM_DEFAULT);
+    URHO3D_ENUM_ATTRIBUTE("Autoremove Mode", autoRemove_, autoRemoveModeNames, REMOVE_DISABLED, AM_DEFAULT);
 }
 
 void ParticleEmitter2D::OnSetEnabled()
@@ -135,6 +139,12 @@ void ParticleEmitter2D::SetMaxParticles(unsigned maxParticles)
     sourceBatches_[0].vertices_.Reserve(maxParticles * 4);
 
     numParticles_ = Min(maxParticles, numParticles_);
+}
+
+void ParticleEmitter2D::SetAutoRemoveMode(AutoRemoveMode mode)
+{
+    autoRemove_ = mode;
+    MarkNetworkUpdate();
 }
 
 void ParticleEmitter2D::ResetEmissionTimer()
@@ -314,9 +324,13 @@ void ParticleEmitter2D::HandleScenePostUpdate(StringHash eventType, VariantMap& 
 
         if (self.Expired())
             return;
+
+        emitting = false;
     }
     if (hasParticles && numParticles_ == 0)
     {
+        // Make a weak pointer to self to check for destruction during event handling
+        WeakPtr<ParticleEmitter2D> self(this);
         using namespace ParticlesEnd;
 
         VariantMap& eventData = GetEventDataMap();
@@ -324,6 +338,15 @@ void ParticleEmitter2D::HandleScenePostUpdate(StringHash eventType, VariantMap& 
         eventData[P_EFFECT] = effect_;
 
         SendEvent(E_PARTICLESEND, eventData);      // All particles over
+
+        if(!emitting)
+        {
+            if (self.Expired())
+                return;
+
+            DoAutoRemove(autoRemove_);
+        }
+
     }
 }
 
