@@ -215,7 +215,7 @@ void UpdateParticleEffect2dWindow(float timeStep)
                 particle2dResetTimer = Max(particle2dResetTimer - timeStep, 0.0f);
                 if (particle2dResetTimer <= 0.0001f && particle2dLoopEmission)
                 {
-                    particleEffect2dEmitter.emitting = true;
+                    particleEffect2dEmitter.Reset();
                     particle2dResetTimer = 0.0f;
                 }
             }
