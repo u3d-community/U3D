@@ -667,6 +667,8 @@ private:
 
 void PhysicsWorld2D::GetRigidBodies(PODVector<RigidBody2D*>& results, const Rect& aabb, unsigned collisionMask)
 {
+    results.Clear();
+
     AabbQueryCallback callback(results, collisionMask);
 
     b2AABB b2Aabb;

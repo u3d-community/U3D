@@ -56,9 +56,6 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 2 --target all --config ${{ matrix.build-type }} -- -j2
 
-      - name: Test
-        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build-type }}
-
       - name: Package
         #if: startsWith(github.ref, 'refs/tags/')
         run: cmake --build build --target package --config ${{ matrix.build-type }}

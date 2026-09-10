@@ -755,7 +755,8 @@ bool Material::Save(XMLElement& dest) const
     {
         XMLElement parameterElem = dest.CreateChild("parameter");
         parameterElem.SetString("name", j->second_.name_);
-        if (j->second_.value_.GetType() != VAR_BUFFER && j->second_.value_.GetType() != VAR_INT && j->second_.value_.GetType() != VAR_BOOL)
+        const VariantType parameterType = j->second_.value_.GetType();
+        if (parameterType != VAR_BUFFER && parameterType != VAR_INT && parameterType != VAR_BOOL && parameterType != VAR_COLOR)
             parameterElem.SetVectorVariant("value", j->second_.value_);
         else
         {

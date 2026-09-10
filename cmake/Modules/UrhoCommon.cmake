@@ -342,6 +342,8 @@ if (IS_URHO3D)
     # Enable file watcher support for automatic resource reloads by default.
     option (URHO3D_FILEWATCHER "Enable filewatcher support" TRUE)
     option (URHO3D_TESTING "Enable testing support")
+    cmake_dependent_option (URHO3D_UNIT_TESTS "Build the unit test suite" FALSE "NOT ANDROID AND NOT IOS AND NOT TVOS" FALSE)
+    cmake_dependent_option (URHO3D_COVERAGE "Instrument the library and the unit tests for code coverage (GCC/Clang only)" FALSE "URHO3D_UNIT_TESTS AND NOT MSVC" FALSE)
     # By default this option is off (i.e. we use the MSVC dynamic runtime), this can be switched on if using Urho3D as a STATIC library
     cmake_dependent_option (URHO3D_STATIC_RUNTIME "Use static C/C++ runtime libraries and eliminate the need for runtime DLLs installation (VS only)" FALSE "MSVC" FALSE)
     if (CPACK_SYSTEM_NAME STREQUAL Linux)
@@ -565,8 +567,16 @@ if ($ENV{COVERITY_SCAN_BRANCH})
 endif ()
 
 # Enable testing
-if (URHO3D_TESTING)
+if (URHO3D_TESTING OR URHO3D_UNIT_TESTS)
     enable_testing ()
+endif ()
+
+if (URHO3D_COVERAGE)
+    set (URHO3D_PCH 0)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-update=atomic")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-update=atomic")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 endif ()
 
 # Default library type is STATIC

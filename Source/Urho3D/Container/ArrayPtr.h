@@ -30,6 +30,8 @@
 namespace Urho3D
 {
 
+template <class T> class WeakArrayPtr;
+
 /// Shared array pointer template class. Uses non-intrusive reference counting.
 template <class T> class SharedArrayPtr
 {
@@ -171,6 +173,16 @@ public:
     unsigned ToHash() const { return (unsigned)((size_t)ptr_ / sizeof(T)); }
 
 private:
+    friend class WeakArrayPtr<T>;
+
+    /// Construct from a raw pointer and the existing reference count, which is adopted rather than restarted.
+    SharedArrayPtr(T* ptr, RefCount* refCount) :
+        ptr_(ptr),
+        refCount_(refCount)
+    {
+        AddRef();
+    }
+
     /// Prevent direct assignment from a shared array pointer of different type.
     template <class U> SharedArrayPtr<T>& operator =(const SharedArrayPtr<U>& rhs);
 
@@ -327,7 +339,7 @@ public:
     {
         T* rawPtr = Get();
         assert(rawPtr);
-        return (*rawPtr)[index];
+        return rawPtr[index];
     }
 
     /// Test for equality with another weak array pointer.
