@@ -203,6 +203,10 @@ void TileMap2D::HandleSceneUpdate(StringHash eventType, VariantMap& eventData)
 {
     using namespace SceneUpdate;
 
+    // No tmx file assigned yet, so there is nothing to animate
+    if (!tmxFile_)
+        return;
+
     float timeStep = eventData[P_TIMESTEP].GetFloat();
     tmxFile_->UpdateAnimationTimers(timeStep);
 
