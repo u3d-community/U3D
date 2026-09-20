@@ -193,7 +193,11 @@ void SplinePath::ClearControlPoints()
 void SplinePath::SetControlledNode(Node* controlled)
 {
     if (controlled)
+    {
         controlledNode_ = WeakPtr<Node>(controlled);
+        // Keep the serialized ID in sync, as is done for the control points in UpdateNodeIds()
+        controlledIdAttr_ = controlled->GetID();
+    }
 }
 
 void SplinePath::SetInterpolationMode(InterpolationMode interpolationMode)
