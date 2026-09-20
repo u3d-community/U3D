@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <memory>
 #include <tuple>
+
 
 #ifndef ASSIMP_BUILD_NO_COMPRESSED_IFC
 #ifdef ASSIMP_USE_HUNTER
@@ -259,8 +260,6 @@ void IFCImporter::InternReadFile(const std::string &pFile, aiScene *pScene, IOSy
     if (!proj) {
         ThrowException("missing IfcProject entity");
     }
-
-
 
     ConversionData conv(*db, proj->To<Schema_2x3::IfcProject>(), pScene, settings);
     SetUnits(conv);

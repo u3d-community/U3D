@@ -3,9 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
-
-
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -52,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef ASSIMP_BUILD_NO_MD3_IMPORTER
 
-#include "AssetLib/MD3/MD3Loader.h"
+#include "MD3Loader.h"
 #include "Common/Importer.h"
 
 #include <assimp/GenericProperty.h>
@@ -352,7 +350,7 @@ MD3Importer::~MD3Importer() = default;
 // ------------------------------------------------------------------------------------------------
 // Returns whether the class can handle the format of the given file.
 bool MD3Importer::CanRead(const std::string &pFile, IOSystem *pIOHandler, bool /*checkSig*/) const {
-    static const uint32_t tokens[] = { AI_MD3_MAGIC_NUMBER_LE };
+    static constexpr uint32_t tokens[] = { AI_MD3_MAGIC_NUMBER_LE };
     return CheckMagicToken(pIOHandler, pFile, tokens, AI_COUNT_OF(tokens));
 }
 
@@ -392,13 +390,21 @@ void MD3Importer::ValidateHeaderOffsets() {
 void MD3Importer::ValidateSurfaceHeaderOffsets(const MD3::Surface *pcSurf) {
     // Calculate the relative offset of the surface
     const int32_t ofs = int32_t((const unsigned char *)pcSurf - this->mBuffer);
+    if (ofs + sizeof(MD3::Surface) > fileSize) {
+        throw DeadlyImportError("Surface header is outside file bounds");
+    }
 
+    auto inRange = [this, ofs](uint32_t rel_offset, uint32_t count, size_t elem_size) -> bool {
+        size_t abs_offset = ofs + rel_offset;
+        if (count > 0 && elem_size > 0 && count > SIZE_MAX / elem_size) return false;
+        size_t total = abs_offset + size_t(count) * elem_size;
+        return abs_offset <= fileSize && total <= fileSize;
+    };
     // Check whether all data chunks are inside the valid range
-    if (pcSurf->OFS_TRIANGLES + ofs + pcSurf->NUM_TRIANGLES * sizeof(MD3::Triangle) > fileSize ||
-            pcSurf->OFS_SHADERS + ofs + pcSurf->NUM_SHADER * sizeof(MD3::Shader) > fileSize ||
-            pcSurf->OFS_ST + ofs + pcSurf->NUM_VERTICES * sizeof(MD3::TexCoord) > fileSize ||
-            pcSurf->OFS_XYZNORMAL + ofs + pcSurf->NUM_VERTICES * sizeof(MD3::Vertex) > fileSize) {
-
+    if (!inRange(pcSurf->OFS_TRIANGLES, pcSurf->NUM_TRIANGLES, sizeof(MD3::Triangle)) ||
+        !inRange(pcSurf->OFS_SHADERS,   pcSurf->NUM_SHADER,    sizeof(MD3::Shader)) ||
+        !inRange(pcSurf->OFS_ST,        pcSurf->NUM_VERTICES,  sizeof(MD3::TexCoord)) ||
+        !inRange(pcSurf->OFS_XYZNORMAL, pcSurf->NUM_VERTICES,  sizeof(MD3::Vertex))) {
         throw DeadlyImportError("Invalid MD3 surface header: some offsets are outside the file");
     }
 
@@ -724,6 +730,7 @@ void MD3Importer::InternReadFile(const std::string &pFile, aiScene *pScene, IOSy
     std::vector<unsigned char> mBuffer2(fileSize);
     file->Read(&mBuffer2[0], 1, fileSize);
     mBuffer = &mBuffer2[0];
+    const unsigned char* bufferEnd = mBuffer + fileSize;
 
     pcHeader = (BE_NCONST MD3::Header *)mBuffer;
 
@@ -749,9 +756,15 @@ void MD3Importer::InternReadFile(const std::string &pFile, aiScene *pScene, IOSy
 
     // Navigate to the list of surfaces
     BE_NCONST MD3::Surface *pcSurfaces = (BE_NCONST MD3::Surface *)(mBuffer + pcHeader->OFS_SURFACES);
+    if ((const unsigned char*)pcSurfaces + sizeof(MD3::Surface) * pcHeader->NUM_SURFACES > bufferEnd) {
+        throw DeadlyImportError("MD3 surface headers are outside the file");
+    }
 
     // Navigate to the list of tags
     BE_NCONST MD3::Tag *pcTags = (BE_NCONST MD3::Tag *)(mBuffer + pcHeader->OFS_TAGS);
+    if ((const unsigned char*)pcTags + sizeof(MD3::Tag) * pcHeader->NUM_TAGS > bufferEnd) {
+        throw DeadlyImportError("MD3 tags are outside the file");
+    }
 
     // Allocate output storage
     pScene->mNumMeshes = pcHeader->NUM_SURFACES;
@@ -1026,6 +1039,10 @@ void MD3Importer::InternReadFile(const std::string &pFile, aiScene *pScene, IOSy
 
         for (unsigned int i = 0; i < pcHeader->NUM_TAGS; ++i, ++pcTags) {
             aiNode *nd = pScene->mRootNode->mChildren[i] = new aiNode();
+            if ((const unsigned char*)pcTags + sizeof(MD3::Tag) > bufferEnd) {
+                throw DeadlyImportError("MD3 tag is outside the file");
+            }
+
             nd->mName.Set((const char *)pcTags->NAME);
             nd->mParent = pScene->mRootNode;
 
