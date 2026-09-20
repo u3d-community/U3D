@@ -1404,11 +1404,12 @@ void EditResource(StringHash eventType, VariantMap& eventData)
 
     if (resource !is null)
     {
-        // For now only Materials can be edited
         if (resource.typeName == "Material")
             EditMaterial(cast<Material>(resource));
         else if (resource.typeName == "ParticleEffect")
             EditParticleEffect(cast<ParticleEffect>(resource));
+        else if (resource.typeName == "ParticleEffect2D")
+            EditParticleEffect2d(cast<ParticleEffect2D>(resource));
     }
 }
 
