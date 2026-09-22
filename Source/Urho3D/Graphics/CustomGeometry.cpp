@@ -238,7 +238,7 @@ void CustomGeometry::SetDynamic(bool enable)
 
 void CustomGeometry::BeginGeometry(unsigned index, PrimitiveType type)
 {
-    if (index > geometries_.Size())
+    if (index >= geometries_.Size())
     {
         URHO3D_LOGERROR("Geometry index out of bounds");
         return;
@@ -301,7 +301,7 @@ void CustomGeometry::DefineTangent(const Vector4& tangent)
 void CustomGeometry::DefineGeometry(unsigned index, PrimitiveType type, unsigned numVertices, bool hasNormals,
                                     bool hasColors, bool hasTexCoords, bool hasTangents)
 {
-    if (index > geometries_.Size())
+    if (index >= geometries_.Size())
     {
         URHO3D_LOGERROR("Geometry index out of bounds");
         return;

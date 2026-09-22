@@ -40,9 +40,6 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.build-type }}
 
-      - name: Test
-        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build-type }}
-
       - name: Package
         #if: startsWith(github.ref, 'refs/tags/')
         run: cmake --build build --target package --config ${{ matrix.build-type }}

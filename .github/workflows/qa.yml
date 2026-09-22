@@ -86,3 +86,57 @@ jobs:
             echo "No C/C++ source files changed"
           fi
 
+  tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: qa-tests-${{ github.sha }}
+          restore-keys: qa-tests-
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ccache ninja-build pkg-config \
+            libgl1-mesa-dev libglew-dev \
+            libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev libxss-dev libxxf86vm-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols \
+            libasound2-dev libpulse-dev \
+            libibus-1.0-dev \
+            libdbus-1-dev libreadline6-dev libssl-dev libudev-dev uuid-dev
+
+      - name: CMake
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DURHO3D_UNIT_TESTS=ON \
+            -DURHO3D_SAMPLES=OFF \
+            -DURHO3D_TOOLS=OFF \
+            -DURHO3D_PLAYER=OFF \
+            -DURHO3D_ANGELSCRIPT=OFF \
+            -DURHO3D_LUA=OFF \
+            -DURHO3D_LUAJIT=OFF \
+            -DURHO3D_DEPLOYMENT_TARGET=generic \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build
+        run: cmake --build build --target Urho3D-UnitTests --parallel 2
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --parallel 2
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-log
+          path: build/Testing/Temporary/LastTest.log
+

@@ -223,6 +223,10 @@ bool CompressedLevel::Decompress(unsigned char* dest) const
 
     switch (format_)
     {
+    case CF_RGBA:
+        memcpy(dest, data_, (size_t)width_ * height_ * depth_ * 4);
+        return true;
+
     case CF_DXT1:
     case CF_DXT3:
     case CF_DXT5:
@@ -406,7 +410,7 @@ bool Image::BeginLoad(Deserializer& source)
             currentImage->compressedFormat_ = compressedFormat_;
             currentImage->width_ = ddsd.dwWidth_;
             currentImage->height_ = ddsd.dwHeight_;
-            currentImage->depth_ = ddsd.dwDepth_;
+            currentImage->depth_ = Max(ddsd.dwDepth_, 1U);
 
             currentImage->numCompressedLevels_ = ddsd.dwMipMapCount_;
             if (!currentImage->numCompressedLevels_)
@@ -1081,7 +1085,7 @@ bool Image::FlipHorizontal()
                 for (unsigned x = 0; x < level.rowSize_; x += level.blockSize_)
                 {
                     unsigned char* src = level.data_ + y * level.rowSize_ + (level.rowSize_ - level.blockSize_ - x);
-                    unsigned char* dest = newData.Get() + y * level.rowSize_ + x;
+                    unsigned char* dest = newData.Get() + dataOffset + y * level.rowSize_ + x;
                     FlipBlockHorizontal(dest, src, compressedFormat_);
                 }
             }
@@ -1208,6 +1212,7 @@ bool Image::Resize(int width, int height)
     width_ = width;
     height_ = height;
     data_ = newData;
+    nextLevel_.Reset();
     SetMemoryUse(width * height * depth_ * components_);
     return true;
 }
@@ -1573,8 +1578,7 @@ Color Image::GetPixelTrilinear(float x, float y, float z) const
     auto xI = (int)x;
     auto yI = (int)y;
     auto zI = (int)z;
-    if (zI == depth_ - 1)
-        return GetPixelBilinear(x, y);
+    int zINext = Min(zI + 1, depth_ - 1);
     float xF = Fract(x);
     float yF = Fract(y);
     float zF = Fract(z);
@@ -1582,8 +1586,8 @@ Color Image::GetPixelTrilinear(float x, float y, float z) const
     Color topColorNear = GetPixel(xI, yI, zI).Lerp(GetPixel(xI + 1, yI, zI), xF);
     Color bottomColorNear = GetPixel(xI, yI + 1, zI).Lerp(GetPixel(xI + 1, yI + 1, zI), xF);
     Color colorNear = topColorNear.Lerp(bottomColorNear, yF);
-    Color topColorFar = GetPixel(xI, yI, zI + 1).Lerp(GetPixel(xI + 1, yI, zI + 1), xF);
-    Color bottomColorFar = GetPixel(xI, yI + 1, zI + 1).Lerp(GetPixel(xI + 1, yI + 1, zI + 1), xF);
+    Color topColorFar = GetPixel(xI, yI, zINext).Lerp(GetPixel(xI + 1, yI, zINext), xF);
+    Color bottomColorFar = GetPixel(xI, yI + 1, zINext).Lerp(GetPixel(xI + 1, yI + 1, zINext), xF);
     Color colorFar = topColorFar.Lerp(bottomColorFar, yF);
     return colorNear.Lerp(colorFar, zF);
 }

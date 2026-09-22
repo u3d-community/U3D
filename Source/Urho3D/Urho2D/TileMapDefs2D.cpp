@@ -102,32 +102,32 @@ bool TileMapInfo2D::PositionToTileIndex(int& x, int& y, const Vector2& position)
         float ox = position.x_ / tileWidth_ - height_ * 0.5f;
         float oy = position.y_ / tileHeight_;
 
-        x = (int)(width_ - oy + ox);
-        y = (int)(height_ - oy - ox);
+        x = FloorToInt(width_ - oy + ox);
+        y = FloorToInt(height_ - oy - ox);
     }
         break;
 
     case O_STAGGERED:
-        y = (int)(height_ - 1 - position.y_ * 2.0f / tileHeight_);
+        y = FloorToInt(height_ - 1 - position.y_ * 2.0f / tileHeight_);
         if (y % 2 == 0)
-            x = (int)(position.x_ / tileWidth_);
+            x = FloorToInt(position.x_ / tileWidth_);
         else
-            x = (int)(position.x_ / tileWidth_ - 0.5f);
+            x = FloorToInt(position.x_ / tileWidth_ - 0.5f);
 
         break;
 
     case O_HEXAGONAL:
-        y = (int)(height_ - 1 - position.y_ / 0.75f / tileHeight_);
+        y = FloorToInt(height_ - 1 - position.y_ / 0.75f / tileHeight_);
         if (y % 2 == 0)
-            x = (int)(position.x_ / tileWidth_);
+            x = FloorToInt(position.x_ / tileWidth_);
         else
-            x = (int)(position.x_ / tileWidth_ - 0.75f);
+            x = FloorToInt(position.x_ / tileWidth_ - 0.5f);
         break;
 
     case O_ORTHOGONAL:
     default:
-        x = (int)(position.x_ / tileWidth_);
-        y = height_ - 1 - int(position.y_ / tileHeight_);
+        x = FloorToInt(position.x_ / tileWidth_);
+        y = height_ - 1 - FloorToInt(position.y_ / tileHeight_);
         break;
 
     }
@@ -143,7 +143,10 @@ void PropertySet2D::Load(const XMLElement& element)
 {
     assert(element.GetName() == "properties");
     for (XMLElement propertyElem = element.GetChild("property"); propertyElem; propertyElem = propertyElem.GetNext("property"))
-        nameToValueMapping_[propertyElem.GetAttribute("name")] = propertyElem.GetAttribute("value");
+    {
+        const String value = propertyElem.GetAttribute("value");
+        nameToValueMapping_[propertyElem.GetAttribute("name")] = value.Empty() ? propertyElem.GetValue() : value;
+    }
 }
 
 bool PropertySet2D::HasProperty(const String& name) const
@@ -182,8 +185,8 @@ void FrameSet2D::Load(const XMLElement& element)
 void FrameSet2D::UpdateTimer(float timeStep)
 {
     timeElapsed_ += timeStep * 1000.0f;
-    if (timeElapsed_ > lapTime_)
-        timeElapsed_ -= lapTime_;
+    if (lapTime_ > 0)
+        timeElapsed_ = fmodf(timeElapsed_, (float)lapTime_);
 }
 
 unsigned FrameSet2D::GetCurrentFrameGid() const

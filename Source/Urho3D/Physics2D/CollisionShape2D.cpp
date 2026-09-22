@@ -209,6 +209,9 @@ void CollisionShape2D::CreateFixture()
     if (!fixtureDef_.shape)
         return;
 
+    if (!node_)
+        return;
+
     if (!rigidBody_)
     {
         rigidBody_ = node_->GetComponent<RigidBody2D>(); // RigidBody2D can be created after CollisionShape2D

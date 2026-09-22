@@ -111,6 +111,10 @@ void AnimatedSprite2D::SetAnimationSet(AnimationSet2D* animationSet)
     UnsubscribeFromEvent(E_DEVICERESET);
 
     animationSet_ = animationSet;
+
+    animationName_.Clear();
+    loopMode_ = LM_DEFAULT;
+
     if (!animationSet_)
         return;
 
@@ -156,10 +160,6 @@ void AnimatedSprite2D::SetAnimationSet(AnimationSet2D* animationSet)
         }
         
     }
-
-    // Clear animation name
-    animationName_.Clear();
-    loopMode_ = LM_DEFAULT;
 }
 
 void AnimatedSprite2D::SetEntity(const String& entity)

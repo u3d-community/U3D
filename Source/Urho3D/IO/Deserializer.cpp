@@ -47,7 +47,10 @@ Deserializer::~Deserializer() = default;
 
 unsigned Deserializer::SeekRelative(int delta)
 {
-    return Seek(GetPosition() + delta);
+    if (delta < 0 && static_cast<unsigned>(-delta) > position_)
+        return Seek(0);
+
+    return Seek(position_ + delta);
 }
 
 const String& Deserializer::GetName() const
