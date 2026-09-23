@@ -1,33 +1,57 @@
 name: 🖳 Windows
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  configure:
+    name: Configure
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DURHO3D_LIB_TYPE=static -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A x64 -DURHO3D_D3D11=1
+
   windows:
     name: Windows
+    needs: configure
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         runner: [windows-2022, windows-2025-vs2026]
         lib-type: ${{ github.event_name == 'pull_request' && fromJSON('["static"]') || fromJSON('["static", "shared"]') }}
         build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
-        architecture: ${{ github.event_name == 'pull_request' && fromJSON('["x64"]') || fromJSON('["x64", "Win32"]') }}
-        graphics-api: ${{ github.event_name == 'pull_request' && fromJSON('["DX11"]') || fromJSON('["DX11", "DX9", "OpenGL"]') }}
+        architecture: [x64]
+        graphics-api: ${{ github.event_name == 'pull_request' && fromJSON('["DX11"]') || fromJSON('["DX11", "OpenGL"]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: CMake
         run: |
           $graphicsFlags = ""
           if ("${{ matrix.graphics-api }}" -eq "DX11") {
             $graphicsFlags = "-DURHO3D_D3D11=1"
-          } elseif ("${{ matrix.graphics-api }}" -eq "DX9") {
-            $graphicsFlags = "-DURHO3D_OPENGL=0"
           } elseif ("${{ matrix.graphics-api }}" -eq "OpenGL") {
             $graphicsFlags = "-DURHO3D_OPENGL=1"
           }
@@ -38,15 +62,16 @@ jobs:
           cmake -S . -B build -G "$vsGenerator" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DURHO3D_PCH=OFF -DURHO3D_DEPLOYMENT_TARGET=generic -A ${{ matrix.architecture }} $graphicsFlags
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build-type }}
+        run: cmake --build build --parallel 4 --config ${{ matrix.build-type }}
 
       - name: Package
-        #if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         run: cmake --build build --target package --config ${{ matrix.build-type }}
 
       - name: Upload packages
-        #if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: "U3D-${{ github.job }}${{ matrix.runner == 'windows-2025-vs2026' && '-vs2026' || '' }}-${{ matrix.architecture }}-${{ matrix.graphics-api }}-${{ matrix.lib-type }}-${{ matrix.build-type }}"
           path: build/*.zip
+          retention-days: 30

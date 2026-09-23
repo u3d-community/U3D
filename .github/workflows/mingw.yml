@@ -1,8 +1,21 @@
 name: 🪟 MinGW
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-mingw
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -14,6 +27,7 @@ jobs:
   mingw:
     name: MinGW
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -21,7 +35,7 @@ jobs:
         build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache
         uses: actions/cache@v4
@@ -40,7 +54,7 @@ jobs:
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMINGW_PREFIX=$MINGW_PREFIX -DMINGW_SYSROOT=$MINGW_SYSROOT -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchains/MinGW.cmake -DMINGW=1
 
       - name: Build
-        run: cmake --build build --parallel 2
+        run: cmake --build build --parallel $(nproc)
 
       - name: Package
         if: startsWith(github.ref, 'refs/tags/')
@@ -52,3 +66,4 @@ jobs:
         with:
           name: 'U3D-${{ github.job }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}'
           path: build/*.zip
+          retention-days: 30

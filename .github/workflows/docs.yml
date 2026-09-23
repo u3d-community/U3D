@@ -7,7 +7,7 @@ on:
   workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-docs
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -17,17 +17,18 @@ jobs:
   docs:
     name: Docs
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: linux-static-Release-${{ github.sha }}
+          key: docs-${{ github.sha }}
           restore-keys: |
-            linux-static-Release-
+            docs-
 
       - name: Dependencies
         run: |
@@ -45,7 +46,7 @@ jobs:
         run: cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DURHO3D_LIB_TYPE=static -DURHO3D_DEPLOYMENT_TARGET=generic -DURHO3D_DOCS=1 -DURHO3D_PLAYER=0 -DURHO3D_PROFILING=0 -DURHO3D_SAMPLES=0 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
-        run: cmake --build build --parallel 2 --target all --config Release -- -j2
+        run: cmake --build build --parallel $(nproc) --target all --config Release
 
       - name: Build Documentation
         run: cmake --build build --target doc

@@ -1,8 +1,21 @@
 name: QA
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-qa
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -12,37 +25,39 @@ jobs:
   style:
     name: 🎨 Code Style
     runs-on: ubuntu-latest
-    if: false  # Disable code style check for now
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Install clang-format
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-format
+          sudo apt-get install -y clang-format-18
 
       - name: Check code style
         run: |
-          # Get changed C/C++ files (excluding ThirdParty)
-          changed_files=$(git diff --name-only HEAD~1 -- Source | grep -v ThirdParty | grep -E '\.(c|cpp|h|hpp)$' || true)
-          if [ -n "$changed_files" ]; then
-            echo "Checking files:"
-            echo "$changed_files"
-            echo "$changed_files" | xargs clang-format -n -Werror
-          else
-            echo "No C/C++ source files changed"
+          base=$(git merge-base origin/master HEAD)
+          out=$(git clang-format-18 --diff --extensions c,cpp,h,hpp "$base" -- Source ':!Source/ThirdParty' || true)
+          if [ -z "$out" ] || [ "$out" = "no modified files to format" ] || [ "$out" = "clang-format did not modify any files" ]; then
+            echo "No formatting changes required"
+            exit 0
           fi
+          echo "$out"
+          exit 1
 
   lint:
     name: 🔍 Clang-Tidy
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     if: false  # Disable linting for now
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Cache
         uses: actions/cache@v4
@@ -77,7 +92,8 @@ jobs:
       - name: Run clang-tidy
         run: |
           # Get changed C/C++ files (excluding ThirdParty)
-          changed_files=$(git diff --name-only HEAD~1 -- Source | grep -v ThirdParty | grep -E '\.(c|cpp|h|hpp)$' || true)
+          base=$(git merge-base origin/master HEAD)
+          changed_files=$(git diff --name-only $base HEAD -- Source | grep -v ThirdParty | grep -E '\.(c|cpp|h|hpp)$' || true)
           if [ -n "$changed_files" ]; then
             echo "Linting files:"
             echo "$changed_files"
@@ -88,12 +104,18 @@ jobs:
 
   tests:
     name: 🧪 Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest"]') || fromJSON('["ubuntu-latest", "windows-2022", "macos-latest"]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache
+        if: runner.os == 'Linux'
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -101,6 +123,7 @@ jobs:
           restore-keys: qa-tests-
 
       - name: Dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -113,8 +136,11 @@ jobs:
             libdbus-1-dev libreadline6-dev libssl-dev libudev-dev uuid-dev
 
       - name: CMake
+        shell: bash
+        env:
+          EXTRA_FLAGS: ${{ runner.os == 'Linux' && '-G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache' || '' }}
         run: |
-          cmake -S . -B build -G Ninja \
+          cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DURHO3D_UNIT_TESTS=ON \
             -DURHO3D_SAMPLES=OFF \
@@ -124,19 +150,20 @@ jobs:
             -DURHO3D_LUA=OFF \
             -DURHO3D_LUAJIT=OFF \
             -DURHO3D_DEPLOYMENT_TARGET=generic \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            $EXTRA_FLAGS
 
       - name: Build
-        run: cmake --build build --target Urho3D-UnitTests --parallel 2
+        shell: bash
+        run: cmake --build build --target Urho3D-UnitTests --parallel 4 --config Debug
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure --parallel 2
+        shell: bash
+        run: ctest --test-dir build --output-on-failure --parallel 2 -C Debug
 
       - name: Upload test log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-log
+          name: unit-test-log-${{ matrix.os }}
           path: build/Testing/Temporary/LastTest.log
-
+          retention-days: 7

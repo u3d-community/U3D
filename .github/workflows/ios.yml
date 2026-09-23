@@ -1,14 +1,28 @@
 name: 🍎 iOS
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-ios
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   ios:
     name: iOS
     runs-on: macos-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -17,7 +31,7 @@ jobs:
         build-type: ${{ github.event_name == 'pull_request' && fromJSON('["Release"]') || fromJSON('["Release", "Debug"]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
@@ -26,7 +40,7 @@ jobs:
         run: cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DTRACY_NO_PARALLEL_ALGORITHMS=ON -DPLATFORM=SIMULATOR64 -DDEPLOYMENT_TARGET=11 -DCMAKE_OSX_DEPLOYMENT_TARGET=11 ${{ matrix.platform == 'iOS' && '-DIOS=1' || '-DIOS=0' }} ${{ matrix.platform == 'tvOS' && '-DTVOS=1' || '-DTVOS=0' }}
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build-type }}
+        run: cmake --build build --parallel 3 --config ${{ matrix.build-type }}
 
       - name: Package
         if: startsWith(github.ref, 'refs/tags/')
@@ -38,3 +52,4 @@ jobs:
         with:
           name: 'U3D-${{ github.job }}-${{ matrix.platform }}-${{ matrix.lib-type }}-${{ matrix.build-type }}-${{ github.sha }}'
           path: build/*.tar.gz
+          retention-days: 30

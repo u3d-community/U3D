@@ -1,8 +1,21 @@
 name: 🐧 Linux
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -12,6 +25,7 @@ jobs:
   linux:
     name: Linux
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +34,7 @@ jobs:
         compiler: ${{ github.event_name == 'pull_request' && fromJSON('["gcc"]') || fromJSON('["gcc", "clang"]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache
         uses: actions/cache@v4
@@ -51,18 +65,19 @@ jobs:
             export CC=clang
             export CXX=clang++
           fi
-          cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DURHO3D_DEPLOYMENT_TARGET=generic
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DURHO3D_LIB_TYPE=${{ matrix.lib-type }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DURHO3D_DEPLOYMENT_TARGET=generic
 
       - name: Build
-        run: cmake --build build --parallel 2 --target all --config ${{ matrix.build-type }} -- -j2
+        run: cmake --build build --parallel $(nproc) --target all --config ${{ matrix.build-type }}
 
       - name: Package
-        #if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         run: cmake --build build --target package --config ${{ matrix.build-type }}
 
       - name: Upload packages
-        #if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: 'U3D-${{ github.job }}-${{ matrix.compiler }}-${{ matrix.lib-type }}-${{ matrix.build-type }}'
           path: build/*.tar.gz
+          retention-days: 30

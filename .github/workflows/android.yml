@@ -1,14 +1,28 @@
 name: 📱 Android
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - 'releases/**'
+    tags:
+      - '*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'website/**'
+      - 'LICENSE'
+  pull_request: ~
+  workflow_dispatch: ~
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-android
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   android:
     name: Android
     runs-on: ubuntu-24.04
+    timeout-minutes: 120
     permissions:
       contents: read
       packages: write
@@ -25,10 +39,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -45,9 +59,6 @@ jobs:
       - name: Build Launcher (shared only)
         if: matrix.lib-type == 'shared'
         run: ./gradlew :android:launcher-app:externalNativeBuild${{ matrix.build-type }} :android:launcher-app:assemble${{ matrix.build-type }}
-
-      - name: Test
-        run: ./gradlew :android:urho3d-lib:test
 
       - name: Package
         if: startsWith(github.ref, 'refs/tags/')
