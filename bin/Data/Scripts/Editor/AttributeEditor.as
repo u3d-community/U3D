@@ -41,6 +41,8 @@ WeakHandle testAnimState;
 
 bool dragEditAttribute = false;
 
+UIElement@ rightClickedAttrNameText;
+
 UIElement@ SetEditable(UIElement@ element, bool editable)
 {
     if (element is null)
@@ -91,6 +93,9 @@ UIElement@ CreateAttributeEditorParentWithSeparatedLabel(ListView@ list, const S
         editorParent.AddChild(attrNameText);
         attrNameText.style = "EditorAttributeText";
         attrNameText.text = name;
+        attrNameText.enabled = true;
+
+        SubscribeToEvent(attrNameText,"ClickEnd", "HandleAttributeEditorAttrNameClick");
     }
 
     return editorParent;
@@ -124,8 +129,105 @@ UIElement@ CreateAttributeEditorParent(ListView@ list, const String&in name, uin
     attrNameText.style = "EditorAttributeText";
     attrNameText.text = name;
     attrNameText.SetFixedWidth(ATTRNAME_WIDTH);
+    attrNameText.enabled = true;
+
+    SubscribeToEvent(attrNameText,"ClickEnd", "HandleAttributeEditorAttrNameClick");
 
     return editorParent;
+}
+
+// attempts to find one of the attribute edit fields the attrNameText refers to
+UIElement@ GetAttrEditFromAttrNameText(UIElement@ attrNameText)
+{
+    UIElement@ parent = attrNameText.parent;
+    UIElement@ attrEdit = parent.GetChild(parent.numChildren - 1);
+
+    if(attrEdit.name == "ResourcePickerContainer")
+    {
+        // attributes with a resource picker have an extra container element around it for layout purposes
+        attrEdit = attrEdit.GetChild(0);
+    }
+
+    return attrEdit;
+}
+
+void HandleAttributeEditorAttrNameClick(StringHash eventType, VariantMap& eventData)
+{
+    if (eventData["Button"].GetInt() != MOUSEB_RIGHT)
+        return;
+
+    UIElement@ clickedEl = eventData["Element"].GetPtr();
+    UIElement@ clickStartEl = eventData["BeginElement"].GetPtr();
+
+    if(clickedEl is null || clickStartEl !is clickedEl) return;
+
+    rightClickedAttrNameText = clickedEl;
+    Array<UIElement@> actions;
+
+    // find the serializable attribute the clicked text refers to
+    UIElement@ attrEdit = GetAttrEditFromAttrNameText(rightClickedAttrNameText);
+    if(attrEdit !is null)
+    {
+        Array<Serializable@>@ serializables = GetAttributeEditorTargets(attrEdit);
+        if (!serializables.empty)
+            actions.Push(CreateContextMenuItem("Reset to default", "HandleAttrContextMenuResetToDefault"));
+    }
+
+    if (actions.length > 0)
+        ActivateContextMenu(actions);
+
+}
+
+void HandleAttrContextMenuResetToDefault(StringHash eventType, VariantMap& eventData)
+{
+    if(rightClickedAttrNameText is null) return;
+
+    // find the serializable attribute the clicked text refers to
+    UIElement@ attrEdit = GetAttrEditFromAttrNameText(rightClickedAttrNameText);
+    if(attrEdit is null) return;
+
+    Array<Serializable@>@ serializables = GetAttributeEditorTargets(attrEdit);
+    if (serializables.empty)
+        return;
+
+    uint index = attrEdit.vars["Index"].GetUInt();
+    uint subIndex = attrEdit.vars["SubIndex"].GetUInt();
+    uint coordinate = attrEdit.vars["Coordinate"].GetUInt();
+    bool intermediateEdit = false;
+
+    // Do the editor pre logic before attribute is being modified
+    if (!PreEditAttribute(serializables, index))
+        return;
+
+    inEditAttribute = true;
+
+    Array<Variant> oldValues;
+
+    if (!dragEditAttribute)
+    {
+        // Store old values so that PostEditAttribute can create undo actions
+        for (uint i = 0; i < serializables.length; ++i)
+            oldValues.Push(serializables[i].attributes[index]);
+    }
+
+    // apply default value of attribute to serializables
+    for (uint i = 0; i < serializables.length; ++i)
+        serializables[i].SetAttribute(index, serializables[i].GetAttributeDefault(index));
+
+    for (uint i = 0; i < serializables.length; ++i)
+        serializables[i].ApplyAttributes();
+
+    if (!dragEditAttribute)
+    {
+        // Do the editor post logic after attribute has been modified.
+        PostEditAttribute(serializables, index, oldValues);
+    }
+
+    inEditAttribute = false;
+
+    // reload the editor fields with validated values
+    // (attributes may have interactions; therefore we load everything, not just the value being edited)
+    attributesDirty = true;
 }
 
 LineEdit@ CreateAttributeLineEdit(UIElement@ parent, Array<Serializable@>@ serializables, uint index, uint subIndex)
@@ -366,7 +468,7 @@ UIElement@ CreateResourceRefAttributeEditor(ListView@ list, Array<Serializable@>
     // Create the attribute name on a separate non-interactive line to allow for more space
     parent = CreateAttributeEditorParentWithSeparatedLabel(list, info.name, index, subIndex, suppressedSeparatedLabel);
 
-    UIElement@ container = UIElement();
+    UIElement@ container = UIElement("ResourcePickerContainer");
     container.SetLayout(LM_HORIZONTAL, 4, IntRect(info.name.StartsWith("   ") ? 20 : 10, 0, 4, 0));    // Left margin is indented more when the name is so
     container.SetFixedHeight(ATTR_HEIGHT);
     parent.AddChild(container);
