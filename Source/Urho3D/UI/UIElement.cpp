@@ -199,6 +199,8 @@ bool UIElement::LoadXML(const XMLElement& source, XMLFile* styleFile)
             String appliedStyle(appliedStyle_);
             SetStyle(styleName, styleFile);
             appliedStyle_ = appliedStyle;
+            // Keep considering style attribute values as instance-level attribute default values as we traverse the style "tree"
+            SetInstanceDefault(true);
         }
     }
 
