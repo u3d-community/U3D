@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -113,7 +113,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define stbi_zlib_decode_noheader_malloc assimp_stbi_zlib_decode_noheader_malloc
 #endif
 
-#include "stb_image.h"
+#include "stb/stb_image.h"
 
 #if _MSC_VER
 #pragma warning(pop)

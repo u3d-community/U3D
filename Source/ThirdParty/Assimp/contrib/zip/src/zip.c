@@ -471,7 +471,6 @@ static ssize_t zip_entry_mark(struct zip_t *zip,
       entry_mark[i].type = MZ_KEEP;
     }
 
-    // U3D : add explicit conversion cast to mz_uint
     if (!mz_zip_reader_file_stat(&zip->archive, (mz_uint)i, &file_stat)) {
       return ZIP_ENOENT;
     }
@@ -529,7 +528,6 @@ static ssize_t zip_entry_markbyindex(struct zip_t *zip,
       entry_mark[i].type = MZ_KEEP;
     }
 
-    // U3D : add explicit conversion cast to mz_uint
     if (!mz_zip_reader_file_stat(&zip->archive, (mz_uint)i, &file_stat)) {
       return ZIP_ENOENT;
     }
