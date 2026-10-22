@@ -65,56 +65,56 @@ unsigned Deserializer::GetChecksum()
 
 long long Deserializer::ReadInt64()
 {
-    long long ret;
+    long long ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 int Deserializer::ReadInt()
 {
-    int ret;
+    int ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 short Deserializer::ReadShort()
 {
-    short ret;
+    short ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 signed char Deserializer::ReadByte()
 {
-    signed char ret;
+    signed char ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 unsigned long long Deserializer::ReadUInt64()
 {
-    unsigned long long ret;
+    unsigned long long ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 unsigned Deserializer::ReadUInt()
 {
-    unsigned ret;
+    unsigned ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 unsigned short Deserializer::ReadUShort()
 {
-    unsigned short ret;
+    unsigned short ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 unsigned char Deserializer::ReadUByte()
 {
-    unsigned char ret;
+    unsigned char ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
@@ -126,56 +126,56 @@ bool Deserializer::ReadBool()
 
 float Deserializer::ReadFloat()
 {
-    float ret;
+    float ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 double Deserializer::ReadDouble()
 {
-    double ret;
+    double ret = 0;
     Read(&ret, sizeof ret);
     return ret;
 }
 
 IntRect Deserializer::ReadIntRect()
 {
-    int data[4];
+    int data[4]{};
     Read(data, sizeof data);
     return IntRect(data);
 }
 
 IntVector2 Deserializer::ReadIntVector2()
 {
-    int data[2];
+    int data[2]{};
     Read(data, sizeof data);
     return IntVector2(data);
 }
 
 IntVector3 Deserializer::ReadIntVector3()
 {
-    int data[3];
+    int data[3]{};
     Read(data, sizeof data);
     return IntVector3(data);
 }
 
 Rect Deserializer::ReadRect()
 {
-    float data[4];
+    float data[4]{};
     Read(data, sizeof data);
     return Rect(data);
 }
 
 Vector2 Deserializer::ReadVector2()
 {
-    float data[2];
+    float data[2]{};
     Read(data, sizeof data);
     return Vector2(data);
 }
 
 Vector3 Deserializer::ReadVector3()
 {
-    float data[3];
+    float data[3]{};
     Read(data, sizeof data);
     return Vector3(data);
 }
@@ -183,7 +183,7 @@ Vector3 Deserializer::ReadVector3()
 Vector3 Deserializer::ReadPackedVector3(float maxAbsCoord)
 {
     float invV = maxAbsCoord / 32767.0f;
-    short coords[3];
+    short coords[3]{};
     Read(coords, sizeof coords);
     Vector3 ret(coords[0] * invV, coords[1] * invV, coords[2] * invV);
     return ret;
@@ -191,21 +191,21 @@ Vector3 Deserializer::ReadPackedVector3(float maxAbsCoord)
 
 Vector4 Deserializer::ReadVector4()
 {
-    float data[4];
+    float data[4]{};
     Read(data, sizeof data);
     return Vector4(data);
 }
 
 Quaternion Deserializer::ReadQuaternion()
 {
-    float data[4];
+    float data[4]{};
     Read(data, sizeof data);
     return Quaternion(data);
 }
 
 Quaternion Deserializer::ReadPackedQuaternion()
 {
-    short coords[4];
+    short coords[4]{};
     Read(coords, sizeof coords);
     Quaternion ret(coords[0] * invQ, coords[1] * invQ, coords[2] * invQ, coords[3] * invQ);
     ret.Normalize();
@@ -214,35 +214,35 @@ Quaternion Deserializer::ReadPackedQuaternion()
 
 Matrix3 Deserializer::ReadMatrix3()
 {
-    float data[9];
+    float data[9]{};
     Read(data, sizeof data);
     return Matrix3(data);
 }
 
 Matrix3x4 Deserializer::ReadMatrix3x4()
 {
-    float data[12];
+    float data[12]{};
     Read(data, sizeof data);
     return Matrix3x4(data);
 }
 
 Matrix4 Deserializer::ReadMatrix4()
 {
-    float data[16];
+    float data[16]{};
     Read(data, sizeof data);
     return Matrix4(data);
 }
 
 Color Deserializer::ReadColor()
 {
-    float data[4];
+    float data[4]{};
     Read(data, sizeof data);
     return Color(data);
 }
 
 BoundingBox Deserializer::ReadBoundingBox()
 {
-    float data[6];
+    float data[6]{};
     Read(data, sizeof data);
     return BoundingBox(Vector3(&data[0]), Vector3(&data[3]));
 }
@@ -265,10 +265,8 @@ String Deserializer::ReadString()
 
 String Deserializer::ReadFileID()
 {
-    String ret;
-    ret.Resize(4);
-    Read(&ret[0], 4);
-    return ret;
+    char data[4]{};
+    return String(data, Read(data, sizeof data));
 }
 
 StringHash Deserializer::ReadStringHash()

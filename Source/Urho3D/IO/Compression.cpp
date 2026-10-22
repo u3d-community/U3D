@@ -100,7 +100,8 @@ bool DecompressStream(Serializer& dest, Deserializer& src)
     if (src.Read(srcBuffer, srcSize) != srcSize)
         return false;
 
-    LZ4_decompress_fast((const char*)srcBuffer.Get(), (char*)destBuffer.Get(), destSize);
+    if (LZ4_decompress_safe((const char*)srcBuffer.Get(), (char*)destBuffer.Get(), srcSize, destSize) != (int)destSize)
+        return false;
     return dest.Write(destBuffer, destSize) == destSize;
 }
 

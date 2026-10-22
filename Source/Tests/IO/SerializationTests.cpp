@@ -9,6 +9,20 @@
 using namespace Urho3D;
 using namespace U3DTest;
 
+namespace
+{
+
+void DirtyStack()
+{
+    volatile unsigned char junk[4096];
+    for (unsigned i = 0; i < sizeof junk; ++i)
+        junk[i] = 0xAA;
+}
+
+void (*volatile dirtyStack)() = DirtyStack;
+
+}
+
 TEST_CASE("VectorBuffer round trips every primitive", "[IO]")
 {
     VectorBuffer buffer;
@@ -242,6 +256,116 @@ TEST_CASE("Reading past the end is clamped", "[IO]")
     REQUIRE(buffer.IsEof());
 
     REQUIRE(buffer.ReadString().Empty());
+}
+
+TEST_CASE("Typed reads past the end return zero values", "[IO]")
+{
+    VectorBuffer empty;
+
+    dirtyStack();
+    const long long int64Value = empty.ReadInt64();
+    REQUIRE(int64Value == 0);
+    dirtyStack();
+    const int intValue = empty.ReadInt();
+    REQUIRE(intValue == 0);
+    dirtyStack();
+    const short shortValue = empty.ReadShort();
+    REQUIRE(shortValue == 0);
+    dirtyStack();
+    const signed char byteValue = empty.ReadByte();
+    REQUIRE(byteValue == 0);
+    dirtyStack();
+    const unsigned long long uint64Value = empty.ReadUInt64();
+    REQUIRE(uint64Value == 0);
+    dirtyStack();
+    const unsigned uintValue = empty.ReadUInt();
+    REQUIRE(uintValue == 0);
+    dirtyStack();
+    const unsigned short ushortValue = empty.ReadUShort();
+    REQUIRE(ushortValue == 0);
+    dirtyStack();
+    const unsigned char ubyteValue = empty.ReadUByte();
+    REQUIRE(ubyteValue == 0);
+    dirtyStack();
+    const bool boolValue = empty.ReadBool();
+    REQUIRE_FALSE(boolValue);
+    dirtyStack();
+    const float floatValue = empty.ReadFloat();
+    REQUIRE(floatValue == 0.0f);
+    dirtyStack();
+    const double doubleValue = empty.ReadDouble();
+    REQUIRE(doubleValue == 0.0);
+    dirtyStack();
+    const IntRect intRect = empty.ReadIntRect();
+    REQUIRE(intRect == IntRect::ZERO);
+    dirtyStack();
+    const IntVector2 intVector2 = empty.ReadIntVector2();
+    REQUIRE(intVector2 == IntVector2::ZERO);
+    dirtyStack();
+    const IntVector3 intVector3 = empty.ReadIntVector3();
+    REQUIRE(intVector3 == IntVector3::ZERO);
+    dirtyStack();
+    const Rect rect = empty.ReadRect();
+    REQUIRE(rect.min_ == Vector2::ZERO);
+    REQUIRE(rect.max_ == Vector2::ZERO);
+    dirtyStack();
+    const Vector2 vector2 = empty.ReadVector2();
+    REQUIRE(vector2 == Vector2::ZERO);
+    dirtyStack();
+    const Vector3 vector3 = empty.ReadVector3();
+    REQUIRE(vector3 == Vector3::ZERO);
+    dirtyStack();
+    const Vector3 packedVector3 = empty.ReadPackedVector3(100.0f);
+    REQUIRE(packedVector3 == Vector3::ZERO);
+    dirtyStack();
+    const Vector4 vector4 = empty.ReadVector4();
+    REQUIRE(vector4 == Vector4::ZERO);
+    dirtyStack();
+    const Quaternion quaternion = empty.ReadQuaternion();
+    REQUIRE(quaternion.w_ == 0.0f);
+    REQUIRE(quaternion.x_ == 0.0f);
+    REQUIRE(quaternion.y_ == 0.0f);
+    REQUIRE(quaternion.z_ == 0.0f);
+    dirtyStack();
+    const Matrix3 matrix3 = empty.ReadMatrix3();
+    REQUIRE(matrix3 == Matrix3::ZERO);
+    dirtyStack();
+    const Matrix3x4 matrix3x4 = empty.ReadMatrix3x4();
+    REQUIRE(matrix3x4 == Matrix3x4::ZERO);
+    dirtyStack();
+    const Matrix4 matrix4 = empty.ReadMatrix4();
+    REQUIRE(matrix4 == Matrix4::ZERO);
+    dirtyStack();
+    const Color color = empty.ReadColor();
+    REQUIRE(color == Color(0.0f, 0.0f, 0.0f, 0.0f));
+    dirtyStack();
+    const BoundingBox box = empty.ReadBoundingBox();
+    REQUIRE(box.min_ == Vector3::ZERO);
+    REQUIRE(box.max_ == Vector3::ZERO);
+    dirtyStack();
+    const StringHash hash = empty.ReadStringHash();
+    REQUIRE(hash == StringHash::ZERO);
+    dirtyStack();
+    const unsigned vle = empty.ReadVLE();
+    REQUIRE(vle == 0);
+    dirtyStack();
+    const String fileID = empty.ReadFileID();
+    REQUIRE(fileID.Empty());
+}
+
+TEST_CASE("Typed reads that run short zero the missing bytes", "[IO]")
+{
+    const unsigned char twoBytes[] = {0x34, 0x12};
+    MemoryBuffer partial(twoBytes, sizeof twoBytes);
+
+    dirtyStack();
+    const unsigned value = partial.ReadUInt();
+    REQUIRE(value == 0x1234u);
+    REQUIRE(partial.IsEof());
+
+    const unsigned char idBytes[] = {'U', 'P'};
+    MemoryBuffer shortID(idBytes, sizeof idBytes);
+    REQUIRE(shortID.ReadFileID() == "UP");
 }
 
 TEST_CASE("Compression round trips a buffer", "[IO]")

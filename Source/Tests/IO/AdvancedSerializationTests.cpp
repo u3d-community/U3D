@@ -123,3 +123,33 @@ TEST_CASE("Raw and streaming compression round trip", "[IO]")
     REQUIRE(DecompressStream(output, packed));
     REQUIRE(output.GetBuffer() == source);
 }
+
+TEST_CASE("DecompressStream rejects a payload whose size does not match the compressed data", "[IO]")
+{
+    PODVector<unsigned char> source(200);
+    for (unsigned i = 0; i < source.Size(); ++i)
+        source[i] = static_cast<unsigned char>("compressible "[i % 13]);
+
+    PODVector<unsigned char> compressed(EstimateCompressBound(source.Size()));
+    const unsigned compressedSize = CompressData(compressed.Buffer(), source.Buffer(), source.Size());
+    REQUIRE(compressedSize > 0);
+
+    VectorBuffer valid;
+    valid.WriteUInt(source.Size());
+    valid.WriteUInt(compressedSize);
+    valid.Write(compressed.Buffer(), compressedSize);
+    valid.Seek(0);
+    VectorBuffer validOutput;
+    REQUIRE(DecompressStream(validOutput, valid));
+    REQUIRE(validOutput.GetBuffer() == source);
+
+    VectorBuffer malformed;
+    malformed.WriteUInt(source.Size());
+    malformed.WriteUInt(compressedSize + 1);
+    malformed.Write(compressed.Buffer(), compressedSize);
+    malformed.WriteUByte(0x5A);
+    malformed.Seek(0);
+    VectorBuffer malformedOutput;
+    REQUIRE_FALSE(DecompressStream(malformedOutput, malformed));
+    REQUIRE(malformedOutput.GetSize() == 0);
+}

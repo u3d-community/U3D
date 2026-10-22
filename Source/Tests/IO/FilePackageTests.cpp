@@ -1,5 +1,6 @@
 #include "TestUtils.h"
 
+#include <Urho3D/IO/Compression.h>
 #include <Urho3D/IO/File.h>
 #include <Urho3D/IO/FileSystem.h>
 #include <Urho3D/IO/PackageFile.h>
@@ -31,6 +32,71 @@ void WritePackage(Context* context, const String& path)
     File output(context, path, FILE_WRITE);
     REQUIRE(output.IsOpen());
     REQUIRE(output.Write(package.GetData(), package.GetSize()) == package.GetSize());
+}
+
+const unsigned PACKAGE_BLOCK_SIZE = 32768;
+const unsigned NO_CORRUPT_BLOCK = M_MAX_UNSIGNED;
+
+String CompressiblePayload()
+{
+    String payload;
+    for (unsigned i = 0; i < 20; ++i)
+        payload += "lz4 block ";
+    return payload;
+}
+
+String MultiBlockPayload()
+{
+    const char* words[] = {"scene ", "node ", "model ", "material ", "texture ", "shader ", "light ", "zone "};
+    unsigned seed = 12345;
+    String payload;
+    while (payload.Length() < 80000)
+    {
+        seed = seed * 1103515245u + 12345u;
+        payload += words[(seed >> 16) % 8];
+        payload += String((seed >> 8) % 1000);
+    }
+    payload.Resize(80000);
+    return payload;
+}
+
+unsigned WriteCompressedPackage(Context* context, const String& path, const String& payload, unsigned corruptBlock, unsigned firstBlockSize = PACKAGE_BLOCK_SIZE)
+{
+    const String entryName("packed.txt");
+    const unsigned headerSize = 4 + 4 + 4 + entryName.Length() + 1 + 4 + 4 + 4;
+
+    VectorBuffer package;
+    package.WriteFileID("ULZ4");
+    package.WriteUInt(1);
+    package.WriteUInt(12345);
+    package.WriteString(entryName);
+    package.WriteUInt(headerSize);
+    package.WriteUInt(payload.Length());
+    package.WriteUInt(67890);
+
+    PODVector<unsigned char> compressed(EstimateCompressBound(PACKAGE_BLOCK_SIZE));
+    unsigned numBlocks = 0;
+    for (unsigned pos = 0; pos < payload.Length();)
+    {
+        const unsigned blockSize = numBlocks ? PACKAGE_BLOCK_SIZE : firstBlockSize;
+        const unsigned unpackedSize = Min(blockSize, payload.Length() - pos);
+        const unsigned compressedSize = CompressData(compressed.Buffer(), payload.CString() + pos, unpackedSize);
+        REQUIRE(compressedSize > 0);
+        const bool corrupt = numBlocks == corruptBlock;
+        package.WriteUShort((unsigned short)unpackedSize);
+        package.WriteUShort((unsigned short)(corrupt ? compressedSize + 1 : compressedSize));
+        package.Write(compressed.Buffer(), compressedSize);
+        if (corrupt)
+            package.WriteUByte(0x5A);
+        pos += unpackedSize;
+        ++numBlocks;
+    }
+    package.WriteUInt(package.GetSize() + sizeof(unsigned));
+
+    File output(context, path, FILE_WRITE);
+    REQUIRE(output.IsOpen());
+    REQUIRE(output.Write(package.GetData(), package.GetSize()) == package.GetSize());
+    return numBlocks;
 }
 
 }
@@ -129,4 +195,138 @@ TEST_CASE("PackageFile rejects invalid and out-of-bounds directories", "[IO]")
     }
     REQUIRE_FALSE(package.Open(path));
     RemoveScratch("io-invalid.pak");
+}
+
+TEST_CASE("Compressed package entries decompress block by block", "[IO]")
+{
+    TestContext context;
+    const String path = ScratchPath("io-compressed.pak");
+    RemoveScratch("io-compressed.pak");
+    REQUIRE(WriteCompressedPackage(context, path, CompressiblePayload(), NO_CORRUPT_BLOCK) == 1);
+
+    PackageFile package(context);
+    REQUIRE(package.Open(path));
+    REQUIRE(package.IsCompressed());
+
+    File file(context, &package, "packed.txt");
+    REQUIRE(file.IsOpen());
+    REQUIRE(file.GetSize() == 200);
+    String content;
+    content.Resize(file.GetSize());
+    REQUIRE(file.Read(&content[0], content.Length()) == 200);
+    REQUIRE(content == CompressiblePayload());
+
+    RemoveScratch("io-compressed.pak");
+}
+
+TEST_CASE("Compressed package read stops at a malformed block", "[IO]")
+{
+    TestContext context;
+    const String path = ScratchPath("io-compressed-bad.pak");
+    RemoveScratch("io-compressed-bad.pak");
+    REQUIRE(WriteCompressedPackage(context, path, CompressiblePayload(), 0) == 1);
+
+    PackageFile package(context);
+    REQUIRE(package.Open(path));
+
+    File file(context, &package, "packed.txt");
+    REQUIRE(file.IsOpen());
+    String content;
+    content.Resize(file.GetSize());
+    REQUIRE(file.Read(&content[0], content.Length()) == 0);
+
+    RemoveScratch("io-compressed-bad.pak");
+}
+
+TEST_CASE("Compressed package entries spanning multiple blocks read and seek across block boundaries", "[IO]")
+{
+    TestContext context;
+    const String path = ScratchPath("io-compressed-multi.pak");
+    RemoveScratch("io-compressed-multi.pak");
+    const String payload = MultiBlockPayload();
+    REQUIRE(WriteCompressedPackage(context, path, payload, NO_CORRUPT_BLOCK) == 3);
+
+    PackageFile package(context);
+    REQUIRE(package.Open(path));
+    REQUIRE(package.IsCompressed());
+
+    File file(context, &package, "packed.txt");
+    REQUIRE(file.IsOpen());
+    REQUIRE(file.GetSize() == 80000);
+    String content;
+    content.Resize(80000);
+    unsigned total = 0;
+    while (total < 80000)
+    {
+        const unsigned read = file.Read(&content[total], Min(1000u, 80000 - total));
+        REQUIRE(read > 0);
+        total += read;
+    }
+    REQUIRE(content == payload);
+    REQUIRE(file.IsEof());
+
+    REQUIRE(file.Seek(0) == 0);
+    REQUIRE(file.Seek(50000) == 50000);
+    String slice;
+    slice.Resize(100);
+    REQUIRE(file.Read(&slice[0], 100) == 100);
+    REQUIRE(slice == payload.Substring(50000, 100));
+
+    REQUIRE(file.Seek(0) == 0);
+    REQUIRE(file.Seek(32760) == 32760);
+    String boundary;
+    boundary.Resize(16);
+    REQUIRE(file.Read(&boundary[0], 16) == 16);
+    REQUIRE(boundary == payload.Substring(32760, 16));
+
+    RemoveScratch("io-compressed-multi.pak");
+}
+
+TEST_CASE("Compressed package read and seek stop at a malformed middle block", "[IO]")
+{
+    TestContext context;
+    const String path = ScratchPath("io-compressed-multi-bad.pak");
+    RemoveScratch("io-compressed-multi-bad.pak");
+    const String payload = MultiBlockPayload();
+    REQUIRE(WriteCompressedPackage(context, path, payload, 1) == 3);
+
+    PackageFile package(context);
+    REQUIRE(package.Open(path));
+
+    {
+        File file(context, &package, "packed.txt");
+        REQUIRE(file.IsOpen());
+        String content;
+        content.Resize(80000);
+        REQUIRE(file.Read(&content[0], 80000) == PACKAGE_BLOCK_SIZE);
+        REQUIRE(content.Substring(0, PACKAGE_BLOCK_SIZE) == payload.Substring(0, PACKAGE_BLOCK_SIZE));
+    }
+    {
+        File file(context, &package, "packed.txt");
+        REQUIRE(file.IsOpen());
+        REQUIRE(file.Seek(50000) == PACKAGE_BLOCK_SIZE);
+    }
+
+    RemoveScratch("io-compressed-multi-bad.pak");
+}
+
+TEST_CASE("Compressed package reads a block larger than the first block", "[IO]")
+{
+    TestContext context;
+    const String path = ScratchPath("io-compressed-growing.pak");
+    RemoveScratch("io-compressed-growing.pak");
+    const String payload = MultiBlockPayload().Substring(0, 30100);
+    REQUIRE(WriteCompressedPackage(context, path, payload, NO_CORRUPT_BLOCK, 100) == 2);
+
+    PackageFile package(context);
+    REQUIRE(package.Open(path));
+
+    File file(context, &package, "packed.txt");
+    REQUIRE(file.IsOpen());
+    String content;
+    content.Resize(30100);
+    REQUIRE(file.Read(&content[0], 30100) == 30100);
+    REQUIRE(content == payload);
+
+    RemoveScratch("io-compressed-growing.pak");
 }

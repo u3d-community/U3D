@@ -64,6 +64,7 @@ const char* APK = "/apk/";
 static const unsigned READ_BUFFER_SIZE = 32768;
 #endif
 static const unsigned SKIP_BUFFER_SIZE = 1024;
+static const unsigned MAX_COMPRESSED_BLOCK_SIZE = 65535;
 
 File::File(Context* context) :
     Object(context),
@@ -227,13 +228,14 @@ unsigned File::Read(void* dest, unsigned size)
 
                 if (!readBuffer_)
                 {
-                    readBuffer_ = new unsigned char[unpackedSize];
-                    inputBuffer_ = new unsigned char[LZ4_compressBound(unpackedSize)];
+                    readBuffer_ = new unsigned char[MAX_COMPRESSED_BLOCK_SIZE];
+                    inputBuffer_ = new unsigned char[MAX_COMPRESSED_BLOCK_SIZE];
                 }
 
                 /// \todo Handle errors
                 ReadInternal(inputBuffer_.Get(), packedSize);
-                LZ4_decompress_fast((const char*)inputBuffer_.Get(), (char*)readBuffer_.Get(), unpackedSize);
+                if (LZ4_decompress_safe((const char*)inputBuffer_.Get(), (char*)readBuffer_.Get(), packedSize, unpackedSize) != (int)unpackedSize)
+                    return size - sizeLeft;
 
                 readBufferSize_ = unpackedSize;
                 readBufferOffset_ = 0;
@@ -297,7 +299,10 @@ unsigned File::Seek(unsigned position)
         {
             unsigned char skipBuffer[SKIP_BUFFER_SIZE];
             while (position > position_)
-                Read(skipBuffer, Min(position - position_, SKIP_BUFFER_SIZE));
+            {
+                if (!Read(skipBuffer, Min(position - position_, SKIP_BUFFER_SIZE)))
+                    break;
+            }
         }
         else
             URHO3D_LOGERROR("Seeking backward in a compressed file is not supported");
